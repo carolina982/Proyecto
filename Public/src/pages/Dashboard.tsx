@@ -19,11 +19,10 @@ export default function Dashboard() {
 
   // Detectar ancho de pantalla
   const screenWidth = Dimensions.get("window").width;
-  const isLargeScreen = screenWidth > 600; // Ajusta según tu criterio
+  const isLargeScreen = screenWidth > 600;
 
   return (
     <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column" }}>
-      {/* Menú lateral o hamburguesa */}
       {isLargeScreen ? (
         <View style={styles.sideMenu}>
           <TouchableOpacity
@@ -55,6 +54,9 @@ export default function Dashboard() {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Cerrar Sesión</Text>
           </TouchableOpacity>
+
+          {/* Mostrar rol actual solo como info */}
+          <Text style={styles.currentRole}>Rol actual: {currentUser.rol}</Text>
         </View>
       ) : (
         <Appbar.Header>
@@ -83,12 +85,6 @@ export default function Dashboard() {
 
       {/* Contenido de la pestaña */}
       <ScrollView style={styles.contentContainer}>
-        {/* Mostrar siempre nombre y rol */}
-        <View style={{ marginBottom: 16 }}>
-          <Text style={styles.section}>Usuario: {currentUser.nombre}</Text>
-          <Text style={styles.section}>Rol: {currentUser.rol}</Text>
-        </View>
-
         {tab === "Perfil" && <ProfileTab currentUser={currentUser} />}
 
         {tab === "Viajes" && (
@@ -126,7 +122,7 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   sideMenu: {
-    width: 140,
+    width: 160,
     backgroundColor: "#eee",
     paddingVertical: 20,
     paddingHorizontal: 10,
@@ -148,6 +144,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   logoutText: { color: "white", textAlign: "center", fontWeight: "bold" },
+  currentRole: { marginTop: 10, fontWeight: "bold", textAlign: "center" },
   contentContainer: { flex: 1, padding: 16 },
   section: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   detail: { marginTop: 15, padding: 10, backgroundColor: "#f0f0f0", borderRadius: 8 },

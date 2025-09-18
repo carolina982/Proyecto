@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Button, Image, Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Button, Image, StyleSheet, Text, View } from "react-native";
 import { User } from "../types";
 
 interface ProfileTabProps {
@@ -8,81 +8,70 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab({ currentUser }: ProfileTabProps) {
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [name, setName] = useState(currentUser.nombre);
-  const [email, setEmail] = useState(currentUser.email);
+  const [photoUri, setPhotoUri] = useState<string | null>(currentUser.photoUrl || null);
 
-  // Función para abrir el selector de imágenes
   const pickImage = async () => {
-    // Pedir permisos (solo necesario en móvil)
-    if (Platform.OS !== "web") {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        alert("Se necesitan permisos para acceder a la galería");
-        return;
-      }
+    // Pedir permisos
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permiso denegado", "Se requiere acceso a la galería para subir una foto.");
+      return;
     }
 
+    // Abrir selector de imágenes
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
     });
 
     if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
+      setPhotoUri(result.assets[0].uri); // Guardar URI de la imagen seleccionada
     }
-  };
-
-  const handleSave = () => {
-    // Aquí puedes actualizar el usuario en el store si quieres
-    alert("Perfil actualizado");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.section}>Perfil</Text>
-
+      {/* Foto */}
       <Image
-        source={
-          photoUri
-            ? { uri: photoUri }
-            : { uri: "https://via.placeholder.com/120" } // placeholder por defecto
-        }
+        source={{ uri: photoUri || "https://via.placeholder.com/120" }}
         style={styles.photo}
       />
 
-      <Button title="Cambiar foto" onPress={pickImage} />
+      {/* Botón para cambiar foto */}
+      <Button title="Cambiar Foto" onPress={pickImage} />
 
-      <TextInput
-        placeholder="Nombre"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
+      {/* Información del usuario */}
+      <Text style={styles.label}>Nombre:</Text>
+      <Text style={styles.value}>{currentUser.nombre}</Text>
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-      />
+      <Text style={styles.label}>Email:</Text>
+      <Text style={styles.value}>{currentUser.email}</Text>
 
-      <Button title="Guardar cambios" onPress={handleSave} />
+      <Text style={styles.label}>Rol:</Text>
+      <Text style={styles.value}>{currentUser.rol}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  section: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
-  photo: { width: 120, height: 120, borderRadius: 60, marginBottom: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 12,
+  container: { 
+    alignItems: "center", 
+    padding: 16 
+  },
+  photo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 16,
+    backgroundColor: "#ccc",
+  },
+  label: {
+    fontWeight: "bold",
+    marginTop: 12,
+  },
+  value: {
+    fontSize: 16,
   },
 });
