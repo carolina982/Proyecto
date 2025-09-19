@@ -1,44 +1,74 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
-import { User, useStore } from "../context/Store";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import { useStore } from "../context/Store";
 
 export default function Login({ navigation }: any) {
-  const { login } = useStore();
-  const [nombre, setNombre] = useState("");
+  const { users, login } = useStore();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    if (!nombre || !email) {
-      alert("Por favor completa todos los campos");
+    if (!email || !password) {
+      Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
 
-    const user: User = {
-      id: Date.now().toString(),
-      nombre,
-      email,
-      rol: "Chofer", // Cambia a "Admin" para probar administrador
-      photoUrl: null,
-    };
+    // Buscar usuario por email
+    const existingUser = users.find(
+      (u) => u.email && u.email.toLowerCase() === email.toLowerCase()
+    );
 
-    login(user);
+    if (!existingUser) {
+      Alert.alert("Usuario no encontrado", "Regístrate primero");
+      return;
+    }
+
+    // Iniciar sesión
+    login(existingUser);
+
+    // Redirigir según rol
+    if (existingUser.rol?.toLowerCase() === "admin") {
+      navigation.navigate("AdminPage");
+    } else {
+      navigation.navigate("Dashboard");
+    }
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <FontAwesome5 name="truck-moving" size={85.5} color="#007bff" style={styles.icon} />
 
       <Text style={styles.title}>Volta</Text>
 
-      <TextInput placeholder="Usuario" value={nombre} onChangeText={setNombre} style={styles.input} />
-      <TextInput placeholder="Correo" value={email} onChangeText={setEmail} keyboardType="email-address" style={styles.input} />
+      <TextInput
+        placeholder="Correo electrónico"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        style={styles.input}
+      />
+
+      <TextInput
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        style={styles.input}
+      />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Iniciar Sesión</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("Register")}>
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={() => navigation.navigate("Register")}
+      >
         <Text style={styles.registerText}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>

@@ -4,6 +4,7 @@ import React from "react";
 import { StoreProvider, useStore } from "../Public/src/context/Store";
 
 // Importar tus páginas
+import AdminPage from "../Public/src/pages/AdminPage";
 import Dashboard from "../Public/src/pages/Dashboard";
 import EditUnitsPage from "../Public/src/pages/EditUnitsPage";
 import Login from "../Public/src/pages/Login";
@@ -30,6 +31,7 @@ function AppNavigator() {
             <Stack.Screen name="Dashboard" component={Dashboard} />
             <Stack.Screen name="TripsPage" component={TripsPage} />
             <Stack.Screen name="ViaticsPage" component={ViaticsPage} />
+            <Stack.Screen name="AdminPage" component={AdminPage} />
             <Stack.Screen name="UnitsPage" component={UnitsPage} />
             <Stack.Screen name="EditUnitsPage" component={EditUnitsPage} />
           </>

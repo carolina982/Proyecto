@@ -1,52 +1,55 @@
-import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
-import { Alert, Button, Image, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useState } from "react";
+import { Alert, Image, Picker, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useStore } from "../context/Store";
 
 export default function Register({ navigation }: any) {
-  const { users, addUser } = useStore();
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState(""); // nuevo campo apellido
+  const { addUser, login } = useStore();
   const [email, setEmail] = useState("");
-  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer");
-  const [photoUri, setPhotoUri] = useState<string | null>(null); // URI de la foto
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [password, setPassword] = useState("");
+  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer"); // Campo rol
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
-  // Función para seleccionar foto desde la galería
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert("Permiso denegado", "Se requiere acceso a la galería para subir una foto.");
-      return;
-    }
-
+  const pickImageFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.7,
     });
+    if (!result.canceled) setPhotoUrl(result.assets[0].uri);
+  };
 
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-    }
+  const takePhoto = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled) setPhotoUrl(result.assets[0].uri);
   };
 
   const handleRegister = () => {
-    if (!nombre || !apellido || !email) return alert("Todos los campos son obligatorios");
-    if (users.find(u => u.email === email)) return alert("Usuario ya existe");
+    if (!email || !nombre || !apellido || !password) {
+      Alert.alert("Error", "Todos los campos son obligatorios");
+      return;
+    }
 
-    const Nuevo = { 
-      id: Date.now().toString(), 
-      nombre: nombre + " " + apellido, // unir nombre y apellido
-      email, 
-      rol, 
-      photoUrl: photoUri 
+    const newUser = {
+      id: Date.now().toString(),
+      nombre,
+      apellido,
+      email,
+      password,
+      rol, //  rol seleccionado por el usuario
+      photoUrl,
     };
 
-    addUser(Nuevo);
-    alert("Usuario creado");
-    navigation.goBack();
+    addUser(newUser);
+    login(newUser);
+    navigation.navigate("Dashboard");
   };
 
   return (
@@ -55,28 +58,49 @@ export default function Register({ navigation }: any) {
 
       <TextInput placeholder="Nombre" value={nombre} onChangeText={setNombre} style={styles.input} />
       <TextInput placeholder="Apellido" value={apellido} onChangeText={setApellido} style={styles.input} />
+      <TextInput placeholder="Correo" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
+      <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
 
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
-
-      <Picker selectedValue={rol} onValueChange={value => setRol(value as any)} style={styles.picker}>
+      {/* Selector de rol */}
+      <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
+      <Picker selectedValue={rol} onValueChange={(value) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
         <Picker.Item label="Chofer" value="Chofer" />
         <Picker.Item label="Admin" value="Admin" />
       </Picker>
 
-      {/* Mostrar foto seleccionada */}
-      {photoUri && <Image source={{ uri: photoUri }} style={styles.photo} />}
+      <View style={styles.photoButtons}>
+        <TouchableOpacity style={styles.photoButton} onPress={pickImageFromGallery}>
+          <Text style={styles.photoButtonText}>Elegir foto</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
+          <Text style={styles.photoButtonText}>Tomar foto</Text>
+        </TouchableOpacity>
+      </View>
 
-      <Button title="Seleccionar Foto" onPress={pickImage} />
-      <View style={{ marginTop: 10 }} />
-      <Button title="Registrar" onPress={handleRegister} />
+      {photoUrl && <Image source={{ uri: photoUrl }} style={styles.avatarPreview} />}
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Registrarse</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("Login")}>
+        <Text style={styles.registerText}>¿Ya tienes cuenta? Inicia Sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, marginTop: 50 },
-  title: { fontSize: 24, marginBottom: 20 },
-  input: { borderWidth: 1, padding: 10, marginBottom: 10, borderRadius: 5 },
-  picker: { height: 50, width: "100%", marginBottom: 20 },
-  photo: { width: 120, height: 120, borderRadius: 60, marginBottom: 10 },
+  container: { flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
+  title: { fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
+  input: { width: "100%", height: 50, backgroundColor: "#fff", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
+  picker: { width: "100%", height: 50, marginBottom: 15, backgroundColor: "#fff", borderRadius: 10 },
+  photoButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  photoButton: { flex: 0.48, height: 45, backgroundColor: "#007bff", justifyContent: "center", alignItems: "center", borderRadius: 10 },
+  photoButtonText: { color: "#fff", fontSize: 14, fontWeight: "bold" },
+  avatarPreview: { width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginVertical: 10 },
+  button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
+  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  registerButton: { marginTop: 15, alignItems: "center" },
+  registerText: { color: "#007bff", fontSize: 16 },
 });

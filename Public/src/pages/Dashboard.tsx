@@ -1,17 +1,17 @@
 import React, { useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Appbar, Menu } from "react-native-paper";
 import ProfileTab from "../components/ProfileTab";
 import TripList from "../components/TripList";
 import UnitList from "../components/UnitList";
 import ViaticList from "../components/ViaticList";
 import { useStore } from "../context/Store";
+import AdminPage from "./AdminPage"; //Importa tu AdminPage
 
 export default function Dashboard() {
   const { currentUser, setCurrentUser } = useStore();
-  const [tab, setTab] = useState<"Perfil" | "Viajes" | "Viáticos" | "Unidades">("Perfil");
+  const [tab, setTab] = useState<"Perfil" | "Viajes" | "Viáticos" | "Unidades" | "Usuarios">("Perfil");
   const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
   if (!currentUser) return <Text>Debes iniciar sesión</Text>;
 
@@ -22,28 +22,44 @@ export default function Dashboard() {
 
   return (
     <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column" }}>
-      {/* Menú lateral o hamburguesa */}
+      
+      {/* ===== MENÚ LATERAL (pantallas grandes) ===== */}
       {isLargeScreen ? (
         <View style={styles.sideMenu}>
-          {["Perfil", "Viajes", "Viáticos"].map((t) => (
-            <TouchableOpacity key={t} style={[styles.sideTab, tab === t && styles.sideTabActive]} onPress={() => setTab(t as any)}>
-              <Text style={styles.tabText}>{t}</Text>
-            </TouchableOpacity>
-          ))}
+          {currentUser.photoUrl && <Image source={{ uri: currentUser.photoUrl }} style={styles.avatar} />}
+          <Text style={styles.name}>{currentUser.nombre} {currentUser.apellido}</Text>
+          <Text style={styles.role}>Rol: {currentUser.rol}</Text>
 
-          {currentUser.rol === "Admin" && (
+          <TouchableOpacity style={[styles.sideTab, tab === "Perfil" && styles.sideTabActive]} onPress={() => setTab("Perfil")}>
+            <Text style={styles.tabText}>Perfil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.sideTab, tab === "Viajes" && styles.sideTabActive]} onPress={() => setTab("Viajes")}>
+            <Text style={styles.tabText}>Viajes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.sideTab, tab === "Viáticos" && styles.sideTabActive]} onPress={() => setTab("Viáticos")}>
+            <Text style={styles.tabText}>Viáticos</Text>
+          </TouchableOpacity>
+
+          {/* PESTAÑA UNIDADES SOLO ADMIN */}
+          {currentUser.rol?.toLowerCase() === "admin" && (
             <TouchableOpacity style={[styles.sideTab, tab === "Unidades" && styles.sideTabActive]} onPress={() => setTab("Unidades")}>
               <Text style={styles.tabText}>Unidades</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* PESTAÑA USUARIOS SOLO ADMIN */}
+          {currentUser.rol?.toLowerCase() === "admin" && (
+            <TouchableOpacity style={[styles.sideTab, tab === "Usuarios" && styles.sideTabActive]} onPress={() => setTab("Usuarios")}>
+              <Text style={styles.tabText}>Usuarios</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Cerrar Sesión</Text>
           </TouchableOpacity>
-
-          <Text style={styles.currentRole}>Rol actual: {currentUser.rol}</Text>
         </View>
       ) : (
+        /* ===== APPBAR Y MENÚ (pantallas pequeñas) ===== */
         <Appbar.Header>
           <Appbar.Content title="Dashboard" />
           <Menu
@@ -51,37 +67,54 @@ export default function Dashboard() {
             onDismiss={() => setMenuVisible(false)}
             anchor={<Appbar.Action icon="menu" color="white" onPress={() => setMenuVisible(true)} />}
           >
-            {["Perfil", "Viajes", "Viáticos"].map((t) => (
-              <Menu.Item key={t} onPress={() => { setTab(t as any); setMenuVisible(false); }} title={t} />
-            ))}
-            {currentUser.rol === "Admin" && (
+            <Menu.Item onPress={() => { setTab("Perfil"); setMenuVisible(false); }} title="Perfil" />
+            <Menu.Item onPress={() => { setTab("Viajes"); setMenuVisible(false); }} title="Viajes" />
+            <Menu.Item onPress={() => { setTab("Viáticos"); setMenuVisible(false); }} title="Viáticos" />
+
+            {/*  MENÚ UNIDADES SOLO ADMIN */}
+            {currentUser.rol?.toLowerCase() === "admin" && (
               <Menu.Item onPress={() => { setTab("Unidades"); setMenuVisible(false); }} title="Unidades" />
             )}
+
+            {/* MENÚ USUARIOS SOLO ADMIN */}
+            {currentUser.rol?.toLowerCase() === "admin" && (
+              <Menu.Item onPress={() => { setTab("Usuarios"); setMenuVisible(false); }} title="Usuarios" />
+            )}
+
             <Menu.Item onPress={handleLogout} title="Cerrar Sesión" />
           </Menu>
         </Appbar.Header>
       )}
 
-      {/* Contenido */}
+      {/* ===== CONTENIDO DE PESTAÑAS ===== */}
       <ScrollView style={styles.contentContainer}>
         {tab === "Perfil" && <ProfileTab currentUser={currentUser} />}
-        {tab === "Viajes" && (
-          <TripList viewOnly={currentUser.rol === "Chofer"} onSelect={(id) => setSelectedTripId(id)} />
+        {tab === "Viajes" && <TripList viewOnly={currentUser.rol?.toLowerCase() === "chofer"} />}
+        {tab === "Viáticos" && <ViaticList viewOnly={currentUser.rol?.toLowerCase() === "chofer"} />}
+
+        {/*  CONTENIDO PESTAÑA UNIDADES */}
+        {tab === "Unidades" && currentUser.rol?.toLowerCase() === "admin" && (
+          <UnitList />
         )}
-        {tab === "Viáticos" && <ViaticList viewOnly={currentUser.rol === "Chofer"} />}
-        {tab === "Unidades" && currentUser.rol === "Admin" && <UnitList />}
+
+        {/*  CONTENIDO PESTAÑA USUARIOS */}
+        {tab === "Usuarios" && currentUser.rol?.toLowerCase() === "admin" && (
+          <AdminPage />
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  sideMenu: { width: 160, backgroundColor: "#eee", paddingVertical: 20, paddingHorizontal: 10 },
-  sideTab: { paddingVertical: 12, paddingHorizontal: 10, marginBottom: 5, borderRadius: 6 },
-  sideTabActive: { backgroundColor: "#74a8dfff" },
-  tabText: { fontSize: 16 },
-  logoutButton: { marginTop: 20, backgroundColor: "#3842a0ff", paddingVertical: 10, borderRadius: 6 },
-  logoutText: { color: "white", textAlign: "center", fontWeight: "bold" },
-  currentRole: { marginTop: 10, fontWeight: "bold", textAlign: "center" },
-  contentContainer: { flex: 1, padding: 16 },
+  sideMenu: { width: 200, backgroundColor: "#f0f0f0", padding: 10 },
+  sideTab: { padding: 10, marginVertical: 5, borderRadius: 5 },
+  sideTabActive: { backgroundColor: "#007bff" },
+  tabText: { color: "#000" },
+  logoutButton: { marginTop: 20, padding: 10, backgroundColor: "#ff4d4d", borderRadius: 5 },
+  logoutText: { color: "#fff", textAlign: "center" },
+  contentContainer: { flex: 1, padding: 10 },
+  avatar: { width: 80, height: 80, borderRadius: 40, marginBottom: 10 },
+  name: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
+  role: { fontSize: 14, marginBottom: 15, color: "#555" },
 });
