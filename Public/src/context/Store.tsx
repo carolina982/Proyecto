@@ -3,41 +3,52 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { Platform } from "react-native";
 import { Trip, Unit, User, Viatic } from "../types";
 
+
+// ================== Definición de interfaz ==================
 interface StoreContextProps {
   currentUser: User | null;
   users: User[];
   trips: Trip[];
   units: Unit[];
   viatics: Viatic[];
+
+  // Métodos de usuario
   setCurrentUser: (user: User | null) => void;
-
   addUser: (user: User) => void;
-  updateUser: (user: User) => void;      // 🔹 actualizar usuario
-  removeUser: (userId: string) => void;  // 🔹 eliminar usuario
+  updateUser: (user: User) => void;
+  removeUser: (userId: string) => void;
 
+  // Métodos de viajes
   addTrip: (trip: Trip) => void;
+  updateTrip: (trip: Trip) => void;
   removeTrip: (tripId: string) => void;
 
+  // Métodos de viáticos
+  addViatic: (viatic: Viatic) => void;
   updateViatic: (viatic: Viatic) => void;
   removeViatic: (viaticId: string) => void;
 
+  // Métodos de unidades
   addUnit: (unit: Unit) => void;
+  updateUnit: (unit: Unit) => void;
   removeUnit: (unitId: string) => void;
 
+  // Sesión
   login: (user: User) => void;
   logout: () => void;
 }
 
 const StoreContext = createContext<StoreContextProps>({} as StoreContextProps);
 
+// ================== Provider ==================
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [viatics, setViatic] = useState<Viatic[]>([]);
+  const [viatics, setViatics] = useState<Viatic[]>([]);
 
-  // Cargar datos
+  // ===== Cargar datos al iniciar =====
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -51,16 +62,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           setUsers(parsed.users || []);
           setTrips(parsed.trips || []);
           setUnits(parsed.units || []);
-          setViatic(parsed.viatics || []);
+          setViatics(parsed.viatics || []);
         }
       } catch (error) {
-        console.error("Error cargando datos:", error);
+        console.error(" Error cargando datos:", error);
       }
     };
     loadData();
   }, []);
 
-  // Guardar datos
+  // ===== Guardar datos en storage =====
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -68,49 +79,45 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         if (Platform.OS === "web") localStorage.setItem("storeData", data);
         else await AsyncStorage.setItem("storeData", data);
       } catch (error) {
-        console.error("Error guardando datos:", error);
+        console.error(" Error guardando datos:", error);
       }
     };
     saveData();
   }, [users, trips, units, viatics]);
 
-  // ===================== Usuarios =====================
+  // ================== CRUD Usuarios ==================
   const addUser = (user: User) => setUsers((prev) => [...prev, user]);
-
   const updateUser = (updatedUser: User) =>
     setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
-
   const removeUser = (userId: string) =>
     setUsers((prev) => prev.filter((u) => u.id !== userId));
 
-  // ===================== Viajes =====================
-  const addTrip = (trip: Trip) =>
-    setTrips((prev) => {
-      const exist = prev.find((t) => t.id === trip.id);
-      return exist ? prev.map((t) => (t.id === trip.id ? trip : t)) : [...prev, trip];
-    });
-
+  // ================== CRUD Viajes ==================
+  const addTrip = (trip: Trip) => setTrips((prev) => [...prev, trip]);
+  const updateTrip = (updatedTrip: Trip) =>
+    setTrips((prev) => prev.map((t) => (t.id === updatedTrip.id ? updatedTrip : t)));
   const removeTrip = (tripId: string) =>
     setTrips((prev) => prev.filter((t) => t.id !== tripId));
 
-  // ===================== Viáticos =====================
-  const updateViatic = (viatic: Viatic) =>
-    setViatic((prev) => prev.map((v) => (v.id === viatic.id ? viatic : v)));
-
+  // ================== CRUD Viáticos ==================
+  const addViatic = (viatic: Viatic) => setViatics((prev) => [...prev, viatic]);
+  const updateViatic = (updatedViatic: Viatic) =>
+    setViatics((prev) => prev.map((v) => (v.id === updatedViatic.id ? updatedViatic : v)));
   const removeViatic = (viaticId: string) =>
-    setViatic((prev) => prev.filter((v) => v.id !== viaticId));
+    setViatics((prev) => prev.filter((v) => v.id !== viaticId));
 
-  // ===================== Unidades =====================
+  // ================== CRUD Unidades ==================
   const addUnit = (unit: Unit) => setUnits((prev) => [...prev, unit]);
-
+  const updateUnit = (updatedUnit: Unit) =>
+    setUnits((prev) => prev.map((u) => (u.id === updatedUnit.id ? updatedUnit : u)));
   const removeUnit = (unitId: string) =>
     setUnits((prev) => prev.filter((u) => u.id !== unitId));
 
-  // ===================== Login/Logout =====================
+  // ================== Sesión ==================
   const login = (user: User) => setCurrentUser(user);
-
   const logout = () => setCurrentUser(null);
 
+  // ================== Proveedor ==================
   return (
     <StoreContext.Provider
       value={{
@@ -124,10 +131,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         updateUser,
         removeUser,
         addTrip,
+        updateTrip,
         removeTrip,
+        addViatic,
         updateViatic,
         removeViatic,
         addUnit,
+        updateUnit,
         removeUnit,
         login,
         logout,
@@ -137,5 +147,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     </StoreContext.Provider>
   );
 };
+
 
 export const useStore = () => useContext(StoreContext);

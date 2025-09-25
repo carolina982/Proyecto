@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Appbar, Menu } from "react-native-paper";
 import ProfileTab from "../components/ProfileTab";
-import TripList from "../components/TripList";
-import UnitList from "../components/UnitList";
-import ViaticList from "../components/ViaticList";
 import { useStore } from "../context/Store";
-import AdminPage from "./AdminPage"; //Importa tu AdminPage
+
+import AdminPage from "./AdminPage";
+import TripsPage from "./TripsPage";
+import UnitsPage from "./UnitsPage";
+import ViaticsPage from "./ViaticsPage";
 
 export default function Dashboard() {
   const { currentUser, setCurrentUser } = useStore();
@@ -40,18 +41,15 @@ export default function Dashboard() {
             <Text style={styles.tabText}>Viáticos</Text>
           </TouchableOpacity>
 
-          {/* PESTAÑA UNIDADES SOLO ADMIN */}
           {currentUser.rol?.toLowerCase() === "admin" && (
-            <TouchableOpacity style={[styles.sideTab, tab === "Unidades" && styles.sideTabActive]} onPress={() => setTab("Unidades")}>
-              <Text style={styles.tabText}>Unidades</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* PESTAÑA USUARIOS SOLO ADMIN */}
-          {currentUser.rol?.toLowerCase() === "admin" && (
-            <TouchableOpacity style={[styles.sideTab, tab === "Usuarios" && styles.sideTabActive]} onPress={() => setTab("Usuarios")}>
-              <Text style={styles.tabText}>Usuarios</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity style={[styles.sideTab, tab === "Unidades" && styles.sideTabActive]} onPress={() => setTab("Unidades")}>
+                <Text style={styles.tabText}>Unidades</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.sideTab, tab === "Usuarios" && styles.sideTabActive]} onPress={() => setTab("Usuarios")}>
+                <Text style={styles.tabText}>Usuarios</Text>
+              </TouchableOpacity>
+            </>
           )}
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -71,14 +69,11 @@ export default function Dashboard() {
             <Menu.Item onPress={() => { setTab("Viajes"); setMenuVisible(false); }} title="Viajes" />
             <Menu.Item onPress={() => { setTab("Viáticos"); setMenuVisible(false); }} title="Viáticos" />
 
-            {/*  MENÚ UNIDADES SOLO ADMIN */}
             {currentUser.rol?.toLowerCase() === "admin" && (
-              <Menu.Item onPress={() => { setTab("Unidades"); setMenuVisible(false); }} title="Unidades" />
-            )}
-
-            {/* MENÚ USUARIOS SOLO ADMIN */}
-            {currentUser.rol?.toLowerCase() === "admin" && (
-              <Menu.Item onPress={() => { setTab("Usuarios"); setMenuVisible(false); }} title="Usuarios" />
+              <>
+                <Menu.Item onPress={() => { setTab("Unidades"); setMenuVisible(false); }} title="Unidades" />
+                <Menu.Item onPress={() => { setTab("Usuarios"); setMenuVisible(false); }} title="Usuarios" />
+              </>
             )}
 
             <Menu.Item onPress={handleLogout} title="Cerrar Sesión" />
@@ -89,18 +84,10 @@ export default function Dashboard() {
       {/* ===== CONTENIDO DE PESTAÑAS ===== */}
       <ScrollView style={styles.contentContainer}>
         {tab === "Perfil" && <ProfileTab currentUser={currentUser} />}
-        {tab === "Viajes" && <TripList viewOnly={currentUser.rol?.toLowerCase() === "chofer"} />}
-        {tab === "Viáticos" && <ViaticList viewOnly={currentUser.rol?.toLowerCase() === "chofer"} />}
-
-        {/*  CONTENIDO PESTAÑA UNIDADES */}
-        {tab === "Unidades" && currentUser.rol?.toLowerCase() === "admin" && (
-          <UnitList />
-        )}
-
-        {/*  CONTENIDO PESTAÑA USUARIOS */}
-        {tab === "Usuarios" && currentUser.rol?.toLowerCase() === "admin" && (
-          <AdminPage />
-        )}
+        {tab === "Viajes" && <TripsPage />}
+        {tab === "Viáticos" && <ViaticsPage />}
+        {tab === "Unidades" && currentUser.rol?.toLowerCase() === "admin" && <UnitsPage />}
+        {tab === "Usuarios" && currentUser.rol?.toLowerCase() === "admin" && <AdminPage />}
       </ScrollView>
     </View>
   );
