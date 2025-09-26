@@ -3,7 +3,6 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { Platform } from "react-native";
 import { Trip, Unit, User, Viatic } from "../types";
 
-
 // ================== Definición de interfaz ==================
 interface StoreContextProps {
   currentUser: User | null;

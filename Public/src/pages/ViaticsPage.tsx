@@ -1,99 +1,146 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
-import { Trip, useStore, Viatic } from "../context/Store";
+import { api } from "../api/api";
+
+interface Viatic {
+  id: string;
+  concepto: string;
+  descripcion: string;
+  monto: number;
+  tripId: string;
+}
 
 export default function ViaticsPage() {
-  const { viatics, trips, addViatic, updateViatic, removeViatic } = useStore();
-
+  const [viatics, setViatics] = useState<Viatic[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingViatic, setEditingViatic] = useState<Viatic | null>(null);
   const [tripId, setTripId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [concepto, setConcepto] = useState("");
+  const [monto, setMonto] = useState("");
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    loadViatics();
+  }, []);
+
+  const loadViatics = async () => {
+    try {
+      const res = await api.get("/viatics");
+      setViatics(res.data);
+    } catch (error) {
+      console.error("Error cargando viáticos", error);
+    }
+  };
 
   const openModal = (viatic?: Viatic) => {
     if (viatic) {
       setEditingViatic(viatic);
+      setConcepto(viatic.concepto);
+      setMonto(viatic.monto.toString());
+      setDescription(viatic.descripcion);
       setTripId(viatic.tripId);
-      setAmount(viatic.amount.toString());
-      setDescription(viatic.description);
+    } else {
+      setEditingViatic(null);
+      setConcepto("");
+      setMonto("");
+      setDescription("");
+      setTripId("");
     }
     setModalVisible(true);
   };
 
-  const saveViatic = () => {
-    if (!tripId || !amount || !description) {
-      Alert.alert("Error", "Completa todos los datos");
+  const saveViatic = async () => {
+    if (!concepto || !monto || !description || !tripId) {
+      Alert.alert("Error", "Completa todos los datos obligatorios");
       return;
     }
-    const viatic: Viatic = {
-      id: editingViatic ? editingViatic.id : Date.now().toString(),
-      tripId,
-      amount: Number(amount),
-      description,
-    };
-    if (editingViatic) updateViatic(viatic);
-    else addViatic(viatic);
 
-    setEditingViatic(null);
-    setTripId("");
-    setAmount("");
-    setDescription("");
-    setModalVisible(false);
+    const viaticData = {
+      concepto,
+      descripcion: description,
+      monto: parseFloat(monto),
+      tripId,
+    };
+
+    try {
+      const response = editingViatic
+        ? await api.put(`/viatics/${editingViatic.id}`, viaticData)
+        : await api.post("/viatics", viaticData);
+
+      console.log("Viático guardado:", response.data);
+      await loadViatics();
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error guardando viático", error);
+      Alert.alert("Error", "No se pudo guardar el viático");
+    }
   };
 
   const deleteViaticItem = (id: string) => {
     Alert.alert("Confirmar", "¿Deseas eliminar este viático?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive", onPress: () => removeViatic(id) },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await api.delete(`/viatics/${id}`);
+            await loadViatics();
+          } catch (error) {
+            console.error("Error eliminando viático", error);
+            Alert.alert("Error", "No se pudo eliminar el viático");
+          }
+        },
+      },
     ]);
   };
 
-  const renderItem = ({ item }: { item: Viatic }) => {
-    const trip: Trip | undefined = trips.find((t) => t.id === item.tripId);
-    return (
-      <View style={styles.card}>
-        <Text style={styles.title}>${item.amount}</Text>
-        <Text>Descripción: {item.description}</Text>
-        <Text>Viaje: {trip?.nombre || "No asignado"}</Text>
-        <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>
-            Editar
-          </Button>
-          <Button mode="contained" onPress={() => deleteViaticItem(item.id)} buttonColor="red">
-            Eliminar
-          </Button>
-        </View>
+  const renderItem = ({ item }: { item: Viatic }) => (
+    <View style={styles.card}>
+      <Text style={styles.title}>{item.concepto}</Text>
+      <Text>Monto: ${item.monto}</Text>
+      <Text>Descripción: {item.descripcion}</Text>
+      <Text>Trip ID: {item.tripId}</Text>
+      <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
+        <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>
+          Editar
+        </Button>
+        <Button mode="contained" buttonColor="red" onPress={() => deleteViaticItem(item.id)}>
+          Eliminar
+        </Button>
       </View>
-    );
-  };
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Button mode="contained" buttonColor="#0d75bbff" onPress={() => openModal()} >
+      <Button mode="contained" buttonColor="#0d75bbff" onPress={() => openModal()}>
         Nuevo Viático
       </Button>
-      <FlatList
-        data={viatics}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        style={{ marginTop: 15 }}
-      />
+
+      {viatics.length === 0 ? (
+        <Text style={{ marginTop: 15 }}>No hay viáticos registrados</Text>
+      ) : (
+        <FlatList
+          data={viatics}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          style={{ marginTop: 15 }}
+        />
+      )}
+
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingViatic ? "Editar Viático" : "Nuevo Viático"}</Text>
-          <TextInput
-            placeholder="Trip ID"
-            value={tripId}
-            onChangeText={setTripId}
-            style={styles.input}
-          />
+
+          <TextInput placeholder="Trip ID" value={tripId} onChangeText={setTripId} style={styles.input} />
+          <TextInput placeholder="Concepto" value={concepto} onChangeText={setConcepto} style={styles.input} />
           <TextInput
             placeholder="Monto"
-            value={amount}
+            value={monto}
+            onChangeText={setMonto}
             keyboardType="numeric"
-            onChangeText={setAmount}
             style={styles.input}
           />
           <TextInput
@@ -102,6 +149,7 @@ export default function ViaticsPage() {
             onChangeText={setDescription}
             style={styles.input}
           />
+
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             <Button mode="contained" onPress={() => setModalVisible(false)}>
               Cancelar

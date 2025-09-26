@@ -12,6 +12,7 @@ import TripsPage from "../Public/src/pages/TripsPage";
 import UnitsPage from "../Public/src/pages/UnitsPage";
 import ViaticsPage from "../Public/src/pages/ViaticsPage";
 
+
 const Stack = createNativeStackNavigator();
 function AppNavigator() {
   const { currentUser } = useStore();

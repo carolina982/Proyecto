@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { api } from "../api/api";
 import { User, useStore } from "../context/Store";
 
 export default function AdminPage() {
@@ -18,6 +19,19 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Cargar usuarios al iniciar
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const res = await api.get("/users");
+        setUsers(res.data);
+      } catch (error) {
+        console.error("Error cargando usuarios", error);
+      }
+    };
+    loadUsers();
+  }, []);
 
   // Abrir modal para agregar o editar
   const handleEdit = (user?: User) => {
@@ -40,64 +54,66 @@ export default function AdminPage() {
   };
 
   // Guardar cambios
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!editingUser) return;
 
-    if (
-      !editingUser.nombre ||
-      !editingUser.apellido ||
-      !editingUser.email ||
-      !editingUser.rol ||
-      !editingUser.password
-    ) {
+    if (!editingUser.nombre || !editingUser.apellido || !editingUser.email || !editingUser.rol || !editingUser.password) {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
     }
 
-    const existingIndex = users.findIndex((u) => u.email === editingUser.email);
-    let updatedUsers = [...users];
+    try {
+      if (isAdding) {
+        const res = await api.post("/users", editingUser);
+        console.log("Usuario creado", res.data);
+        Alert.alert("Éxito", "Usuario creado correctamente");
+      } else {
+        const res = await api.put(`/users/${editingUser.id}`, editingUser);
+        console.log("Usuario actualizado:", res.data);
+        Alert.alert("Éxito", "Usuario actualizado correctamente");
+      }
 
-    if (isAdding) {
-      if (existingIndex >= 0) {
-        Alert.alert("Error", "Ya existe un usuario con ese correo");
-        return;
-      }
-      updatedUsers.push(editingUser);
-    } else {
-      if (existingIndex >= 0) {
-        updatedUsers[existingIndex] = editingUser;
-      }
+      // Recargar usuarios
+      const res = await api.get("/users");
+      setUsers(res.data);
+      setModalVisible(false);
+      setEditingUser(null);
+      setIsAdding(false);
+    } catch (error) {
+      console.error("Error guardando usuario", error);
+      Alert.alert("Error", "No se pudo guardar el usuario");
     }
-
-    setUsers(updatedUsers);
-    setModalVisible(false);
-    setEditingUser(null);
-    setIsAdding(false);
   };
 
-  // Eliminar usuario correctamente
-  const handleDelete= (email:string ) =>Alert.alert("Confirmar " , "¿Desea elimar este usuario",[
-    {text:"Cancelar" , style:"cancel"},
-    {
-      text:"Eliminar",
-      style:"destructive",
-      onPress:()=>{
-        const updatedUsers=users.filter((u)=>u.email !==email);
-        setUsers(updatedUsers);
-        if (editingUser?.email === email) setEditingUser (null);
+  // Eliminar usuario
+  const handleDelete = (userId: string) => {
+    Alert.alert("Confirmar", "¿Desea eliminar este usuario?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await api.delete(`/users/${userId}`);
+            console.log("Usuario eliminado:", userId);
+            Alert.alert("Éxito", "Usuario eliminado correctamente");
+            const res = await api.get("/users");
+            setUsers(res.data);
+            if (editingUser?.id === userId) setEditingUser(null);
+          } catch (error) {
+            console.error("Error eliminando usuario", error);
+            Alert.alert("Error", "No se pudo eliminar el usuario");
+          }
+        },
       },
-    },
-  ] )
+    ]);
+  };
 
-  
-
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
       {item.photoUrl && <Image source={{ uri: item.photoUrl }} style={styles.avatar} />}
       <View style={styles.userInfo}>
-        <Text style={styles.name}>
-          {item.nombre} {item.apellido}
-        </Text>
+        <Text style={styles.name}>{item.nombre} {item.apellido}</Text>
         <Text style={styles.email}>{item.email}</Text>
         <Text style={styles.role}>Rol: {item.rol}</Text>
       </View>
@@ -105,7 +121,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.email)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -118,7 +134,7 @@ export default function AdminPage() {
       <Button title="Agregar Usuario" onPress={() => handleEdit()} />
       <FlatList
         data={users}
-        keyExtractor={(item) => item.email}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
       />
@@ -164,14 +180,7 @@ export default function AdminPage() {
             />
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-              <Button
-                title="Cancelar"
-                onPress={() => {
-                  setModalVisible(false);
-                  setEditingUser(null);
-                  setIsAdding(false);
-                }}
-              />
+              <Button title="Cancelar" onPress={() => { setModalVisible(false); setEditingUser(null); setIsAdding(false); }} />
               <Button title="Guardar" onPress={saveChanges} />
             </View>
           </View>

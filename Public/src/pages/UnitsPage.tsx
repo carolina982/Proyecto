@@ -1,48 +1,80 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
-import { Unit, useStore } from "../context/Store";
+import { api } from "../api/api";
+import { Unit } from "../context/Store";
+
+interface Unit {
+  id:string;
+  nombre: string;
+  tipo:string;
+}
 
 export default function UnitsPage() {
-  const { units, addUnit, updateUnit, removeUnit } = useStore();
-
+  const [units, setUnits] =useState<Unit[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("");
 
+  useEffect(()=>{
+    loadUnits();
+  },[]);
+  const loadUnits = async ()=>{
+    try {
+      const res =await api.get("/units");
+      setUnits (res.data) ;
+    }catch (error){
+      console.error("Error cargando unidade", error);
+    }
+  };
   const openModal = (unit?: Unit) => {
     if (unit) {
       setEditingUnit(unit);
       setNombre(unit.nombre);
       setTipo(unit.tipo);
+    }else {
+      setEditingUnit(null);
+      setNombre("");
+      setTipo("");
     }
     setModalVisible(true);
   };
 
-  const saveUnit = () => {
+  const saveUnit =async () => {
     if (!nombre || !tipo) {
       Alert.alert("Error", "Completa todos los datos");
       return;
     }
-    const unit: Unit = {
-      id: editingUnit ? editingUnit.id : Date.now().toString(),
-      nombre,
-      tipo,
-    };
-    if (editingUnit) updateUnit(unit);
-    else addUnit(unit);
-
-    setEditingUnit(null);
-    setNombre("");
-    setTipo("");
+   const unitData ={nombre, tipo };
+   try{
+    if (editingUnit) {
+      await api.put(`/units/${editingUnit.id}`,unitData);
+    }else{
+      await api.post ("/units" , unitData);
+    }
+    await loadUnits();
     setModalVisible(false);
+  } catch (error){
+    console.error("Error guardando unidad " , error );
+    Alert.alert("Error", "No se puedo guadar la unidad");
+  }
   };
+
 
   const deleteUnitItem = (id: string) => {
     Alert.alert("Confirmar", "¿Deseas eliminar esta unidad?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive", onPress: () => removeUnit(id) },
+      { text: "Eliminar", style: "destructive", onPress:async () => {
+        try{
+          await api.delete(`/units/${id}`);
+          await loadUnits();
+        }catch (error){
+          console.error ("Error eliminado unidad", error);
+          Alert.alert ("Error", "No se puede eliminar la unidad");
+        }
+      },
+      },
     ]);
   };
 
