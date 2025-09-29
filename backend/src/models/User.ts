@@ -5,7 +5,7 @@ export  interface IUser extends Document {
  apellido?:string;
  email:string;
  password:string ;
- rol:"Admin" |"Chofer"; 
+ rol:string; 
  photoUrl?:string|null;
 
 }

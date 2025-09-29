@@ -25,7 +25,7 @@ export const getUserById =async (req:Request , res:Response) =>{
 
 
 export const createUser = async (req: Request, res: Response) => {
-  console.log("POST recibido en /user:", req.body); // <- ver qué llega
+ 
   try {
     const user = await User.create(req.body);
     res.status(201).json(user);

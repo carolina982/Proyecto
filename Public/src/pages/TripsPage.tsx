@@ -3,6 +3,7 @@ import { Alert, FlatList, Modal, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 
+
 interface Trip {
   id: string;
   nombre: string;
@@ -34,9 +35,12 @@ export default function TripsPage() {
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
-      setTrips(res.data);
+      // Mapear _id a id
+      const mappedTrips = res.data.map((trip: any) => ({ ...trip, id: trip._id }));
+      setTrips(mappedTrips);
     } catch (error) {
       console.error("Error cargando viajes", error);
+      Alert.alert("Error", "No se pudieron cargar los viajes");
     }
   };
 
@@ -61,6 +65,13 @@ export default function TripsPage() {
     setModalVisible(true);
   };
 
+
+  //convertir "DD/MM/YY"
+  const formatDateToIso =(dateStr:string) =>{
+    const [day, month , year] =dateStr.split("/");
+    return `${year}-${month}-${day}`;
+  };
+
   const saveTrip = async () => {
     if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino) {
       Alert.alert("Error", "Completa todos los datos");
@@ -71,8 +82,8 @@ export default function TripsPage() {
       nombre,
       unidadId,
       conductorId,
-      fechaSalida,
-      fechaLlegada,
+      fechaSalida: new Date(formatDateToIso(fechaSalida)),
+      fechaLlegada:new Date (formatDateToIso(fechaLlegada)),
       destino,
       estado: editingTrip?.estado || "pendiente",
     };
@@ -174,5 +185,5 @@ const styles = StyleSheet.create({
   title: { fontWeight: "bold", fontSize: 16, color: "#007bff" },
   modalContent: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
+  input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
 });

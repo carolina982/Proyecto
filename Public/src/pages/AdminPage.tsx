@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   FlatList,
-  Image,
   Modal,
   StyleSheet,
   Text,
@@ -22,25 +21,25 @@ export default function AdminPage() {
 
   // Cargar usuarios al iniciar
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const res = await api.get("/users");
-        setUsers(res.data);
-      } catch (error) {
-        console.error("Error cargando usuarios", error);
-      }
-    };
     loadUsers();
   }, []);
 
-  // Abrir modal para agregar o editar
+  const loadUsers = async () => {
+    try {
+      const res = await api.get("/users");
+      setUsers(res.data);
+    } catch (error) {
+      console.error("Error cargando usuarios", error);
+    }
+  };
+
+  // Abrir modal
   const handleEdit = (user?: User) => {
     if (user) {
       setEditingUser(user);
       setIsAdding(false);
     } else {
       setEditingUser({
-        id: Date.now().toString(),
         nombre: "",
         apellido: "",
         email: "",
@@ -57,25 +56,22 @@ export default function AdminPage() {
   const saveChanges = async () => {
     if (!editingUser) return;
 
-    if (!editingUser.nombre || !editingUser.apellido || !editingUser.email || !editingUser.rol || !editingUser.password) {
-      Alert.alert("Error", "Todos los campos son obligatorios");
+    const { nombre, apellido, email, password, rol, photoUrl } = editingUser;
+
+    if (!nombre || !email || !password || !rol) {
+      Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
       return;
     }
 
     try {
       if (isAdding) {
-        const res = await api.post("/users", editingUser);
-        console.log("Usuario creado", res.data);
+        await api.post("/users", { nombre, apellido, email, password, rol, photoUrl });
         Alert.alert("Éxito", "Usuario creado correctamente");
       } else {
-        const res = await api.put(`/users/${editingUser.id}`, editingUser);
-        console.log("Usuario actualizado:", res.data);
+        await api.put(`/users/${editingUser._id || editingUser.id}`, { nombre, apellido, email, rol });
         Alert.alert("Éxito", "Usuario actualizado correctamente");
       }
-
-      // Recargar usuarios
-      const res = await api.get("/users");
-      setUsers(res.data);
+      await loadUsers();
       setModalVisible(false);
       setEditingUser(null);
       setIsAdding(false);
@@ -94,12 +90,9 @@ export default function AdminPage() {
         style: "destructive",
         onPress: async () => {
           try {
-            await api.delete(`/users/${userId}`);
-            console.log("Usuario eliminado:", userId);
+            await api.delete(`users/${userId}`);
             Alert.alert("Éxito", "Usuario eliminado correctamente");
-            const res = await api.get("/users");
-            setUsers(res.data);
-            if (editingUser?.id === userId) setEditingUser(null);
+            await loadUsers();
           } catch (error) {
             console.error("Error eliminando usuario", error);
             Alert.alert("Error", "No se pudo eliminar el usuario");
@@ -111,7 +104,6 @@ export default function AdminPage() {
 
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
-      {item.photoUrl && <Image source={{ uri: item.photoUrl }} style={styles.avatar} />}
       <View style={styles.userInfo}>
         <Text style={styles.name}>{item.nombre} {item.apellido}</Text>
         <Text style={styles.email}>{item.email}</Text>
@@ -121,7 +113,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id || item.id)}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -134,18 +126,16 @@ export default function AdminPage() {
       <Button title="Agregar Usuario" onPress={() => handleEdit()} />
       <FlatList
         data={users}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id || item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
       />
 
-      {/* Modal para agregar/editar */}
+      {/* Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-              {isAdding ? "Agregar Usuario" : "Editar Usuario"}
-            </Text>
+            <Text style={styles.modalTitle}>{isAdding ? "Agregar Usuario" : "Editar Usuario"}</Text>
 
             <TextInput
               placeholder="Nombre"
@@ -165,13 +155,15 @@ export default function AdminPage() {
               value={editingUser?.email}
               onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}
             />
-            <TextInput
-              placeholder="Contraseña"
-              style={styles.input}
-              secureTextEntry
-              value={editingUser?.password}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
-            />
+            {isAdding && (
+              <TextInput
+                placeholder="Contraseña"
+                style={styles.input}
+                secureTextEntry
+                value={editingUser?.password}
+                onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
+              />
+            )}
             <TextInput
               placeholder="Rol (Admin / Chofer)"
               style={styles.input}
@@ -194,7 +186,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
   userCard: { flexDirection: "row", backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10, alignItems: "center" },
-  avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
   userInfo: { flex: 1 },
   name: { fontSize: 16, fontWeight: "bold" },
   email: { fontSize: 14, color: "#555" },
@@ -205,5 +196,6 @@ const styles = StyleSheet.create({
   actionText: { color: "#fff", fontWeight: "bold" },
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10 },
 });

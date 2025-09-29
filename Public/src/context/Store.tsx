@@ -47,6 +47,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [viatics, setViatics] = useState<Viatic[]>([]);
 
+
+
   // ===== Cargar datos al iniciar =====
   useEffect(() => {
     const loadData = async () => {

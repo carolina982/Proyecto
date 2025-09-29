@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Trip, { ITrip } from "../models/Trip";
 
 export const getTrip = async (req: Request, res: Response) => {
@@ -26,7 +27,18 @@ export const getTripById = async (req: Request, res: Response) => {
 export const createTrip = async (req: Request, res: Response) => {
   console.log("POST recibido en /trips:", req.body);
   try {
-    const trip = await Trip.create(req.body);
+    const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado } = req.body;
+
+    const trip = await Trip.create({
+      nombre,
+      unidadId: new mongoose.Types.ObjectId(unidadId),
+      conductorId: new mongoose.Types.ObjectId(conductorId),
+      fechaSalida: new Date(fechaSalida),
+      fechaLlegada: new Date(fechaLlegada),
+      destino,
+      estado,
+    });
+
     res.status(201).json(trip);
   } catch (error: any) {
     console.error("Error creando viaje:", error.message);
@@ -36,7 +48,22 @@ export const createTrip = async (req: Request, res: Response) => {
 
 export const updateTrip = async (req: Request, res: Response) => {
   try {
-    const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado } = req.body;
+
+    const trip = await Trip.findByIdAndUpdate(
+      req.params.id,
+      {
+        nombre,
+        unidadId: unidadId ? new mongoose.Types.ObjectId(unidadId) : undefined,
+        conductorId: conductorId ? new mongoose.Types.ObjectId(conductorId) : undefined,
+        fechaSalida: fechaSalida ? new Date(fechaSalida) : undefined,
+        fechaLlegada: fechaLlegada ? new Date(fechaLlegada) : undefined,
+        destino,
+        estado,
+      },
+      { new: true }
+    );
+
     if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
     res.json(trip);
   } catch (error) {

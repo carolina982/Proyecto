@@ -14,4 +14,4 @@ const viaticSchema = new Schema<IViatic>({
   monto: { type: Number, required: true },
 });
 
-export default mongoose.model<IViatic>("Viatic", viaticSchema);
+export default mongoose.model<IViatic>("Viatic",viaticSchema);

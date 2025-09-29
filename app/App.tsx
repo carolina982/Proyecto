@@ -2,6 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { StoreProvider, useStore } from "../Public/src/context/Store";
+
 // Importar tus páginas
 import AdminPage from "../Public/src/pages/AdminPage";
 import Dashboard from "../Public/src/pages/Dashboard";
@@ -43,7 +44,9 @@ function AppNavigator() {
 export default function App() {
   return (
     <StoreProvider>
+      
       <AppNavigator />
+     
     </StoreProvider>
   );
 }

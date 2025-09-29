@@ -47,8 +47,7 @@ export default function Register({ navigation }: any) {
       photoUrl,
     };
 
-    addUser(newUser);
-    login(newUser);
+    
     navigation.navigate("Dashboard");
   };
 
@@ -63,7 +62,7 @@ export default function Register({ navigation }: any) {
 
       {/* Selector de rol */}
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
-      <Picker selectedValue={rol} onValueChange={(value) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
+      <Picker selectedValue={rol} onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
         <Picker.Item label="Chofer" value="Chofer" />
         <Picker.Item label="Admin" value="Admin" />
       </Picker>
