@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IViatic extends Document {
-  tripId: string;       // ID como string
+  tripId: string;       
   concepto: string;
   descripcion: string;
   monto: number;
+ 
 }
 
 const viaticSchema = new Schema<IViatic>({
