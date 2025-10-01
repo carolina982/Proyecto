@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Button,
   FlatList,
-  Image,
   Modal,
   StyleSheet,
   Text,
@@ -11,19 +11,10 @@ import {
   View,
 } from "react-native";
 import { api } from "../api/api";
-
-interface User {
-  _id?: string; // _id viene de MongoDB
-  nombre: string;
-  apellido?: string;
-  email: string;
-  password: string;
-  rol: "Admin" | "Chofer";
-  photoUrl?: string | null;
-}
+import { User, useStore } from "../context/Store";
 
 export default function AdminPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const { users, setUsers } = useStore();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -38,12 +29,11 @@ export default function AdminPage() {
       const res = await api.get("/users");
       setUsers(res.data);
     } catch (error) {
-      console.error("Error cargando usuarios:", error);
-      Alert.alert("Error", "No se pudieron cargar los usuarios");
+      console.error("Error cargando usuarios", error);
     }
   };
 
-  // Abrir modal para agregar o editar
+  // Abrir modal
   const handleEdit = (user?: User) => {
     if (user) {
       setEditingUser(user);
@@ -62,35 +52,37 @@ export default function AdminPage() {
     setModalVisible(true);
   };
 
-  // Guardar cambios (POST o PUT)
+  // Guardar cambios
   const saveChanges = async () => {
     if (!editingUser) return;
 
-    if (!editingUser.nombre || !editingUser.email || !editingUser.password || !editingUser.rol) {
-      Alert.alert("Error", "Completa todos los campos obligatorios");
+    const { nombre, apellido, email, password, rol, photoUrl } = editingUser;
+
+    if (!nombre || !email || !password || !rol) {
+      Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
       return;
     }
 
     try {
       if (isAdding) {
-        await api.post("/users", editingUser);
+        await api.post("/users", { nombre, apellido, email, password, rol, photoUrl });
         Alert.alert("Éxito", "Usuario creado correctamente");
       } else {
-        await api.put(`/users/${editingUser._id}`, editingUser);
+        await api.put(`/users/${editingUser._id || editingUser.id}`, { nombre, apellido, email, rol });
         Alert.alert("Éxito", "Usuario actualizado correctamente");
       }
+      await loadUsers();
       setModalVisible(false);
       setEditingUser(null);
       setIsAdding(false);
-      loadUsers();
     } catch (error) {
-      console.error("Error guardando usuario:", error);
+      console.error("Error guardando usuario", error);
       Alert.alert("Error", "No se pudo guardar el usuario");
     }
   };
 
   // Eliminar usuario
-  const handleDelete = async (userId: string) => {
+  const handleDelete = (userId: string) => {
     Alert.alert("Confirmar", "¿Desea eliminar este usuario?", [
       { text: "Cancelar", style: "cancel" },
       {
@@ -98,11 +90,11 @@ export default function AdminPage() {
         style: "destructive",
         onPress: async () => {
           try {
-            await api.delete(`/users/${userId}`);
+            await api.delete(`users/${userId}`);
             Alert.alert("Éxito", "Usuario eliminado correctamente");
-            loadUsers();
+            await loadUsers();
           } catch (error) {
-            console.error("Error eliminando usuario:", error);
+            console.error("Error eliminando usuario", error);
             Alert.alert("Error", "No se pudo eliminar el usuario");
           }
         },
@@ -112,11 +104,8 @@ export default function AdminPage() {
 
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
-      {item.photoUrl && <Image source={{ uri: item.photoUrl }} style={styles.avatar} />}
       <View style={styles.userInfo}>
-        <Text style={styles.name}>
-          {item.nombre} {item.apellido}
-        </Text>
+        <Text style={styles.name}>{item.nombre} {item.apellido}</Text>
         <Text style={styles.email}>{item.email}</Text>
         <Text style={styles.role}>Rol: {item.rol}</Text>
       </View>
@@ -124,7 +113,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id!)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id || item.id)}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -134,20 +123,16 @@ export default function AdminPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
-      <TouchableOpacity style={styles.addButton} onPress={() => handleEdit()}>
-        <Text style={styles.addButtonText}>Agregar Usuario</Text>
-      </TouchableOpacity>
-
+      <Button title="Agregar Usuario" onPress={() => handleEdit()} />
       <FlatList
         data={users}
-        keyExtractor={(item) => item._id!}
+        keyExtractor={(item) => item._id || item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
       />
-    
 
       {/* Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{isAdding ? "Agregar Usuario" : "Editar Usuario"}</Text>
@@ -170,27 +155,25 @@ export default function AdminPage() {
               value={editingUser?.email}
               onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}
             />
-            <TextInput
-              placeholder="Contraseña"
-              style={styles.input}
-              secureTextEntry
-              value={editingUser?.password}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
-            />
+            {isAdding && (
+              <TextInput
+                placeholder="Contraseña"
+                style={styles.input}
+                secureTextEntry
+                value={editingUser?.password}
+                onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
+              />
+            )}
             <TextInput
               placeholder="Rol (Admin / Chofer)"
               style={styles.input}
               value={editingUser?.rol}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, rol: text as "Admin" | "Chofer" })}
+              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, rol: text })}
             />
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.actionText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
-                <Text style={styles.actionText}>Guardar</Text>
-              </TouchableOpacity>
+              <Button title="Cancelar" onPress={() => { setModalVisible(false); setEditingUser(null); setIsAdding(false); }} />
+              <Button title="Guardar" onPress={saveChanges} />
             </View>
           </View>
         </View>
@@ -201,23 +184,18 @@ export default function AdminPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  addButton: { backgroundColor: "#007bff", padding: 10, borderRadius: 10, alignItems: "center" },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
   userCard: { flexDirection: "row", backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10, alignItems: "center" },
-  avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
   userInfo: { flex: 1 },
   name: { fontSize: 16, fontWeight: "bold" },
   email: { fontSize: 14, color: "#555" },
   role: { fontSize: 14, color: "#007bff", marginTop: 2 },
   actions: { flexDirection: "column", marginLeft: 10 },
-  editButton: { backgroundColor: "#1381f7ff", padding: 5, borderRadius: 5, marginBottom: 5, alignItems: "center" },
-  deleteButton: { backgroundColor: "#ec514cff", padding: 5, borderRadius: 5, alignItems: "center" },
-  cancelButton: { backgroundColor: "#999", padding: 10, borderRadius: 5, flex: 1, marginRight: 5, alignItems: "center" },
-  saveButton: { backgroundColor: "#007bff", padding: 10, borderRadius: 5, flex: 1, marginLeft: 5, alignItems: "center" },
+  editButton: { backgroundColor: "#1381f7ff", padding: 5, borderRadius: 5, marginBottom: 5 },
+  deleteButton: { backgroundColor: "#ec514cff", padding: 5, borderRadius: 5 },
   actionText: { color: "#fff", fontWeight: "bold" },
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10 },
 });

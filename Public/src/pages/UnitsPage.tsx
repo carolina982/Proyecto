@@ -109,7 +109,7 @@ export default function UnitsPage() {
     return (
       <View style={styles.card}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={styles.unitName}>{item.nombre}</Text>
+          <Text style={styles.title}>{item.nombre}</Text>
           <View style={[styles.estadoBadge, { backgroundColor: estadoColor }]}>
             <Text style={styles.estadoText}>{item.estado}</Text>
           </View>
@@ -131,7 +131,6 @@ export default function UnitsPage() {
 
   return (
     <View style={styles.container}>
-       <Text style={styles.title} >Viajes  Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>
         Nueva Unidad
       </Button>
@@ -141,7 +140,6 @@ export default function UnitsPage() {
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />
-    
 
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContent}>
@@ -215,20 +213,14 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  title: { fontWeight: "bold", fontSize: 24, color: "#0c0c0cff",marginBottom: 15 ,textAlign: "center" },
+  title: { fontWeight: "bold", fontSize: 18, color: "#007bff" },
   estadoBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
   },
-
   estadoText: { color: "#fff", fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
   modalTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
   input: { borderRadius: 8, padding: 12, marginBottom: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#ccc" },
-  unitName :{
-    fontWeight:"bold",
-    fontSize:17,
-    color:"0c0c0cff",
-  }
 });

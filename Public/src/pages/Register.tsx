@@ -1,19 +1,17 @@
-import { Picker } from "@react-native-picker/picker";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { TextInput } from "react-native-paper";
+import { Alert, Image, Picker, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useStore } from "../context/Store";
 
 export default function Register({ navigation }: any) {
+  const { addUser, login } = useStore();
+  const [email, setEmail] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer");
+  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer"); // Campo rol
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
-  // Elegir foto desde galería
   const pickImageFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -24,7 +22,6 @@ export default function Register({ navigation }: any) {
     if (!result.canceled) setPhotoUrl(result.assets[0].uri);
   };
 
-  // Tomar foto con cámara
   const takePhoto = async () => {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
@@ -34,35 +31,24 @@ export default function Register({ navigation }: any) {
     if (!result.canceled) setPhotoUrl(result.assets[0].uri);
   };
 
-  // Registrar usuario
-  const handleRegister = async () => {
-    if (!nombre || !apellido || !email || !password) {
-      return Alert.alert("Error", "Todos los campos son obligatorios");
+  const handleRegister = () => {
+    if (!email || !nombre || !apellido || !password) {
+      Alert.alert("Error", "Todos los campos son obligatorios");
+      return;
     }
 
-    try {
-      const res = await axios.post("http://192.168.1.81:3000/api/users/register", {
-        nombre,
-        apellido,
-        email,
-        password,
-        rol,        
-        photoUrl,   
-      });
+    const newUser = {
+      id: Date.now().toString(),
+      nombre,
+      apellido,
+      email,
+      password,
+      rol, //  rol seleccionado por el usuario
+      photoUrl,
+    };
 
-      Alert.alert("Éxito", "Usuario registrado correctamente");
-      setNombre("");
-      setApellido("");
-      setEmail("");
-      setPassword("");
-      setRol("Chofer");
-      setPhotoUrl(null);
-
-      navigation.navigate("Login");
-    } catch (error: any) {
-      console.error(error.response?.data || error.message);
-      Alert.alert("Error", error.response?.data?.message || "No se pudo registrar");
-    }
+    
+    navigation.navigate("Dashboard");
   };
 
   return (
@@ -74,6 +60,7 @@ export default function Register({ navigation }: any) {
       <TextInput placeholder="Correo" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
 
+      {/* Selector de rol */}
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
       <Picker selectedValue={rol} onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
         <Picker.Item label="Chofer" value="Chofer" />
@@ -114,5 +101,5 @@ const styles = StyleSheet.create({
   button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15, alignItems: "center" },
-  registerText: { color: "#007bff", fontSize: 16 },
+  registerText: { color: "#007bff", fontSize: 16 },
 });
