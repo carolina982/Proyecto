@@ -3,6 +3,15 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { Platform } from "react-native";
 import { Trip, Unit, User, Viatic } from "../types";
 
+export interface user{
+  id?:string;
+  nombre:string;
+  apellido:string ;
+  email:string ;
+  password:string;
+  rol:"Admin" |"Chofer";
+  photoUrl:string |null;
+}
 // ================== Definición de interfaz ==================
 interface StoreContextProps {
   currentUser: User | null;
@@ -153,3 +162,4 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 export const useStore = () => useContext(StoreContext);
 
 export { User };
+

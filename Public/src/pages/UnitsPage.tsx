@@ -16,6 +16,7 @@ export default function UnitsPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+
   const [nombre, setNombre] = useState("");
   const [placas, setPlacas] = useState("");
   const [modelo, setModelo] = useState("");
@@ -118,7 +119,7 @@ export default function UnitsPage() {
         <Text>Modelo: {item.modelo}</Text>
         <Text>Capacidad: {item.capacidad}</Text>
         <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>
+          <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
             Editar
           </Button>
           <Button mode="contained" buttonColor="red" onPress={() => deleteUnitItem(item.id)}>
@@ -131,7 +132,7 @@ export default function UnitsPage() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Unidades Registrados</Text>
+      <Text style={styles.title}>Unidades Registradas</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>
         Nueva Unidad
       </Button>
@@ -141,57 +142,76 @@ export default function UnitsPage() {
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />
-
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
+
           <TextInput
             placeholder="Nombre"
             value={nombre}
             onChangeText={setNombre}
-            style={styles.input}
+            mode="flat"
+            underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb"
             textColor="#000"
             placeholderTextColor="#888"
+            dense
+            style={styles.input}
           />
           <TextInput
             placeholder="Placas"
             value={placas}
             onChangeText={setPlacas}
-            style={styles.input}
+            mode="flat"
+            underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb"
             textColor="#000"
             placeholderTextColor="#888"
+            dense
+            style={styles.input}
           />
           <TextInput
             placeholder="Modelo"
             value={modelo}
             onChangeText={setModelo}
-            style={styles.input}
+            mode="flat"
+            underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb"
             textColor="#000"
             placeholderTextColor="#888"
+            dense
+            style={styles.input}
           />
           <TextInput
             placeholder="Capacidad"
             value={capacidad}
             onChangeText={setCapacidad}
-            style={styles.input}
+            mode="flat"
+            underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb"
             textColor="#000"
             placeholderTextColor="#888"
             keyboardType="numeric"
+            dense
+            style={styles.input}
           />
           <TextInput
             placeholder="Estado (Disponible / Mantenimiento / Ocupado)"
             value={estado}
             onChangeText={(text) => setEstado(text as Unit["estado"])}
-            style={styles.input}
+            mode="flat"
+            underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb"
             textColor="#000"
             placeholderTextColor="#888"
+            dense style={styles.input}
           />
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-            <Button mode="contained" onPress={() => setModalVisible(false)}>
+            <Button mode="contained" buttonColor="#0d75bb" onPress={() => setModalVisible(false)}>
               Cancelar
             </Button>
-            <Button mode="contained" onPress={saveUnit}>
+            <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>
               Guardar
             </Button>
           </View>
@@ -209,12 +229,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
-    elevation: 3,
+    elevation: 2,
   },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
+  title: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
+  pageTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15, color: "#0d75bb" },
   estadoBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -222,6 +243,6 @@ const styles = StyleSheet.create({
   },
   estadoText: { color: "#fff", fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
-  modalTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
-  input: { borderRadius: 8, padding: 12, marginBottom: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#ccc" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
+  input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
 });

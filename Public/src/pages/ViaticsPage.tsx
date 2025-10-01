@@ -134,28 +134,33 @@ export default function ViaticsPage() {
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingViatic ? "Editar Viático" : "Nuevo Viático"}</Text>
-
-          <TextInput placeholder="Trip ID" value={tripId} onChangeText={setTripId} style={styles.input} />
-          <TextInput placeholder="Concepto" value={concepto} onChangeText={setConcepto} style={styles.input} />
+          <TextInput placeholder="Trip ID"  mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input}  />
+          <TextInput placeholder="Concepto" mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input} />
           <TextInput
             placeholder="Monto"
             value={monto}
             onChangeText={setMonto}
             keyboardType="numeric"
-            style={styles.input}
+            mode="flat" 
+            underlineColor="#8bc1e6ff"  
+            activeUnderlineColor="#8bc1e6ff"
+            dense  style={styles.input}
           />
           <TextInput
             placeholder="Descripción"
             value={description}
             onChangeText={setDescription}
-            style={styles.input}
+            mode="flat" 
+            underlineColor="#8bc1e6ff"  
+            activeUnderlineColor="#8bc1e6ff"
+            dense  style={styles.input}
           />
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-            <Button mode="contained" onPress={() => setModalVisible(false)}>
+            <Button mode="contained"  buttonColor="#167abdff"onPress={() => setModalVisible(false)}>
               Cancelar
             </Button>
-            <Button mode="contained" onPress={saveViatic}>
+            <Button mode="contained"buttonColor="#167abdff" onPress={saveViatic}>
               Guardar
             </Button>
           </View>

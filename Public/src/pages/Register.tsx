@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Alert, Image, Picker, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { api } from "../api/api"; // <-- Asegúrate de tener api.ts
+import { api } from "../api/api";
 import { useStore } from "../context/Store";
 
 export default function Register({ navigation }: any) {
@@ -41,8 +41,9 @@ export default function Register({ navigation }: any) {
     try {
       const newUser = { nombre, apellido, email, password, rol, photoUrl };
       
-      // Llamada al backend
-      const res = await api.post("/users", newUser);
+      console.log("Datos a enviar al backend:", newUser); // Verificación
+
+      const res = await api.post("/users/register", newUser);
       
       if (res.status === 201 || res.status === 200) {
         Alert.alert("Éxito", "Usuario registrado correctamente");
@@ -66,7 +67,11 @@ export default function Register({ navigation }: any) {
       <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
 
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
-      <Picker selectedValue={rol} onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
+      <Picker
+        selectedValue={rol}
+        onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")}
+        style={styles.picker}
+      >
         <Picker.Item label="Chofer" value="Chofer" />
         <Picker.Item label="Admin" value="Admin" />
       </Picker>

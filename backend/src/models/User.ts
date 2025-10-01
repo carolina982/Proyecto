@@ -14,7 +14,7 @@ const userSchema  = new Schema <IUser>({
     apellido:{type:String},
     email:{type:String , required:true},
     password:{type:String, required:true},
-    rol:{type:String,enum:["Admin" , "Chofer"], required:true},
+    rol:{type:String, enum:["Admin","Chofer"], required:true},
     photoUrl:{type:String, default:null},
 },
  {timestamps:true}
