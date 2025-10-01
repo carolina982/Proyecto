@@ -151,3 +151,5 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
 
 export const useStore = () => useContext(StoreContext);
+
+export { User };

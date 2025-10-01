@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Alert, Image, Picker, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { api } from "../api/api"; // <-- Asegúrate de tener api.ts
 import { useStore } from "../context/Store";
 
 export default function Register({ navigation }: any) {
@@ -9,7 +10,7 @@ export default function Register({ navigation }: any) {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer"); // Campo rol
+  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer"); 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const pickImageFromGallery = async () => {
@@ -31,24 +32,28 @@ export default function Register({ navigation }: any) {
     if (!result.canceled) setPhotoUrl(result.assets[0].uri);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email || !nombre || !apellido || !password) {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
     }
 
-    const newUser = {
-      id: Date.now().toString(),
-      nombre,
-      apellido,
-      email,
-      password,
-      rol, //  rol seleccionado por el usuario
-      photoUrl,
-    };
-
-    
-    navigation.navigate("Dashboard");
+    try {
+      const newUser = { nombre, apellido, email, password, rol, photoUrl };
+      
+      // Llamada al backend
+      const res = await api.post("/users", newUser);
+      
+      if (res.status === 201 || res.status === 200) {
+        Alert.alert("Éxito", "Usuario registrado correctamente");
+        navigation.navigate("Dashboard");
+      } else {
+        Alert.alert("Error", "No se pudo registrar el usuario");
+      }
+    } catch (error: any) {
+      console.error("Error registrando usuario:", error.response || error);
+      Alert.alert("Error", error.response?.data?.message || "Algo salió mal al registrar el usuario");
+    }
   };
 
   return (
@@ -60,7 +65,6 @@ export default function Register({ navigation }: any) {
       <TextInput placeholder="Correo" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
 
-      {/* Selector de rol */}
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
       <Picker selectedValue={rol} onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")} style={styles.picker}>
         <Picker.Item label="Chofer" value="Chofer" />
@@ -101,5 +105,5 @@ const styles = StyleSheet.create({
   button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15, alignItems: "center" },
-  registerText: { color: "#007bff", fontSize: 16 },
+  registerText: { color: "#007bff", fontSize: 16 },
 });

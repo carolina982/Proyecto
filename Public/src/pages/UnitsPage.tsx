@@ -131,6 +131,7 @@ export default function UnitsPage() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Unidades Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>
         Nueva Unidad
       </Button>
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  title: { fontWeight: "bold", fontSize: 18, color: "#007bff" },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
   estadoBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,

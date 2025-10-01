@@ -115,6 +115,7 @@ export default function ViaticsPage() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Viaticos Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bbff" onPress={() => openModal()}>
         Nuevo Viático
       </Button>
@@ -167,7 +168,7 @@ export default function ViaticsPage() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10 },
-  title: { fontWeight: "bold", fontSize: 16, color: "#007bff" },
+ title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
   modalContent: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
   input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
