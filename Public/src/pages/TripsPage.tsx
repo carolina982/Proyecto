@@ -150,39 +150,80 @@ export default function TripsPage() {
       <Text style={styles.title}>Viajes Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>
       <FlatList data={trips} keyExtractor={(item) => item.id} renderItem={renderItem} style={{ marginTop: 15 }} />
+<Modal visible={modalVisible} animationType="slide">
+  <ScrollView style={styles.modalContent}>
+    <Text style={styles.modalTitle}>{editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
 
-      <Modal visible={modalVisible} animationType="slide">
-        <ScrollView style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
+    <Text style={styles.label}>Nombre:</Text>
+    <TextInput
+      value={nombre}
+      onChangeText={setNombre}
+      mode="flat"
+      underlineColor="#8bc1e6ff"
+      activeUnderlineColor="#8bc1e6ff"
+      dense
+      style={styles.input}
+    />
 
-          <Text style={styles.label}>Nombre:</Text>
-          <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input} />
+    <Text style={styles.label}>Unidad:</Text>
+    <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
+      <Picker.Item label="Selecciona una unidad" value="" />
+      {units.map(u => (
+        <Picker.Item key={u.id} label={u.nombre} value={u.id} />
+      ))}
+    </Picker>
 
-          <Text style={styles.label}>Unidad:</Text>
-          <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
-            <Picker.Item label="Selecciona una unidad" value="" />
-            {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
-          </Picker>
+    <Text style={styles.label}>Conductor:</Text>
+    <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
+      <Picker.Item label="Selecciona un conductor" value="" />
+      {users.map(u => (
+        <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />
+      ))}
+    </Picker>
 
-          <Text style={styles.label}>Conductor:</Text>
-          <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
-            <Picker.Item label="Selecciona un conductor" value="" />
-            {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
-          </Picker>
+    <Text style={styles.label}>Destino:</Text>
+    <TextInput
+      value={destino}
+      onChangeText={setDestino}
+      mode="flat"
+      underlineColor="#8bc1e6ff"
+      activeUnderlineColor="#8bc1e6ff"
+      dense
+      style={styles.input}
+    />
 
-          <Text style={styles.label}>Destino:</Text>
-          <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input} />
-          <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
-          <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input} />
-          <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff"  activeUnderlineColor="#8bc1e6ff"dense  style={styles.input} />
+    <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
+    <TextInput
+      value={fechaSalida}
+      onChangeText={setFechaSalida}
+      mode="flat"
+      underlineColor="#8bc1e6ff"
+      activeUnderlineColor="#8bc1e6ff"
+      dense
+      style={styles.input}
+    />
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-            <Button mode="contained" buttonColor="#167abdff"onPress={() => setModalVisible(false)}>Cancelar</Button>
-            <Button mode="contained"buttonColor="#167abdff" onPress={saveTrip}>Guardar</Button>
-          </View>
-        </ScrollView>
-      </Modal>
+    <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
+    <TextInput
+      value={fechaLlegada}
+      onChangeText={setFechaLlegada}
+      mode="flat"
+      underlineColor="#8bc1e6ff"
+      activeUnderlineColor="#8bc1e6ff"
+      dense
+      style={styles.input}
+    />
+
+    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+      <Button mode="contained" buttonColor="#167abdff" onPress={() => setModalVisible(false)}>
+        Cancelar
+      </Button>
+      <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>
+        Guardar
+      </Button>
+    </View>
+  </ScrollView>
+</Modal>
     </View>
   );
 }

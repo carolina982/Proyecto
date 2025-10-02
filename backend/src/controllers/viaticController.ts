@@ -4,7 +4,7 @@ import Viatic, { IViatic } from "../models/Viatic";
 // Obtener todos los viáticos
 export const getViatic = async (req: Request, res: Response) => {
   try {
-    const viatics: IViatic[] = await Viatic.find(); // sin populate
+    const viatics: IViatic[] = await Viatic.find(); 
     if (!viatics || viatics.length === 0) {
       return res.status(404).json({ message: "No hay viáticos registrados" });
     }
