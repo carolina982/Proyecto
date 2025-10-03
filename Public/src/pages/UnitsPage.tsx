@@ -208,7 +208,7 @@ export default function UnitsPage() {
           />
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-            <Button mode="contained" buttonColor="#0d75bb" onPress={() => setModalVisible(false)}>
+            <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
               Cancelar
             </Button>
             <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>
@@ -244,5 +244,5 @@ const styles = StyleSheet.create({
   estadoText: { color: "#fff", fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
-  input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
+  input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor:""},
 });
