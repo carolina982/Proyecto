@@ -173,7 +173,7 @@ export default function ViaticosPage() {
           <TextInput value={monto} onChangeText={setMonto} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-            <Button mode="contained" buttonColor="#167abdff" onPress={() => setModalVisible(false)}>Cancelar</Button>
+            <Button mode="contained"  onPress={() => setModalVisible(false)}>Cancelar</Button>
             <Button mode="contained" buttonColor="#167abdff" onPress={saveViatico}>Guardar</Button>
           </View>
         </ScrollView>
