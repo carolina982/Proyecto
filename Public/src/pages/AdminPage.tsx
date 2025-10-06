@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Button,
   FlatList,
   Modal,
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button } from "react-native-paper";
 import { api } from "../api/api";
 import { User } from "../context/Store";
 
@@ -64,7 +64,11 @@ export default function AdminPage() {
     (Object.keys(editingUser) as (keyof User)[]).forEach((key) => {
       const newValue = editingUser[key];
       const oldValue = initialUserSnapshot[key];
+
+      // Ignorar valores iguales o nulos
       if (newValue === oldValue || newValue == null) return;
+
+      // Rol solo acepta "Admin" | "Chofer"
       if (key === "rol") {
         if (newValue === "Admin" || newValue === "Chofer") {
           changed[key] = newValue;
@@ -151,7 +155,7 @@ export default function AdminPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
-      <Button mode="contained"buttonColor="#0d75bb" textColor="#fff"style={{ borderRadius: 25, marginTop: 10 }} onPress={() => handleEdit()}>Agregar Usuario</Button>
+      <Button title="Agregar Usuario" onPress={() => handleEdit()} />
       <FlatList
         data={users}
         keyExtractor={(item) => item._id || item.id || Math.random().toString()}
@@ -199,8 +203,8 @@ export default function AdminPage() {
             />
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-              <Button mode="contained" buttonColor="#888"  textColor="#fff" style={{ borderRadius: 25, marginTop: 10 }} onPress={() => {  setModalVisible(false); setEditingUser(null); setIsAdding(false); }}>Cancelar</Button>
-              <Button mode="contained" buttonColor="#007bff" textColor="#fff" style={{ borderRadius: 25, marginTop: 10 }} onPress={saveChanges}>Guardar</Button>
+              <Button title="Cancelar" onPress={() => { setModalVisible(false); setEditingUser(null); setIsAdding(false); }} />
+              <Button title="Guardar" onPress={saveChanges} />
             </View>
           </View>
         </View>
@@ -225,5 +229,4 @@ const styles = StyleSheet.create({
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10 },
-
 });

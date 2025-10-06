@@ -215,7 +215,7 @@ export default function TripsPage() {
     />
 
     <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-      <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
+      <Button mode="contained" buttonColor="#167abdff" onPress={() => setModalVisible(false)}>
         Cancelar
       </Button>
       <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>
