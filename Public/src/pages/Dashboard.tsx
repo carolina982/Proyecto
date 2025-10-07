@@ -34,7 +34,6 @@ export default function Dashboard() {
           </Text>
           <Text style={styles.role}>Rol: {currentUser.rol}</Text>
 
-          {/* 🔹 BOTÓN DE INICIO (arreglado) */}
           <TouchableOpacity style={[styles.sideTab, tab === "Inicio" && styles.sideTabActive]} onPress={() => setTab("Inicio")} >
            <Text style={styles.tabText}>Inicio</Text>
           </TouchableOpacity>

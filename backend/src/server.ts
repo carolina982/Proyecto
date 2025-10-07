@@ -23,7 +23,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/viatics", viaticRoutes);
-app.use("api/announcements",announcement)
+app.use("/api/announcements", announcement);
 // Servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

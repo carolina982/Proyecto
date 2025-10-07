@@ -106,7 +106,28 @@ export default function TripsPage() {
       Alert.alert("Error", "Completa todos los datos");
       return;
     }
-
+    const deleteTrip =async (id:string)=>{
+      try {
+        await deleteTrip(id);
+        Alert.alert("Exito", "El viaje eliminado ")
+      }catch(error){
+        console.log(error);
+        Alert.alert("Error " , "Nos pudo eliminar viaje  ")
+      }
+      Alert.alert("Confirmar" ,"¿Deseas eliminar este viaje?",[
+        {text:"Cancelar" , style:"cancel"},
+        {text:"Eliminar", style:"destructive", onPress:async()=>{
+          try{
+            await api.delete(`/trips/${id}`);
+            await loadTrips();
+          }catch (error){
+            console.error("Error eliminando viaje", error);
+            Alert.alert("Error" , "No se pudo eliminar el viaje")
+          }
+        },
+      },
+      ]);
+    };
     const tripData = {
       nombre,
       unidadId,
@@ -140,7 +161,7 @@ export default function TripsPage() {
       <Text style={styles.textSmall}>Estado: {item.estado}</Text>
       <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
         <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
-        <Button mode="contained" buttonColor="red" onPress={() => saveTrip()}>Eliminar</Button>
+        <Button mode="contained" buttonColor="red" onPress={() =>deleteTrip(item.id) }>Eliminar</Button>
       </View>
     </View>
   );
@@ -221,6 +242,7 @@ export default function TripsPage() {
       <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>
         Guardar
       </Button>
+      
     </View>
   </ScrollView>
 </Modal>

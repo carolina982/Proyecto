@@ -8,4 +8,3 @@ router.put("/:id",updateAnnouncement);
 router.delete("/:id" , deleteAnnouncement);
 
 export default router;
-

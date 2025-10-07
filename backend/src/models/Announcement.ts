@@ -12,4 +12,4 @@ const AnnouncementSchema:Schema =new Schema ({
     fecha:{type:Date , default :Date.now},
 });
 
-export default mongoose.model<IAnnouncement>("Announcemet" ,AnnouncementSchema);
+export default mongoose.model<IAnnouncement>("Announcement", AnnouncementSchema);
