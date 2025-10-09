@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import Announcement from "../models/Announcement";
-
-//obtener los anuncios 
 export const getAnnouncements =async (req:Request , res:Response) =>{
     try {
         const announcements=await Announcement.find ().sort ({fecha:-1});
@@ -10,8 +8,6 @@ export const getAnnouncements =async (req:Request , res:Response) =>{
         res.status(500).json({error:"Error  cargando anuncios"});
     }
 };
-
-//creando anuncio (solo admin)
 export const createAnnouncements =async (req:Request , res:Response) =>{
     try {
         const {titulo , contenido } =req.body;
@@ -22,8 +18,6 @@ export const createAnnouncements =async (req:Request , res:Response) =>{
         res.status(400).json({error:"Error creando anuncio "});
     }
 };
-
-//actualizar  un anuncio
 
 export const updateAnnouncement =async (req:Request, res:Response) =>{
     try {
@@ -36,8 +30,6 @@ export const updateAnnouncement =async (req:Request, res:Response) =>{
         res.status(400).json({error:"Error actualizando anuncio"});
     }
 };
-
-//eliminar un anuncio 
 export  const deleteAnnouncement =async (req:Request , res:Response) =>{
     try {
         await Announcement.findByIdAndDelete(req.params.id);

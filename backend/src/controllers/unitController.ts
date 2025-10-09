@@ -1,7 +1,6 @@
 import { error } from "console";
 import { Request, Response } from "express";
 import Unit, { IUnit } from "../models/Unit";
-
 export const createUnit =async (req:Request , res:Response)=>{
     const unitData :IUnit =req.body as IUnit;
     try{
@@ -11,7 +10,6 @@ export const createUnit =async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error Creando unidad"});
     }
 };
-
 export const getUnits =async (req:Request , res:Response) =>{
     try{
         const units:IUnit[] =await Unit.find();
@@ -42,8 +40,6 @@ export const updateUnit = async (req:Request , res:Response) =>{
         res.status(500).json({message:"Error al actualizar unidad" , error });
     }
 };
-
-
 export const  deleteUnit = async (req:Request , res:Response) =>{
     try{
         const unit =await Unit.findByIdAndDelete (req.params.id);
