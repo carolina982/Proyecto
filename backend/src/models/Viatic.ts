@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IViatic extends Document {
-  tripId: string;      
+  tripId:mongoose.Types.ObjectId;      
   concepto: string;
   descripcion: string;
   monto: number;
@@ -9,7 +9,7 @@ export interface IViatic extends Document {
 }
 
 const viaticSchema = new Schema<IViatic>({
-  tripId: { type: String, required: true },     
+  tripId: {type:mongoose.Schema.Types.ObjectId, ref:"Trip", required:true},     
   concepto: { type: String, required: true },
   descripcion: { type: String, required: true },
   monto: { type: Number, required: true },

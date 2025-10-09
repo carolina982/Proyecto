@@ -123,14 +123,14 @@ export default function ViaticosPage() {
       if (ticket) {
         const filename = ticket.split("/").pop()!;
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? ` image/${match[1]} ` :  `"image" `;
+        const type = match ?`image/${match[1]}`:`"image"`;
         formData.append("ticket", { uri: ticket, name: filename, type } as any);
       } else if (ticketRemoved) {
         formData.append("ticket", ""); // Indica eliminar ticket
       }
 
       if (editingViatico) {
-        await api.put( `/viatics/${editingViatico.id} `, formData, {
+        await api.put(`/viatics/${editingViatico.id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
@@ -192,7 +192,7 @@ export default function ViaticosPage() {
         <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>
           Editar
         </Button>
-        <Button mode="contained" buttonColor="#d9534f" onPress={() => deleteViatico(item.id)}>
+        <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>
           Eliminar
         </Button>
       </View>

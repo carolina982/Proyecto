@@ -1,9 +1,5 @@
 import { Request, Response } from "express";
 import User, { IUser } from "../models/User";
-
-
-
-//lista  todos los usuarios
 export const getUser= async (req:Request , res:Response)=>{
     try{
         const users:IUser []= await User.find ();
@@ -22,8 +18,6 @@ export const getUserById =async (req:Request , res:Response) =>{
         res.status (500).json ({message:"Error  en el servidor "});
     }
 };
-
-
 export const createUser = async (req: Request, res: Response) => {
  
   try {
@@ -34,8 +28,6 @@ export const createUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error creando usuario", error: error.message });
 }
 };
-//registro de usuarios 
-
 export const registerUser =async (req:Request , res:Response) =>{
     const{nombre , email,password,rol}:IUser =req .body;
     try{
@@ -49,9 +41,6 @@ export const registerUser =async (req:Request , res:Response) =>{
         res.status(500).json({message:"Error en el servidor"});
     }
 };
-
-//login
-
 export const loginUser =async (req:Request , res:Response) =>{
     const {email, password}:{email:string; password:string} =req.body;
     try{
@@ -62,10 +51,7 @@ export const loginUser =async (req:Request , res:Response) =>{
         console.error (error);
         res.status(500).json ({message:"Error en el servidor"});
     }
-}
-
-// Actualizar usuario 
-
+};
 export const updateUser =async (req:Request , res:Response) =>{
 try{
     const user=await User.findByIdAndUpdate(req.params.id, req.body, {new:true});
@@ -75,9 +61,6 @@ try{
     res.status(500).json({message:"Error actualizando usuario"});
 }
 };
-
-//  Eliminar 
-
 export const deleteUser =async (req:Request , res:Response) =>{
     try{
         await User.findByIdAndDelete(req.params.id);

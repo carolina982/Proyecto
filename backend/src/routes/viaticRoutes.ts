@@ -12,14 +12,13 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
-
-const router = Router();
-router.post("/" ,upload.single("ticket"),createViatic);
+const router =Router();
+const upload=multer({dest:"uploads/"});
 router.get("/", getViatic);
-router.get("/:id" , getViaticById);
-router.get("/trip/:tipId",getViaticByTrip);
-router.put("/:id" ,updateViatic);
-router.delete("/:id", deleteViatic);
+router.get("/trip/:trip", getViaticByTrip);
+router.get("/:id",getViaticById);
+router.post("/",upload.single("ticket"),createViatic);
+router.put("/:", upload.single("ticket"),updateViatic);
+router.delete("/:id",deleteViatic);
 
 export default router;

@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -7,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Button } from "react-native-paper";
 import { api } from "../api/api";
@@ -39,48 +40,25 @@ export default function AdminPage() {
       setInitialUserSnapshot({ ...user });
       setIsAdding(false);
     } else {
-      const newUser: User = {
+      const newUser: Partial<User> = {
         nombre: "",
         apellido: "",
         email: "",
         password: "",
         rol: "Chofer",
         photoUrl: null,
-        id: "",
-        _id: ""
       };
-      setEditingUser(newUser);
+      setEditingUser(newUser as User);
       setInitialUserSnapshot({ ...newUser });
       setIsAdding(true);
     }
     setModalVisible(true);
   };
 
-  // Función corregida para partial update
-  const getChangedFields = (): Partial<User> => {
-    if (!editingUser) return {};
-    const changed: Partial<User> = {};
-
-    (Object.keys(editingUser) as (keyof User)[]).forEach((key) => {
-      const newValue = editingUser[key];
-      const oldValue = initialUserSnapshot[key];
-      if (newValue === oldValue || newValue == null) return;
-      if (key === "rol") {
-        if (newValue === "Admin" || newValue === "Chofer") {
-          changed[key] = newValue;
-        }
-      } else {
-        changed[key] = newValue;
-      }
-    });
-
-    return changed;
-  };
-
   const saveChanges = async () => {
     if (!editingUser) return;
 
-    const { nombre, apellido, email, password, rol, photoUrl, id, _id } = editingUser;
+    const { nombre, apellido, email, password, rol, photoUrl, _id } = editingUser;
 
     if (!nombre || !apellido || !email || (!password && isAdding) || !rol) {
       Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
@@ -92,14 +70,21 @@ export default function AdminPage() {
         await api.post("/users", { nombre, apellido, email, password, rol, photoUrl });
         Alert.alert("Éxito", "Usuario creado correctamente");
       } else {
-        const changedFields = getChangedFields();
+        const changedFields: Partial<User> = {};
+        if (nombre !== initialUserSnapshot.nombre) changedFields.nombre = nombre;
+        if (apellido !== initialUserSnapshot.apellido) changedFields.apellido = apellido;
+        if (email !== initialUserSnapshot.email) changedFields.email = email;
+        if (rol !== initialUserSnapshot.rol) changedFields.rol = rol;
+        if (password) changedFields.password = password;
+
         if (Object.keys(changedFields).length === 0) {
           Alert.alert("Info", "No se realizaron cambios");
         } else {
-          await api.patch( `/users/${_id || id} `, changedFields);
+          await api.patch(`/users/${_id}`, changedFields);
           Alert.alert("Éxito", "Usuario actualizado correctamente");
         }
       }
+
       await loadUsers();
       setModalVisible(false);
       setEditingUser(null);
@@ -111,6 +96,8 @@ export default function AdminPage() {
   };
 
   const handleDelete = (userId: string) => {
+    if (!userId) return;
+
     Alert.alert("Confirmar", "¿Desea eliminar este usuario?", [
       { text: "Cancelar", style: "cancel" },
       {
@@ -118,7 +105,7 @@ export default function AdminPage() {
         style: "destructive",
         onPress: async () => {
           try {
-            await api.delete( `users/${userId} `);
+            await api.delete(`/users/${userId}`);
             Alert.alert("Éxito", "Usuario eliminado correctamente");
             await loadUsers();
           } catch (error) {
@@ -141,7 +128,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id || item.id || "")}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id || "")}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -151,10 +138,19 @@ export default function AdminPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
-      <Button mode="contained"buttonColor="#0d75bb" textColor="#fff"style={{ borderRadius: 25, marginTop: 10 }} onPress={() => handleEdit()}>Agregar Usuario</Button>
+      <Button
+        mode="contained"
+        buttonColor="#0d75bb"
+        textColor="#fff"
+        style={{ borderRadius: 25, marginTop: 10 }}
+        onPress={() => handleEdit()}
+      >
+        Agregar Usuario
+      </Button>
+
       <FlatList
         data={users}
-        keyExtractor={(item) => item._id || item.id || Math.random().toString()}
+        keyExtractor={(item) => item._id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
       />
@@ -191,16 +187,30 @@ export default function AdminPage() {
                 onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
               />
             )}
-            <TextInput
-              placeholder="Rol (Admin / Chofer)"
-              style={styles.input}
-              value={editingUser?.rol}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, rol: text as "Admin" | "Chofer" })}
-            />
-
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={editingUser?.rol}
+                onValueChange={(itemValue) =>
+                  editingUser && setEditingUser({ ...editingUser, rol: itemValue as "Admin" | "Chofer" })
+                }
+              >
+                <Picker.Item label="Admin" value="Admin" />
+                <Picker.Item label="Chofer" value="Chofer" />
+              </Picker>
+            </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-              <Button mode="contained" buttonColor="#888"  textColor="#fff" style={{ borderRadius: 25, marginTop: 10 }} onPress={() => {  setModalVisible(false); setEditingUser(null); setIsAdding(false); }}>Cancelar</Button>
-              <Button mode="contained" buttonColor="#007bff" textColor="#fff" style={{ borderRadius: 25, marginTop: 10 }} onPress={saveChanges}>Guardar</Button>
+              <Button
+                mode="contained"
+                buttonColor="#888"
+                textColor="#fff"
+                style={{ borderRadius: 25, marginTop: 10 }}
+                onPress={() => {setModalVisible(false);setEditingUser(null);setIsAdding(false);}}>Cancelar</Button>
+              <Button
+                mode="contained"
+                buttonColor="#007bff"
+                textColor="#fff"
+                style={{ borderRadius: 25, marginTop: 10 }}
+                onPress={saveChanges}>Guardar</Button>
             </View>
           </View>
         </View>
@@ -224,6 +234,6 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10 },
-
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
+  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
 });

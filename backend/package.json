@@ -9,9 +9,14 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/morgan": "^1.9.10",
+    "@types/serve-static": "^1.15.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.21.2",
+    "express-validator": "^7.2.1",
     "mongoose": "^7.8.7",
     "multer": "^2.0.2"
   },

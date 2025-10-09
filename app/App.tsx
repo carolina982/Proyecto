@@ -1,5 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import "expo-router/entry";
 import React from "react";
 import { StoreProvider, useStore } from "../Public/src/context/Store";
 
