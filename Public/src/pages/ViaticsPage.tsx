@@ -4,23 +4,16 @@ import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Image, Modal, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
-
 interface Trip {
   id: string;
   nombre: string;
 }
-
 interface Viatico {
-  id: string;
-  nombre: string;
-  tripId: string;
-  monto: number;
-  descripcion: string;
-  concepto: string;
-  estado: string;
-  ticketUrl?: string;
+  id: string; nombre: string;
+  tripId: string; monto: number;
+  descripcion: string; concepto: string;
+  estado: string;ticketUrl?: string;
 }
-
 export default function ViaticosPage() {
   const [viaticos, setViaticos] = useState<Viatico[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -33,17 +26,14 @@ export default function ViaticosPage() {
   const [descripcion, setDescripcion] = useState("");
   const [concepto, setConcepto] = useState("");
   const [estado, setEstado] = useState("pendiente");
-
   const [ticket, setTicket] = useState<string | null>(null);
   const [ticketRemoved, setTicketRemoved] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     loadViaticos();
     loadTrips();
   }, []);
-
   const loadViaticos = async () => {
     try {
       const res = await api.get("/viatics");
@@ -53,7 +43,6 @@ export default function ViaticosPage() {
       Alert.alert("Error", "No se pudieron cargar los viáticos");
     }
   };
-
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
@@ -65,29 +54,20 @@ export default function ViaticosPage() {
 
   const openModal = (viatico?: Viatico) => {
     if (viatico) {
-      setEditingViatico(viatico);
-      setNombre(viatico.nombre);
-      setTripId(viatico.tripId);
-      setMonto(String(viatico.monto));
-      setDescripcion(viatico.descripcion);
-      setConcepto(viatico.concepto);
-      setEstado(viatico.estado);
-      setTicket(viatico.ticketUrl || null);
+      setEditingViatico(viatico);setNombre(viatico.nombre);
+      setTripId(viatico.tripId);setMonto(String(viatico.monto));
+      setDescripcion(viatico.descripcion);setConcepto(viatico.concepto);
+      setEstado(viatico.estado);setTicket(viatico.ticketUrl || null);
     } else {
-      setEditingViatico(null);
-      setNombre("");
-      setTripId("");
-      setMonto("");
-      setDescripcion("");
-      setConcepto("");
-      setEstado("pendiente");
-      setTicket(null);
+      setEditingViatico(null);setNombre("");
+      setTripId("");setMonto("");
+      setDescripcion("");setConcepto("");
+      setEstado("pendiente");setTicket(null);
     }
     setTicketRemoved(false);
     setErrors({});
     setModalVisible(true);
   };
-
   const pickTicket = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: ["image/*", "application/pdf"],
@@ -97,7 +77,6 @@ export default function ViaticosPage() {
     setTicket(file.uri);
     setTicketRemoved(false);
   };
-
   const saveViatico = async () => {
     const newErrors: { [key: string]: string } = {};
     if (!nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
@@ -106,10 +85,8 @@ export default function ViaticosPage() {
     if (!descripcion.trim()) newErrors.descripcion = "La descripción es obligatoria";
     if (!monto.trim() || isNaN(Number(monto)) || Number(monto) <= 0)
       newErrors.monto = "Monto inválido";
-
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-
     setLoading(true);
     try {
       const formData = new FormData();
@@ -119,16 +96,14 @@ export default function ViaticosPage() {
       formData.append("descripcion", descripcion.trim());
       formData.append("concepto", concepto.trim());
       formData.append("estado", estado);
-
       if (ticket) {
         const filename = ticket.split("/").pop()!;
         const match = /\.(\w+)$/.exec(filename);
         const type = match ?`image/${match[1]}`:`"image"`;
         formData.append("ticket", { uri: ticket, name: filename, type } as any);
       } else if (ticketRemoved) {
-        formData.append("ticket", ""); // Indica eliminar ticket
+        formData.append("ticket", ""); 
       }
-
       if (editingViatico) {
         await api.put(`/viatics/${editingViatico.id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -138,7 +113,6 @@ export default function ViaticosPage() {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
-
       await loadViaticos();
       setModalVisible(false);
     } catch (error) {
@@ -148,7 +122,6 @@ export default function ViaticosPage() {
       setLoading(false);
     }
   };
-
   const deleteViatico = async (id: string) => {
     Alert.alert("Confirmar", "¿Deseas eliminar este viático?", [
       { text: "Cancelar", style: "cancel" },
@@ -176,7 +149,6 @@ export default function ViaticosPage() {
       <Text>Descripción: {item.descripcion}</Text>
       <Text>Monto: ${item.monto}</Text>
       <Text>Estado: {item.estado}</Text>
-
       {item.ticketUrl ? (
         <View style={{ marginTop: 8 }}>
           <Text style={{ fontWeight: "bold" }}>Ticket:</Text>
@@ -187,7 +159,6 @@ export default function ViaticosPage() {
           />
         </View>
       ) : null}
-
       <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
         <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>
           Editar
@@ -198,29 +169,23 @@ export default function ViaticosPage() {
       </View>
     </View>
   );
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
-
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>
         Nuevo Viático
       </Button>
-
       <FlatList
         data={viaticos}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />
-
-      {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>
             {editingViatico ? "Editar Viático" : "Nuevo Viático"}
           </Text>
-
           <Text style={styles.label}>Nombre:</Text>
           <TextInput
             value={nombre}
@@ -231,9 +196,7 @@ export default function ViaticosPage() {
             activeUnderlineColor="#0d75bb"
             style={styles.input}
           />
-
           <Text style={styles.label} >Viaje: </Text>
-         
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
             <Picker.Item label="Selecciona un viaje" value="" />
             {trips.map((t) => (
@@ -241,7 +204,6 @@ export default function ViaticosPage() {
             ))}
           </Picker>
           {errors.tripId ? <Text style={styles.error}>{errors.tripId}</Text> : null}
-
           <Text style={styles.label}>Concepto:</Text>
           <TextInput
             value={concepto}
@@ -252,7 +214,6 @@ export default function ViaticosPage() {
             underlineColor="#0d75bb"
             activeUnderlineColor="#0d75bb"
           />
-
           <Text style={styles.label}>Descripción:</Text>
           <TextInput
             value={descripcion}
@@ -263,7 +224,6 @@ export default function ViaticosPage() {
             underlineColor="#0d75bb"
             activeUnderlineColor="#0d75bb"
           />
-
           <Text style={styles.label}>Monto:</Text>
           <TextInput
             value={monto}
@@ -275,10 +235,8 @@ export default function ViaticosPage() {
             underlineColor="#0d75bb"
             activeUnderlineColor="#0d75bb"
           />
-
           <Text style={styles.label}>Factura:</Text>
-          {ticket ? (
-            <>
+          {ticket ? (<>
               <Image source={{ uri: ticket }} style={styles.ticketPreview} />
               <View style={styles.ticketButtons}>
                 <Button mode="contained" buttonColor="#17d1f1ff" onPress={pickTicket}>
@@ -290,18 +248,12 @@ export default function ViaticosPage() {
                   onPress={() => {
                     setTicket(null);
                     setTicketRemoved(true);
-                  }}
-                >
-                  Eliminar
-                </Button>
-              </View>
-            </>
+                  }} >Eliminar</Button></View></>
           ) : (
             <Button mode="contained" buttonColor="#4caf50" onPress={pickTicket}>
               Subir Factura
             </Button>
           )}
-
           {loading ? (
             <ActivityIndicator style={{ marginTop: 20 }} animating={true} />
           ) : (
@@ -319,7 +271,6 @@ export default function ViaticosPage() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff", padding: 12, marginBottom: 10, borderRadius: 8 },

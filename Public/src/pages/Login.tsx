@@ -1,14 +1,6 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-} from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, } from "react-native";
 import { useStore } from "../context/Store";
 
 export default function Login({ navigation }: any) {
@@ -22,17 +14,13 @@ export default function Login({ navigation }: any) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
-
     setLoading(true);
-
     try {
-      // Llamada al backend
       const response = await fetch("http://192.168.1.81:3000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       if (!response.ok) {
         Alert.alert("Error", "Correo o contraseña incorrectos");
         setLoading(false);
@@ -99,7 +87,6 @@ export default function Login({ navigation }: any) {
     </KeyboardAvoidingView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

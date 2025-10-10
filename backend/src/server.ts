@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import connectDB from "./config/db";
 
+
 import announcement from "./routes/announcements";
 import authRoutes from "./routes/authRoutes";
 import tripRoutes from "./routes/tripRoutes";

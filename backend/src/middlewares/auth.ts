@@ -1,20 +1,22 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import User, { IUser } from "../models/User";
+import User from "../models/User";
 
-export const protect= async (req:Request,res:Response,next:NextFunction)=>{
-    let token;
-    if (req.headers.authorization?.startsWith("Bearer")){
-        token= req.headers.authorization.split(" ")[1];
-    }
-    if (!token) {
-        return res.status(401).json({message:"No token"});
-    }
+const JWT_SECRET = process.env.JWT_SECRET ||"Clave temporal";
+interface JwtPayload {
+    id :string;
+}
+
+export const verifyToken=async(req:Request , res:Response , next:NextFunction)=>{
     try {
-        const decoded :any=jwt.verify(token ,process.env.JWT_SECRET ||"secret");
-        req.user=await User.findById(decoded.id).select("-password") as IUser;
+        const token =req.header("Authorization")?.replace ("Bearer" , "").trim();
+        if(!token) return res.status(401).json({message:"Token no proporcionado"});
+        const decoded =jwt.verify(token,JWT_SECRET) as JwtPayload;
+        const user=await User.findById(decoded.id);
+        if (!user) return res.status(401).json({message:"Usuario no econtrado "});
+        req.user =user;
         next();
     }catch (error){
-        return res.status(401).json({message:"Token invalido"});
+        res.status(401).json({message:"Token invalido o expirado "});
     }
 };

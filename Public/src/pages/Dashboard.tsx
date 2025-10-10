@@ -2,30 +2,22 @@ import React, { useState } from "react";
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import { Appbar, Menu } from "react-native-paper";
 import { useStore } from "../context/Store";
-
-
 import AdminPage from "./AdminPage";
 import HomePage from "./HomePage";
 import PerfilePage from "./PerfilePage";
 import TripsPage from "./TripsPage";
 import UnitsPage from "./UnitsPage";
 import ViaticsPage from "./ViaticsPage";
-
 export default function Dashboard() {
   const { currentUser, setCurrentUser } = useStore();
-  const [tab, setTab] = useState< "Inicio" | "Perfil" | "Viajes" | "Viáticos" | "Unidades" | "Usuarios">("Perfil");
+  const [tab, setTab] = useState< "Inicio" | "Perfil" | "Viajes" | "Viáticos" | "Unidades" | "Usuarios">("Inicio");
   const [menuVisible, setMenuVisible] = useState(false);
-
   if (!currentUser) return <Text>Debes iniciar sesión</Text>;
-
   const handleLogout = () => setCurrentUser(null);
-
   const screenWidth = Dimensions.get("window").width;
   const isLargeScreen = screenWidth > 600;
-
   return (
     <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column" }}>
-      {/* ===== MENÚ LATERAL (pantallas grandes) ===== */}
       {isLargeScreen ? ( <View style={styles.sideMenu}>
           {currentUser.photoUrl && (
             <Image source={{ uri: currentUser.photoUrl }} style={styles.avatar} />)}
@@ -33,8 +25,6 @@ export default function Dashboard() {
           {currentUser.nombre} {currentUser.apellido}
           </Text>
           <Text style={styles.role}>Rol: {currentUser.rol}</Text>
-
-          {/* 🔹 BOTÓN DE INICIO (arreglado) */}
           <TouchableOpacity style={[styles.sideTab, tab === "Inicio" && styles.sideTabActive]} onPress={() => setTab("Inicio")} >
            <Text style={styles.tabText}>Inicio</Text>
           </TouchableOpacity>
@@ -47,7 +37,6 @@ export default function Dashboard() {
           <TouchableOpacity style={[styles.sideTab, tab === "Viáticos" && styles.sideTabActive]} onPress={() => setTab("Viáticos")}>
             <Text style={styles.tabText}>Viáticos</Text>
           </TouchableOpacity>
-
           {currentUser.rol?.toLowerCase() === "admin" && (<>
               <TouchableOpacity style={[styles.sideTab, tab === "Unidades" && styles.sideTabActive]} onPress={() => setTab("Unidades")}>
                 <Text style={styles.tabText}>Unidades</Text>
@@ -57,13 +46,11 @@ export default function Dashboard() {
               </TouchableOpacity>
             </>
           )}
-
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Cerrar Sesión</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        /* ===== APPBAR Y MENÚ (pantallas pequeñas) ===== */
         <Appbar.Header>
           <Appbar.Content title="Dashboard" />
           <Menu visible={menuVisible}onDismiss={() => setMenuVisible(false)}anchor={
@@ -85,8 +72,6 @@ export default function Dashboard() {
           </Menu>
         </Appbar.Header>
       )}
-
-      {/* ===== CONTENIDO DE PESTAÑAS ===== */}
       <ScrollView style={styles.contentContainer}>
         {tab === "Inicio" && <HomePage currentUser={currentUser} />}
         {tab === "Perfil" && <PerfilePage currentUser={currentUser} />}

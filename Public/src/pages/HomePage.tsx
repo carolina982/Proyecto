@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 
@@ -14,6 +15,7 @@ interface Announcement {
   titulo: string;
   contenido: string;
   fecha: string;
+  image?: string;
 }
 
 interface HomePageProps {
@@ -26,6 +28,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const [titulo, setTitulo] = useState("");
   const [contenido, setContenido] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     loadAnnouncements();
@@ -41,6 +44,14 @@ export default function HomePage({ currentUser }: HomePageProps) {
     }
   };
 
+  const handleSelectImage = async () => {
+    const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
+    if (!result.didCancel && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      if (uri) setImageUri(uri);
+    }
+  };
+
   const handleSaveAnnouncement = async () => {
     if (!titulo || !contenido) {
       Alert.alert("Error", "Completa todos los campos");
@@ -48,19 +59,29 @@ export default function HomePage({ currentUser }: HomePageProps) {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("titulo", titulo);
+      formData.append("contenido", contenido);
+      if (imageUri) {
+        formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
+      }
+
       if (editingId) {
-        // Editando anuncio existente
-        await api.put(`/announcements/${editingId}`, { titulo, contenido });
+        await api.put(`/announcements/${editingId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         Alert.alert("Éxito", "Anuncio actualizado");
       } else {
-        // Creando nuevo anuncio
-        await api.post("/announcements", { titulo, contenido });
+        await api.post("/announcements", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         Alert.alert("Éxito", "Anuncio creado");
       }
 
       setModalVisible(false);
       setTitulo("");
       setContenido("");
+      setImageUri(null);
       setEditingId(null);
       loadAnnouncements();
     } catch (error) {
@@ -72,7 +93,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const deleteAnnouncement = async (id: string) => {
     try {
       await api.delete(`/announcements/${id}`);
-      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
     } catch (error) {
       console.error("Error eliminando anuncio", error);
       Alert.alert("Error", "No se pudo eliminar anuncio");
@@ -82,6 +103,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const handleEdit = (a: Announcement) => {
     setTitulo(a.titulo);
     setContenido(a.contenido);
+    setImageUri(a.image || null);
     setEditingId(a.id);
     setModalVisible(true);
   };
@@ -90,10 +112,13 @@ export default function HomePage({ currentUser }: HomePageProps) {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>
 
-      {announcements.map((a) => (
+      {announcements.map(a => (
         <View key={a.id} style={styles.card}>
           <Text style={styles.cardTitle}>{a.titulo}</Text>
           <Text>{a.contenido}</Text>
+
+          {a.image && <Image source={{ uri: a.image }} style={styles.announcementImage} />}
+
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
 
           {currentUser.rol?.toLowerCase() === "admin" && (
@@ -127,6 +152,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
           onPress={() => {
             setTitulo("");
             setContenido("");
+            setImageUri(null);
             setEditingId(null);
             setModalVisible(true);
           }}
@@ -162,6 +188,17 @@ export default function HomePage({ currentUser }: HomePageProps) {
               style={styles.input}
             />
 
+            <Button
+              mode="contained"
+              buttonColor={imageUri ? "#28a745" : "#007bff"}
+              style={{ marginBottom: 10 }}
+              onPress={handleSelectImage}
+            >
+              {imageUri ? "Cambiar Imagen" : "Agregar Imagen"}
+            </Button>
+
+            {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
+
             <View style={styles.buttonsRow}>
               <Button
                 mode="contained"
@@ -169,6 +206,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
                 onPress={() => {
                   setModalVisible(false);
                   setEditingId(null);
+                  setImageUri(null);
                 }}
               >
                 Cancelar
@@ -201,4 +239,6 @@ const styles = StyleSheet.create({
   modalContainer: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   input: { marginBottom: 15, backgroundColor: "#fff" },
+  announcementImage: { width: "100%", height: 200, marginTop: 10, borderRadius: 8 },
+  previewImage: { width: "100%", height: 150, marginBottom: 10, borderRadius: 8 },
 });
