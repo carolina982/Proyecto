@@ -13,24 +13,16 @@ interface Trip {
   fechaLlegada: string;
   destino: string;
   estado: string;
+  kilometraje?: number;
 }
 
-interface Unit {
-  id: string;
-  nombre: string;
-}
-
-interface User {
-  id: string;
-  nombre: string;
-  apellido?: string;
-}
+interface Unit { id: string; nombre: string; }
+interface User { id: string; nombre: string; apellido?: string; }
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
 
@@ -41,6 +33,7 @@ export default function TripsPage() {
   const [fechaLlegada, setFechaLlegada] = useState("");
   const [destino, setDestino] = useState("");
   const [estado, setEstado] = useState("pendiente");
+  const [kilometraje, setKilometraje] = useState("");
 
   useEffect(() => {
     loadTrips();
@@ -48,6 +41,7 @@ export default function TripsPage() {
     loadUsers();
   }, []);
 
+  // Cargar viajes
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
@@ -58,6 +52,7 @@ export default function TripsPage() {
     }
   };
 
+  // Cargar unidades
   const loadUnits = async () => {
     try {
       const res = await api.get("/units");
@@ -67,6 +62,7 @@ export default function TripsPage() {
     }
   };
 
+  // Cargar usuarios
   const loadUsers = async () => {
     try {
       const res = await api.get("/users");
@@ -76,6 +72,7 @@ export default function TripsPage() {
     }
   };
 
+  // Abrir modal para crear/editar viaje
   const openModal = (trip?: Trip) => {
     if (trip) {
       setEditingTrip(trip);
@@ -86,27 +83,38 @@ export default function TripsPage() {
       setFechaLlegada(new Date(trip.fechaLlegada).toLocaleDateString("es-ES"));
       setDestino(trip.destino);
       setEstado(trip.estado);
+      setKilometraje(trip.kilometraje?.toString() || "");
     } else {
       setEditingTrip(null);
-      setNombre("");
-      setUnidadId("");
-      setConductorId("");
-      setFechaSalida("");
-      setFechaLlegada("");
-      setDestino("");
-      setEstado("pendiente");
+      setNombre(""); setUnidadId(""); setConductorId(""); setFechaSalida("");
+      setFechaLlegada(""); setDestino(""); setEstado("pendiente"); setKilometraje("");
     }
     setModalVisible(true);
   };
 
+  // Parsear fecha DD/MM/YYYY a objeto Date
   const parseDate = (dateStr: string) => {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
 
+  // Guardar viaje (nuevo o editar)
   const saveTrip = async () => {
-    if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino) {
+    if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino || !kilometraje) {
       Alert.alert("Error", "Completa todos los datos");
+      return;
+    }
+
+    const salida = parseDate(fechaSalida);
+    const llegada = parseDate(fechaLlegada);
+
+    if (isNaN(salida.getTime()) || isNaN(llegada.getTime())) {
+      Alert.alert("Error", "Formato de fecha inválido (DD/MM/YYYY)");
+      return;
+    }
+
+    if (Number(kilometraje) <= 0) {
+      Alert.alert("Error", "El kilometraje debe ser mayor a 0");
       return;
     }
 
@@ -114,10 +122,11 @@ export default function TripsPage() {
       nombre,
       unidadId,
       conductorId,
-      fechaSalida: parseDate(fechaSalida),
-      fechaLlegada: parseDate(fechaLlegada),
+      fechaSalida: salida,
+      fechaLlegada: llegada,
       destino,
       estado,
+      kilometraje: Number(kilometraje),
     };
 
     try {
@@ -126,42 +135,47 @@ export default function TripsPage() {
 
       await loadTrips();
       setModalVisible(false);
-    } catch (error) {
-      console.error("Error guardando viaje:", error);
+    } catch (error: any) {
+      console.error("Error guardando viaje:", error.response?.data || error);
       Alert.alert("Error", "No se pudo guardar el viaje");
     }
   };
+const deleteTrip = (id: string) => {
+  if (!id) return;
 
-  const deleteTrip = (id: string) => {
-    if (!id) {
-      console.error("ID inválido para eliminar viaje:", id);
-      return;
-    }
-
-    Alert.alert(
-      "Confirmar",
-      "¿Desea eliminar este viaje?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
+  Alert.alert(
+    "Confirmar",
+    "¿Desea eliminar este viaje?",
+    [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: () => {
+          (async () => {
             try {
+              const fullUrl = `${api.defaults.baseURL}/trips/${id}`;
               console.log("Eliminando viaje con ID:", id);
-              await api.delete(`/trips/${id}`);
-              await loadTrips();
+              console.log("URL DELETE:", fullUrl);
+
+              await api.delete(`/trips/${id}`, {
+                headers: { "Content-Type": "application/json" }
+              });
+
+              console.log("Viaje eliminado correctamente");
+              await loadTrips(); // recarga la lista
               Alert.alert("Éxito", "Viaje eliminado correctamente");
-            } catch (error) {
-              console.error("Error eliminando viaje:", error);
-              Alert.alert("Error", "No se pudo eliminar el viaje desde frontend");
+            } catch (error: any) {
+              console.error("Error eliminando viaje:", error.response?.data || error);
+              Alert.alert("Error", "No se pudo eliminar el viaje");
             }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
+          })();
+        }
+      }
+    ],
+    { cancelable: true }
+  );
+};
 
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
@@ -176,12 +190,10 @@ export default function TripsPage() {
         <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Estado: {item.estado}</Text>
+        <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
         <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
           <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
-          <Button mode="contained" buttonColor="red" onPress={() => {
-            console.log("Intentando eliminar viaje con ID:", item.id);
-            deleteTrip(item.id);
-          }}>Eliminar</Button>
+          <Button mode="contained" buttonColor="red" onPress={() => deleteTrip(item.id)}>Eliminar</Button>
         </View>
       </View>
     );
@@ -205,7 +217,7 @@ export default function TripsPage() {
           <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
 
           <Text style={styles.label}>Unidad:</Text>
-          <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
+          <Picker selectedValue={unidadId} onValueChange={setUnidadId}  style={styles.picker}>
             <Picker.Item label="Selecciona una unidad" value="" />
             {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
           </Picker>
@@ -217,16 +229,15 @@ export default function TripsPage() {
           </Picker>
 
           <Text style={styles.label}>Destino:</Text>
-          <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-
+          <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
+          <Text style={styles.label}>Kilometraje (km):</Text>
+          <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input}/>
           <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
-          <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-
+          <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
           <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-          <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-
+          <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
           <Text style={styles.label}>Estado:</Text>
-          <Picker selectedValue={estado} onValueChange={setEstado} style={styles.picker}>
+          <Picker selectedValue={estado} onValueChange={setEstado}  style={styles.picker}>
             <Picker.Item label="Pendiente" value="pendiente" />
             <Picker.Item label="En progreso" value="en progreso" />
             <Picker.Item label="Completado" value="completado" />
@@ -241,6 +252,8 @@ export default function TripsPage() {
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },

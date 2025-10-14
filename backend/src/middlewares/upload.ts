@@ -2,16 +2,18 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
-const storage =multer.diskStorage({destination:(req,file,cd)=>{
-    const tripId=req.body.tripId || "Otros";
-    const dir=path.join ("uploads", tripId);
-    if(!fs.existsSync(dir))
-        fs.mkdirSync(dir,{recursive:true});
-    cd(null,dir);
-},
-filename:(req, file,cd)=>{
-    const ext= path.extname(file.originalname);
-    cd(null,`${Date.now()}${ext}`);
-},
+const uploadDir =path.join(__dirname,"../../uploads");
+if(!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir , {recursive:true});
+}
+
+const storage= multer.diskStorage({
+    destination:( _, __, cd )=>cd (null,uploadDir),
+    filename:(_, file , cd )=>{
+        const ext= path.extname(file.originalname);
+        const name =`${Date.now()}-${file.originalname.replace( /\s+/g, "-")}`;
+        cd (null, name);
+    },
 });
-export const upload=multer({storage});
+
+export const  uload =multer({storage});

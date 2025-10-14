@@ -1,24 +1,25 @@
 import { Router } from "express";
+import fs from "fs";
 import multer from "multer";
+import path from "path";
 import { createViatic, deleteViatic, getViatic, getViaticById, getViaticByTrip, updateViatic, } from "../controllers/viaticController";
-
+const uploadDir = path.join(__dirname, "../../uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
+  destination: (_, __, cb) => cb(null, uploadDir),
+  filename: (_, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + "-" + file.originalname);
   },
 });
+const upload = multer({ storage });
+const router = Router();
 
-const router =Router();
-const upload=multer({dest:"uploads/"});
 router.get("/", getViatic);
-router.get("/trip/:trip", getViaticByTrip);
-router.get("/:id",getViaticById);
-router.post("/",upload.single("ticket"),createViatic);
-router.put("/:", upload.single("ticket"),updateViatic);
-router.delete("/:id",deleteViatic);
+router.get("/:id", getViaticById);
+router.get("/trip/:tripId", getViaticByTrip);
+router.post("/", upload.single("ticket"), createViatic);
+router.put("/:id", upload.single("ticket"), updateViatic);
+router.delete("/:id", deleteViatic);
 
 export default router;

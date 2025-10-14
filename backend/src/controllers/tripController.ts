@@ -1,84 +1,84 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
-import Trip, { ITrip } from "../models/Trip";
+import Trip from "../models/Trip";
 
-export const getTrip = async (req: Request, res: Response) => {
+ export const getTrip = async (req:Request, res:Response)=>{
   try {
-    const trips: ITrip[] = await Trip.find();
-    if (!trips.length) return res.status(404).json({ message: "No hay viajes registrados" });
-    res.json(trips);
-  } catch (error) {
+    const user =(req as any).user;
+    const trips = user?.rol === "Chofer" ?await Trip.find({conductorId:user .id})
+    :await Trip.find();
+    res.json (trips);
+  }catch(error){
     console.error(error);
-    res.status(500).json({ message: "Error obteniendo viajes", error });
+    res.status(500).json({message:"Error al obtener el viaje"});
   }
 };
 
-export const getTripById = async (req: Request, res: Response) => {
+ export const getTripById= async (req:Request , res:Response)=>{
   try {
-    const trip = await Trip.findById(req.params.id);
-    if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
+    const trip=await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({message:"Viaje no econtrado"});
+    const user =(req as any ).user;
+    if (user?.rol === "Chofer" && trip.conductorId !== user.id) {
+      return res.status(403).json({message:"No tienes permiso para ver este viaje"});
+    }
     res.json(trip);
-  } catch (error) {
+  }catch (error){
     console.error(error);
-    res.status(500).json({ message: "Error obteniendo viaje", error });
+    res.status(500).json({message:"Error al obtner el viaje"})
   }
 };
 
-export const createTrip = async (req: Request, res: Response) => {
-  console.log("POST recibido en /trips:", req.body);
+ export const createTrip = async (req:Request , res:Response)=>{
   try {
-    const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado } = req.body;
-
-    const trip = await Trip.create({
-      nombre,
-      unidadId: new mongoose.Types.ObjectId(unidadId),
-      conductorId: new mongoose.Types.ObjectId(conductorId),
-      fechaSalida: new Date(fechaSalida),
-      fechaLlegada: new Date(fechaLlegada),
-      destino,
-      estado,
+    const {nombre,unidadId,conductorId,fechaSalida, fechaLlegada,destino,estado,kilometraje}=req.body;
+    if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino || !estado || !kilometraje){
+      return res.status(400).json({message :"Todos los campos son requeridos"});
+    }
+    const newTrip = new Trip({
+      nombre, unidadId,
+      conductorId , 
+      fechaSalida:new Date(fechaSalida),
+      fechaLlegada:new Date(fechaLlegada),
+      destino , estado,
+      kilometraje:Number (kilometraje),
     });
-
-    res.status(201).json(trip);
-  } catch (error: any) {
-    console.error("Error creando viaje:", error.message);
-    res.status(500).json({ message: "Error creando viaje", error: error.message });
+    await newTrip.save();
+    res.status(201).json(newTrip);
+  }catch (error){
+    console.error("Error crenado viaje:", error);
+    res.status(500).json({message:"Error creando viaje " , error});
+  }
+ };
+ 
+export const updateTrip= async(req:Request , res:Response)=>{
+  try {
+    const trip=await Trip.findById(req.params.id);
+    if (!trip) return  res.status(404).json({message:"Viaje no econtrado "});
+    const user = (req as any ).user;
+    if (user?.rol === "Chofer" && trip.conductorId !== user.id){
+      return  res.status(403).json({message:"No tienes permiso para actualizar este viaje"});
+    }
+    Object.assign(trip , req.body);
+    await trip.save();
+    res.json({message:"Viaje actualizado", trip});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al actualizar viaje"});
   }
 };
 
-export const updateTrip = async (req: Request, res: Response) => {
-  try {
-    const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado } = req.body;
-
-    const trip = await Trip.findByIdAndUpdate(
-      req.params.id,
-      {
-        nombre,
-        unidadId: unidadId ? new mongoose.Types.ObjectId(unidadId) : undefined,
-        conductorId: conductorId ? new mongoose.Types.ObjectId(conductorId) : undefined,
-        fechaSalida: fechaSalida ? new Date(fechaSalida) : undefined,
-        fechaLlegada: fechaLlegada ? new Date(fechaLlegada) : undefined,
-        destino,
-        estado,
-      },
-      { new: true }
-    );
-
-    if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
-    res.json(trip);
-  } catch (error) {
+export const deleteTrip = async (req:Request , res:Response)=>{
+  try{
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({message:"Viaje no encontrado"});
+    const user =(req as any).user;
+    if (user?.rol === "Chofer" && trip.conductorId !== user.id){
+      return  res.status(403).json({message:"No tines permiso para eliminar este viaje "});
+    }
+    await trip.deleteOne();
+    res.json({message:"Viaje eliminado"});
+  }catch (error){
     console.error(error);
-    res.status(500).json({ message: "Error actualizando viaje", error });
-  }
-};
-
-export const deleteTrip = async (req: Request, res: Response) => {
-  try {
-    const trip = await Trip.findByIdAndDelete(req.params.id);
-    if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
-    res.json({ message: "Viaje eliminado correctamente" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error eliminando viaje", error });
+    res.status(500).json({message:"Error al eliminar viaje"});
   }
 };

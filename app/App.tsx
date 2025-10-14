@@ -45,9 +45,7 @@ function AppNavigator() {
 export default function App() {
   return (
     <StoreProvider>
-      
       <AppNavigator />
-     
     </StoreProvider>
   );
 }

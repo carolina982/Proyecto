@@ -43,8 +43,7 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       setPhotoUri(result.assets[0].uri);
     }
   };
-
-  // Guardar cambios en el backend
+  
   const handleSave = async () => {
     setIsSaving(true);
 
@@ -54,7 +53,6 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       formData.append("rol", rol);
       formData.append("email", email);
 
-      // Si hay nueva foto y no es la misma que la del servidor
       if (photoUri && !photoUri.startsWith("http")) {
         const filename = photoUri.split("/").pop() || "photo.jpg";
         const match = /\.(\w+)$/.exec(filename);

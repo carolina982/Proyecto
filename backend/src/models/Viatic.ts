@@ -6,6 +6,7 @@ export interface IViatic extends Document {
   descripcion: string;
   monto: number;
   ticket?:string;
+  nombre:string;
 }
 
 const viaticSchema = new Schema<IViatic>({
@@ -14,6 +15,7 @@ const viaticSchema = new Schema<IViatic>({
   descripcion: { type: String, required: true },
   monto: { type: Number, required: true },
   ticket:{type:String},
+  nombre:{type:String , required:true},
 });
 
 export default mongoose.model<IViatic>("Viatic",viaticSchema);

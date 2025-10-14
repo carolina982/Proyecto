@@ -48,3 +48,12 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+- Este programa es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usrios en el apartado de usuruios 
+administrador --> inicio , perdil , viajes , unidades, usuarios 
+chofer/usuario -->inicio , perdil , viajes, viaticos 
+solo falata declarar bien los botones de eliminar y el por que el chofer ve viajes de los demas 
+y  al momento de registrar no aparce el del se registro exitosamente 
+falta agregar el kilometraje y apartado adonde genere el reporte de viajes ya que se decragen en pdf o en excel 
+y dejar un apartado a donde se pueda agragr mas modulos 

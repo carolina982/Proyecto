@@ -1,94 +1,114 @@
 import { Request, Response } from "express";
-import fs from "fs";
-import Viatic, { IViatic } from "../models/Viatic";
+import Trip from "../models/Trip";
+import Viatic from "../models/Viatic";
 
-export const getViatic=async(req:Request, res:Response)=>{
+export const getViatic = async(req:Request , res:Response)=>{
   try{
-  const viatics:IViatic[]=await Viatic.find();
-  res.json(viatics);
-}catch (error){
-  console.error(error);
-  res.status(500).json({message:"Error obteniendo viaticos"});
-}
-};
-
-export const getViaticByTrip =async(req:Request, res:Response)=>{
-  try{
-    const viatics:IViatic[]=await Viatic.find({tripId:req.params.tripId});
+    const user =(req as any).user;
+    let viatics ;
+    if (user?.rol === "Chofer"){
+      const trips =await Trip.find({conductorId: user.id.toString()});
+      const tripsIds =trips.map(t=> t.id);
+      viatics =await Viatic.find({tripId:{$in:tripsIds}})
+    }else{
+      viatics=await Viatic.find();
+    }
     res.json(viatics);
   }catch (error){
     console.error(error);
-    res.status(500).json({message:"Error obteniendo viaticos por viaje "});
+    res.status(500).json({message:"Error al obtener viaticos"});
   }
 };
 
-export const getViaticById=async(req:Request, res:Response)=>{
+export const getViaticById =async(req:Request , res:Response)=>{
   try{
-    const viatic:IViatic |null =await Viatic.findById(req.params.id);
-    if(!viatic) return
-    res.status(404).json({message:"Viatico no econtrado"});
+    const viatic =await Viatic.findById(req.params.id);
+    if (!viatic) return res.status(404).json({message:"Viatico no econtrado"});
+    const user =(req as any).user;
+    if (user?.rol ==="Chofer"){
+      const trip = await Trip.findById(viatic.tripId);
+      if(!trip ||  trip.conductorId.toString()!== user.id.toString()){
+        return res.status(403).json({message:"No tienes permisos para ver este viatico"});
+      }
+    }
     res.json(viatic);
-  } catch(error){
-    console.error(error);
-    res.status(500).json({message:"Error obteniendo viatico"});
-  }
-};
-
-export const createViatic=async(req:Request, res:Response)=>{
-  console.log("POST recibiendo en /viactics:",req.body);
-  try{
-    const {tripId, concepto,descripcion, monto}=req.body;
-    if(!tripId || !concepto || !descripcion ||!monto){
-      return res.status(400).json({message:"Faltan campos requerdios"});
-    }
-    const viatic=await Viatic.create({
-      tripId,
-      concepto,
-      descripcion,
-      monto:Number(monto),
-      ticket:req.file? req.file.path:undefined });
-      console.log("Viatico creando:", Viatic);
-      res.status(201).json({message:"Viatico creado correctamente", data:viatic,});
-  }catch (error:any){
-    console.error("Error creando viatico:" , error.message);
-    res.status(500).json({message:"Error viatico", error:error.message,
-    });
-  }
-};
-
-export const updateViatic=async (req:Request, res:Response)=>{
-  try{
-    const{tripId, concepto , descripcion, monto}= req.body;
-    const updateData:Partial<IViatic>&{ticket?:string}={
-      tripId,
-      concepto,
-      descripcion,
-      monto:monto?Number(monto):undefined,
-    };
-    if (req.file)updateData.ticket=req.file.path;
-    const viaticDoc = await Viatic.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if(!viaticDoc) return
-    res.status(404).json({message:"Viatico no econtrado"});
-    res.json({message:"Viatico actualizado correctamente",
-      data:viaticDoc,
-    });
   }catch (error){
     console.error(error);
-    res.status(500).json({message:"Error al actualizar viatico "});
+    res.status(500).json({message:"Error al obtener viatico"});
   }
 };
 
-export const deleteViatic=async(req:Request, res:Response)=>{
+export const getViaticByTrip = async (req:Request , res:Response)=>{
   try{
-    const viaticDoc=await Viatic.findByIdAndDelete(req.params.id);
-    if(!viaticDoc) return
-    res.status(404).json({message:"Viatico no econtrado"});
-    if (viaticDoc.ticket && fs.existsSync(viaticDoc.ticket)){
-      fs.unlinkSync(viaticDoc.ticket);
+    const tripId =req.params.tripId;
+    const user =(req as any ).user;
+    const trip =await Trip.findById(tripId);
+    if (user?.rol ==="Chofer" && (!trip || trip.conductorId.toString() !== user.id.toString())){
+      return res.status(403).json({message:"No tienes permisos para ver estos viaticos"});
     }
-    res.json({message:"Viatico eliminado correctamente"});
+    const viatics=await Viatic.find({tripId});
+    res.json(viatics);
   }catch (error){
-    console.error("Error al eliminar viatico:",error);
-    res.status(500).json({message:"Error al eliminar viatico", error});
+    console.error(error);
+    res.status(500).json({message:"Error al obtener viaticos por viaje"})
   }
 };
+
+export const createViatic = async (req:Request , res:Response)=>{
+  try{
+    const {tripId, concepto,descripcion,monto,nombre} =req.body;
+    const ticket=req.file?.filename;
+    const user =(req as any).user;
+    if(user?.rol ==="Chofer"){
+      const trip =await Trip.findById(tripId);
+      if (!trip || trip.conductorId.toString() !== user.id.toString()){
+        return res.status(403).json({message:"No puedes agregar viaticos a este viaje "});
+      }
+    }
+    const newViatic = await Viatic.create({tripId,concepto,descripcion,monto,nombre,ticket});
+    res.json({messaage:"Viatico registrado exitosamente",viatic:newViatic});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al crear viatico"});
+  }
+};
+
+export const updateViatic= async (req:Request , res:Response)=>{
+  try {
+    const viatic =await Viatic.findById(req.params.id);
+    if (!viatic) return  res.status(404).json({message:"Viatico no econtrado"});
+    const user =(req as any ).user ;
+    if (user?.rol ==="Chofer"){
+      const trip=await Trip.findById(viatic.tripId);
+      if (!trip ||  trip.conductorId.toString () !== user.id.toString()){
+        return res.status(403).json({message:"No tienes permisos para actualizar este viatico"});
+      }
+    }
+    if (req.file) viatic.ticket=req.file.fieldname;
+    Object.assign(viatic , req.body);
+    await viatic.save();
+    res.json({message:"Viatico actualizado" , viatic});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al actualizar viatico"});
+  }
+};
+
+export const deleteViatic = async (req:Request , res:Response)=>{
+  try{
+    const viatic=await Viatic.findById(req.params.id);
+    if (!viatic) return res.status(404).json({message:"Viatico no econtrado"});
+    const user =(req as any ).user;
+    if(user?.rol === "Chofer"){
+      const trip =await Trip.findById(viatic.tripId);
+      if (!trip || trip.conductorId.toString () ! == user.id.toString()){
+        return res.status(403).json({message:"No tienes permisos para eliminar este viatico"});
+      }
+    }
+    await viatic.deleteOne();
+    res.json({message:"Viatico eliminado"});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al eliminar"});
+  }
+}

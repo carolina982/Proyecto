@@ -7,9 +7,9 @@ export interface ITrip extends Document {
   fechaLlegada: Date;      
   conductorId: string;   
   unidadId:string;      
-  estado: string;          
+  estado: string;   
+  kilometraje?:number;       
 }
-
 const tripSchema = new Schema<ITrip>(
   {
     nombre: { type: String, required: true },
@@ -19,8 +19,8 @@ const tripSchema = new Schema<ITrip>(
     conductorId:{type:String, required:true},
     unidadId:{type:String , required:true},
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
-  },
-  { timestamps: true }
+      kilometraje:{type:Number , default: 0},
+},
+  {timestamps:true}
 );
-
 export default mongoose.model<ITrip>("Trip", tripSchema);
