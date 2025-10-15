@@ -6,7 +6,6 @@ export interface IUnit extends Document {
     placas:string;
     modelo:string;
     capacidad:number;
-    
     estado:"Disponible" | "Mantenimiento " | "Ocupado";
 }
 

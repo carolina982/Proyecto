@@ -6,6 +6,7 @@ import { Avatar, Button, Text, TextInput } from "react-native-paper";
 interface User {
   id: string;
   nombre: string;
+  apellido:string;
   rol: string;
   email: string;
   photoUrl?: string | null;
@@ -17,6 +18,7 @@ interface PerfilPageProps {
 
 export default function PerfilPage({ currentUser }: PerfilPageProps) {
   const [nombre, setNombre] = useState(currentUser.nombre);
+  const [apellido , setApellido]=useState(currentUser.apellido);
   const [rol, setRol] = useState(currentUser.rol);
   const [email, setEmail] = useState(currentUser.email);
   const [photoUri, setPhotoUri] = useState<string | null>(
@@ -50,6 +52,7 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
     try {
       const formData = new FormData();
       formData.append("nombre", nombre);
+      formData.append("apellido" ,apellido);
       formData.append("rol", rol);
       formData.append("email", email);
 
@@ -66,7 +69,7 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       }
 
       const response = await fetch(`http://192.168.1.81:3000/api/users/${currentUser.id}`, {
-        method: "PUT",
+        method: "PATCH",
         body: formData,
       });
 
@@ -75,6 +78,7 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       const data = await response.json();
 
       setNombre(data.nombre);
+      setApellido(data.apellido);
       setRol(data.rol);
       setEmail(data.email);
       setPhotoUri(data.photoUrl ? `http://192.168.1.81:3000${data.photoUrl}` : null);
@@ -93,96 +97,28 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       {photoUri ? (
         <Avatar.Image size={100} source={{ uri: photoUri }} style={styles.avatar} />
       ) : (
-        <Avatar.Text
-          size={100}
-          label={nombre
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()}
-          style={styles.avatar}
-        />
-      )}
+        <Avatar.Text size={100} label={nombre.split(" ").map((n) => n[0]).join("").toUpperCase()}style={styles.avatar}/>)}
 
-      <Button
-        mode="outlined"
-        style={styles.changePhotoButton}
-        onPress={pickImage}
-        labelStyle={{ color: "#0d75bb" }}
-      >
-        Cambiar Imagen
-      </Button>
+      <Button mode="outlined"style={styles.changePhotoButton}onPress={pickImage}labelStyle={{ color: "#0d75bb" }}>Cambiar Imagen</Button>
 
       <Text style={styles.title}>Perfil</Text>
-
-      <TextInput
-        label="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#0d75bb"
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#0d75bb"
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Rol"
-        value={rol}
-        onChangeText={setRol}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#0d75bb"
-        style={styles.input}
-      />
-
-      <Button
-        mode="contained"
-        buttonColor="#0d75bb"
-        style={styles.button}
-        onPress={handleSave}
-        loading={isSaving}
-      >
-        Guardar Cambios
-      </Button>
+      <TextInput label="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+      <TextInput label="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+      <TextInput label="Email"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} />
+      <TextInput label="Rol"value={rol}onChangeText={setRol}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+      <Button mode="contained" buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}> Guardar Cambios</Button>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    flexGrow: 1,
-    alignItems: "center",
-  },
-  avatar: {
-    backgroundColor: "#0d75bb",
-    marginBottom: 10,
-  },
-  changePhotoButton: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    marginBottom: 15,
-    backgroundColor: "",
-  },
-  button: {
-    width: "100%",
-    marginTop: 10,
+  container: {padding: 20,flexGrow: 1,alignItems: "center",},
+  avatar: {backgroundColor: "#0d75bb",marginBottom: 10,},
+  changePhotoButton: {marginBottom: 20, },
+  title: {fontSize: 24,fontWeight: "bold",marginBottom: 20,},
+  input: {width: "100%", marginBottom: 15,backgroundColor: "", },
+  button: {width: "100%",marginTop: 10,
+
+
   },
 });

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User, { IUser } from "../models/User";
+
 export const getUser= async (req:Request , res:Response)=>{
     try{
         const users:IUser []= await User.find ();
@@ -28,6 +29,7 @@ export const createUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error creando usuario", error: error.message });
 }
 };
+
 export const registerUser =async (req:Request , res:Response) =>{
     const{nombre , email,password,rol}:IUser =req .body;
     try{
@@ -41,6 +43,7 @@ export const registerUser =async (req:Request , res:Response) =>{
         res.status(500).json({message:"Error en el servidor"});
     }
 };
+
 export const loginUser =async (req:Request , res:Response) =>{
     const {email, password}:{email:string; password:string} =req.body;
     try{
@@ -52,20 +55,29 @@ export const loginUser =async (req:Request , res:Response) =>{
         res.status(500).json ({message:"Error en el servidor"});
     }
 };
-export const updateUser = async (req:Request , res:Response)=>{
-    const {id} =req.params;
-    const {nombre,email,rol}=req.body;
-    const photoUrl=req.file? `/uploads/${req.file.filename}`:undefined;
-    try{
-        const updateUser =await User.findByIdAndUpdate(
-            id ,
-            {nombre,email,rol, ...(photoUrl && {photoUrl})},
-            {new:true}
-        );
-        if (!updateUser) return  res.status(404).json({message:"Usuario no econtrado"});
-        res.json(updateUser);
+export const updateUser = async(req:Request , res:Response)=>{
+    try {
+        const {id} =req.params;
+        if (!id || id.length !== 24){
+            return res.status(400).json({message:"ID de usuario invalido"});
+        }
+        const user =await User.findById(id)
+        if (!user) {
+            return res.status(404).json({message:"Usuario no econtrado"});
+        }
+        user.nombre=req.body.nombre || user.nombre;
+        user.apellido=req.body.apellido || user.nombre;
+        user.email=req.body.email || user.email;
+        user.rol=req.body.rol || user.rol;
+        if (req.file){
+            user.photoUrl=`/uploads/${req.file.filename}`;
+        }
+        await user.save();
+        res.json({message:"Usuario actualizadp correctamente" , ...user.toObject (),
+        });
     }catch (error){
-        res.status(500).json({message:"Error actualizando usuario" , error});
+        console.error("Error actualizacion de usuario", error);
+        res.status(500).json ({message:"Error actualizando usuario", error,});
     }
 };
 export const deleteUser =async (req:Request , res:Response) =>{

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, StyleSheet, Text, View } from "react-native";
-import { Button, TextInput } from "react-native-paper";
+import { Button, TextInput, } from "react-native-paper";
 import { api } from "../api/api";
 
 interface Unit {
@@ -62,11 +62,8 @@ export default function UnitsPage() {
     }
 
     const unitData = {
-      nombre,
-      placas,
-      modelo,
-      capacidad: Number(capacidad),
-      estado,
+      nombre, placas,
+      modelo,capacidad: Number(capacidad),estado,
     };
 
     try {
@@ -103,7 +100,7 @@ export default function UnitsPage() {
   };
 
   const renderItem = ({ item }: { item: Unit }) => {
-    let estadoColor = "#4caf50"; // Disponible
+    let estadoColor = "#4caf50"; //Disponible
     if (item.estado === "Mantenimiento") estadoColor = "#ff9800";
     if (item.estado === "Ocupado") estadoColor = "#f44336";
 
@@ -146,66 +143,13 @@ export default function UnitsPage() {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
 
-          <TextInput
-            placeholder="Nombre"
-            value={nombre}
-            onChangeText={setNombre}
-            mode="flat"
-            underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb"
-            textColor="#000"
-            placeholderTextColor="#888"
-            dense
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Placas"
-            value={placas}
-            onChangeText={setPlacas}
-            mode="flat"
-            underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb"
-            textColor="#000"
-            placeholderTextColor="#888"
-            dense
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Modelo"
-            value={modelo}
-            onChangeText={setModelo}
-            mode="flat"
-            underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb"
-            textColor="#000"
-            placeholderTextColor="#888"
-            dense
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Capacidad"
-            value={capacidad}
-            onChangeText={setCapacidad}
-            mode="flat"
-            underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb"
-            textColor="#000"
-            placeholderTextColor="#888"
-            keyboardType="numeric"
-            dense
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Estado (Disponible / Mantenimiento / Ocupado)"
-            value={estado}
-            onChangeText={(text) => setEstado(text as Unit["estado"])}
-            mode="flat"
-            underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb"
-            textColor="#000"
-            placeholderTextColor="#888"
-            dense style={styles.input}
-          />
+          <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+          <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+          <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+          <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"keyboardType="numeric"dense style={styles.input}/>
+          <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}
+            onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
+            activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
             <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
