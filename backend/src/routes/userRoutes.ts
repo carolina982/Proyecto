@@ -3,6 +3,8 @@ import multer from "multer";
 import { createUser, deleteUser, getUser, getUserById, loginUser, registerUser, updateUser } from "../controllers/userController";
 
 
+
+
 const router = express.Router();
 const storage = multer.diskStorage({
     destination:function(req,file,cd){

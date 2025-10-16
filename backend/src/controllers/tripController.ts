@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Trip from "../models/Trip";
-
  export const getTrip = async (req:Request, res:Response)=>{
   try {
     const user =(req as any).user;
