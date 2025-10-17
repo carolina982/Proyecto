@@ -3,7 +3,7 @@ import express from "express";
 import path from "path";
 import connectDB from "./config/db";
 
-import announcement from "./routes/announcements";
+import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";
 import tripRoutes from "./routes/tripRoutes";
 import unitRoutes from "./routes/unitRoutes";
