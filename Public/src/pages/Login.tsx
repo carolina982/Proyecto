@@ -1,6 +1,7 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { TextInput } from "react-native-paper";
 import { useStore } from "../context/Store";
 
 export default function Login({ navigation }: any) {
@@ -14,25 +15,34 @@ export default function Login({ navigation }: any) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
+
     setLoading(true);
+
     try {
-      const response = await fetch("http://192.168.1.81:3000/api/login", {
+      const response = await fetch("http://192.168.1.81:3000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
+
+      const data = await response.json();
+
       if (!response.ok) {
-        Alert.alert("Error", "Correo o contraseña incorrectos");
-        setLoading(false);
+        Alert.alert("Error", data.message || "Ocurrió un problema al iniciar sesión");
         return;
       }
-      const user = await response.json();
-      login(user);
-      if (user.rol?.toLowerCase() === "admin") {
+
+      login(data);
+
+      if (data.rol?.toLowerCase() === "admin") {
         navigation.navigate("AdminPage");
       } else {
         navigation.navigate("Dashboard");
       }
+
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "No se pudo iniciar sesión. Intenta más tarde.");
@@ -40,17 +50,13 @@ export default function Login({ navigation }: any) {
       setLoading(false);
     }
   };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <FontAwesome5
-        name="truck-moving"
-        size={85.5}
-        color="#007bff"
-        style={styles.icon}
-      />
+      <FontAwesome5 name="truck-moving" size={85.5} color="#007bff" style={styles.icon} />
       <Text style={styles.title}>Volta</Text>
       <TextInput
         placeholder="Correo electrónico"
@@ -58,14 +64,20 @@ export default function Login({ navigation }: any) {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        style={styles.input}
+        mode="flat" 
+        underlineColor="#0d75bb"
+        activeUnderlineColor="#0d75bb"
+         dense style={styles.input}
       />
       <TextInput
         placeholder="Contraseña"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        style={styles.input}
+        mode="flat" 
+        underlineColor="#0d75bb"
+        activeUnderlineColor="#0d75bb"
+         dense style={styles.input}
       />
       <TouchableOpacity
         style={[styles.button, loading && { opacity: 0.7 }]}
@@ -80,42 +92,18 @@ export default function Login({ navigation }: any) {
         style={styles.registerButton}
         onPress={() => navigation.navigate("Register")}
       >
-        <Text style={styles.registerText}>
-          ¿No tienes cuenta? Regístrate
-        </Text>
+        <Text style={styles.registerText}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    backgroundColor: "#f5f5f5",
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
   icon: { marginBottom: 20 },
   title: { fontSize: 28, marginBottom: 30, fontWeight: "bold" },
-  input: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#fff",
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  button: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#007bff",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
+  input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
+  button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15 },
   registerText: { color: "#007bff", fontSize: 16 },

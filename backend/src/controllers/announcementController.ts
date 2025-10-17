@@ -10,19 +10,22 @@ export const getAnnouncements =async (req:Request , res:Response) =>{
 };
 export const createAnnouncements =async (req:Request , res:Response) =>{
     try {
-        const {titulo , contenido } =req.body;
-        const newAnnouncement =new Announcement({titulo , contenido});
+        const {titulo, contenido}=req.body;
+        const image =req.file?`/uploads/${req.file.filename}`:undefined;
+        const newAnnouncement = new Announcement({titulo,contenido,image});
         await newAnnouncement.save();
         res.json(newAnnouncement);
     }catch (err){
-        res.status(400).json({error:"Error creando anuncio "});
+        console.error(err);
+        res.status(400).json({error :"Error creando anuncio "})
     }
 };
 
 export const updateAnnouncement =async (req:Request, res:Response) =>{
     try {
         const {titulo, contenido} =req.body;
-        const updated=await Announcement.findByIdAndUpdate(req.params.id, {titulo,contenido},
+        const image =req.file?`/uploads/${req.file.filename}`:undefined;
+        const updated=await Announcement.findByIdAndUpdate(req.params.id, {titulo,contenido,image},
             {new:true}
         );
         res.json(updated);

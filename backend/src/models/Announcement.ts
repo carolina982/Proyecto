@@ -1,17 +1,15 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface IAnnouncement extends Document{
+interface IAnnouncement extends Document{
     titulo:string;
-    contenido:string;
-    fecha:Date;
-    image?:string;
+    descripcion:string;
+    fecha :Date;
 }
 
-const AnnouncementSchema:Schema =new Schema ({
+const announcementSchema = new Schema<IAnnouncement>({
     titulo:{type:String , required:true},
-    contenido:{type:String , required:true},
-    fecha:{type:Date , default :Date.now},
-    image:{type:String},
+    descripcion:{type:String ,required:true},
+    fecha:{type:Date , default:Date.now},
 });
 
-export default mongoose.model<IAnnouncement>("Announcement", AnnouncementSchema);
+export default mongoose.model<IAnnouncement>("Announcement",announcementSchema);

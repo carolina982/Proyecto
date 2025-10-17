@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
+import path from "path";
 import connectDB from "./config/db";
-
 
 import announcement from "./routes/announcements";
 import authRoutes from "./routes/authRoutes";
@@ -13,6 +13,8 @@ import viaticRoutes from "./routes/viaticRoutes";
 const app = express();
 const PORT = 3000;
 connectDB();
+
+app.use("/uploads",express.static(path.join(__dirname,"../uploads")));
 
 app.use(cors());
 app.use(express.json());

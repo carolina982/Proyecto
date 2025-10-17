@@ -168,26 +168,8 @@ export default function HomePage({ currentUser }: HomePageProps) {
               {editingId ? "Editar Anuncio" : "Nuevo Anuncio"}
             </Text>
 
-            <TextInput
-              label="Titulo"
-              value={titulo}
-              onChangeText={setTitulo}
-              mode="flat"
-              underlineColor="#0d75bb"
-              activeUnderlineColor="#0d75bb"
-              style={styles.input}
-            />
-            <TextInput
-              label="Contenido"
-              value={contenido}
-              onChangeText={setContenido}
-              mode="flat"
-              underlineColor="#0d75bb"
-              activeUnderlineColor="#0d75bb"
-              multiline
-              style={styles.input}
-            />
-
+            <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+            <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
             <Button
               mode="contained"
               buttonColor={imageUri ? "#28a745" : "#007bff"}

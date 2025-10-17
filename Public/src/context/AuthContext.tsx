@@ -1,34 +1,53 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
-
-interface User {
-  id: string;
-  nombre: string;
-  email: string;
-  rol: "Admin" | "Chofer";
-  photoUrl?: string | null;
-}
+import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
-  currentUser: User | null;
-  login: (email: string) => void;
+  user: any;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  const login = (email: string) => {
-    // Aquí deberías buscar al usuario en tu store o backend
-    const storedUser = { id: "1", nombre: "Juan", email, rol: "Admin" } as User;
-    setCurrentUser(storedUser);
+  useEffect(() => {
+
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
+    }
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const response = await fetch("http://localhost:3000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Error al iniciar sesión");
+
+    setUser(data.user);
+    setToken(data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
   };
 
-  const logout = () => setCurrentUser(null);
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -37,5 +56,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider");
-  return context;
+  return context;
 };

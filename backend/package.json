@@ -13,6 +13,7 @@
     "@types/cors": "^2.8.19",
     "@types/morgan": "^1.9.10",
     "@types/serve-static": "^1.15.9",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.21.2",

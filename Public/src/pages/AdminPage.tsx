@@ -156,6 +156,7 @@ export default function AdminPage() {
               style={styles.input}
               value={editingUser?.nombre}
               onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}
+            
             />
             <TextInput
               placeholder="Apellido"

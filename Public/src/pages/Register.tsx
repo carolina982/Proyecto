@@ -1,7 +1,8 @@
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { TextInput } from "react-native-paper";
 import { api } from "../api/api";
 import { useStore } from "../context/Store";
 
@@ -62,10 +63,10 @@ export default function Register({ navigation }: any) {
     <View style={styles.container}>
       <Text style={styles.title}>Registro</Text>
 
-      <TextInput placeholder="Nombre" value={nombre} onChangeText={setNombre} style={styles.input} />
-      <TextInput placeholder="Apellido" value={apellido} onChangeText={setApellido} style={styles.input} />
-      <TextInput placeholder="Correo" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
+      <TextInput placeholder="Nombre" value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} />
+      <TextInput placeholder="Apellido" value={apellido} onChangeText={setApellido} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} />
+      <TextInput placeholder="Correo" value={email} onChangeText={setEmail} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} keyboardType="email-address" />
+      <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} secureTextEntry />
 
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
       <Picker
@@ -102,7 +103,7 @@ export default function Register({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
   title: { fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
-  input: { width: "100%", height: 50, backgroundColor: "#fff", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
+  input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
   picker: { width: "100%", height: 50, marginBottom: 15, backgroundColor: "#fff", borderRadius: 10 },
   photoButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   photoButton: { flex: 0.48, height: 45, backgroundColor: "#007bff", justifyContent: "center", alignItems: "center", borderRadius: 10 },
