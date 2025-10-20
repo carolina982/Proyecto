@@ -4,7 +4,8 @@ import { Button, TextInput, } from "react-native-paper";
 import { api } from "../api/api";
 
 interface Unit {
-  id: string;
+  //id: string;
+  _id:string;
   nombre: string;
   placas: string;
   modelo: string;
@@ -30,7 +31,16 @@ export default function UnitsPage() {
   const loadUnits = async () => {
     try {
       const res = await api.get("/units");
-      setUnits(res.data);
+      const mappedUnits= res.data.map((u:any)=> ({
+        id:u._id,
+        nombre:u.nombre,
+        placas:u.placas,
+        modelo:u.modelo,
+        capacidad:u.capacidad,
+        estado:u.estado,
+        _id:u._id
+      }));
+      setUnits(mappedUnits);
     } catch (error) {
       console.error("Error cargando unidades", error);
     }
@@ -68,7 +78,7 @@ export default function UnitsPage() {
 
     try {
       if (editingUnit) {
-        await api.put(`/units/${editingUnit.id}`, unitData);
+        await api.put(`/units/${editingUnit._id}`, unitData);
       } else {
         await api.post("/units", unitData);
       }
@@ -81,21 +91,21 @@ export default function UnitsPage() {
   };
 
   const deleteUnitItem = (id: string) => {
-    Alert.alert("Confirmar", "¿Deseas eliminar esta unidad?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.delete(`/units/${id}`);
-            await loadUnits();
-          } catch (error) {
-            console.error("Error eliminando unidad", error);
-            Alert.alert("Error", "No se puede eliminar la unidad");
-          }
-        },
+    console.log("id que se va eliminar",id);
+    Alert.alert("Confirmar","¿?Desea eliminar esta unidad?",[
+      {text:"Cancelar", style:"cancel"},
+      {text:"Eliminar" , style:"destructive", onPress:async()=>{
+        try{
+          const res= await api.delete(`/units/${id}`);
+          console.log("respuesta backend", res.data);
+          setUnits((prev)=>prev.filter((u)=>u._id !==id));
+          await loadUnits ();
+        }catch (error){
+          console.error("Error eliminando unidad", error);
+          Alert.alert("Error","No se puede eliminar la unidad");
+        }
       },
+    },
     ]);
   };
 
@@ -119,7 +129,7 @@ export default function UnitsPage() {
           <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
             Editar
           </Button>
-          <Button mode="contained" buttonColor="red" onPress={() => deleteUnitItem(item.id)}>
+          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnitItem(item._id)}>
             Eliminar
           </Button>
         </View>
@@ -135,7 +145,7 @@ export default function UnitsPage() {
       </Button>
       <FlatList
         data={units}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />
@@ -167,24 +177,10 @@ export default function UnitsPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  card: {
-    backgroundColor: "#fff",
-    padding: 15,
-    marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
-  },
+  card: { backgroundColor: "#fff",padding: 15,marginBottom: 12,borderRadius: 12,shadowColor: "#000",shadowOpacity: 0.05,shadowOffset: { width: 0, height: 2 },shadowRadius: 5,elevation: 2, },
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   pageTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15, color: "#0d75bb" },
-  estadoBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
+  estadoBadge: {paddingHorizontal: 8,paddingVertical: 3,borderRadius: 12,},
   estadoText: { color: "#fff", fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },

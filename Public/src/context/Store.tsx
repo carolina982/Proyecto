@@ -34,6 +34,7 @@ interface StoreContextProps {
   logout: () => void;
 }
 
+
 const StoreContext = createContext<StoreContextProps>({} as StoreContextProps);
 
 

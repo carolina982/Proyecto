@@ -62,52 +62,38 @@ export const loginUser = async (req: Request, res: Response) => {
   if (!email || !password) {
     return res.status(400).json({ message: "Faltan datos" });
   }
-
   try {
-    // Buscar usuario por email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
     }
-
-    // Comparar password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
     }
-
-    // Retornar usuario sin el password
     const userData = {
-      id: user._id,
-      nombre: user.nombre,
-      apellido: user.apellido,
-      email: user.email,
-      rol: user.rol,
-      photoUrl: user.photoUrl || null,
+      id: user._id,nombre: user.nombre,
+      apellido: user.apellido, email: user.email,
+      rol: user.rol, photoUrl: user.photoUrl || null,
     };
-
     res.json(userData);
-
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
-// REGISTER usuario
+
 export const registerUser = async (req: Request, res: Response) => {
   const { nombre, apellido, email, password, rol } = req.body;
 
   if (!nombre || !email || !password || !rol) {
     return res.status(400).json({ message: "Faltan datos" });
   }
-
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Usuario ya existe" });
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       nombre,
       apellido,

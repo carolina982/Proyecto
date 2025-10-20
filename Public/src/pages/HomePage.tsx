@@ -9,7 +9,6 @@ interface User {
   nombre: string;
   rol: string;
 }
-
 interface Announcement {
   id: string;
   titulo: string;
@@ -17,7 +16,6 @@ interface Announcement {
   fecha: string;
   image?: string;
 }
-
 interface HomePageProps {
   currentUser: User;
 }
@@ -33,7 +31,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
   useEffect(() => {
     loadAnnouncements();
   }, []);
-
   const loadAnnouncements = async () => {
     try {
       const res = await api.get("/announcements");
@@ -43,7 +40,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
       Alert.alert("Error", "No se pudieron cargar los anuncios");
     }
   };
-
   const handleSelectImage = async () => {
     const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
     if (!result.didCancel && result.assets && result.assets.length > 0) {
@@ -71,13 +67,12 @@ export default function HomePage({ currentUser }: HomePageProps) {
           headers: { "Content-Type": "multipart/form-data" },
         });
         Alert.alert("Éxito", "Anuncio actualizado");
-      } else {
+        } else {
         await api.post("/announcements", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         Alert.alert("Éxito", "Anuncio creado");
       }
-
       setModalVisible(false);
       setTitulo("");
       setContenido("");
@@ -111,53 +106,27 @@ export default function HomePage({ currentUser }: HomePageProps) {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>
-
       {announcements.map(a => (
         <View key={a.id} style={styles.card}>
           <Text style={styles.cardTitle}>{a.titulo}</Text>
           <Text>{a.contenido}</Text>
-
           {a.image && <Image source={{ uri: a.image }} style={styles.announcementImage} />}
-
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
-
           {currentUser.rol?.toLowerCase() === "admin" && (
             <View style={styles.buttonsRow}>
-              <Button
-                mode="contained"
-                buttonColor="#f39c12"
-                style={styles.actionButton}
-                onPress={() => handleEdit(a)}
-              >
-                Editar
-              </Button>
-              <Button
-                mode="contained"
-                buttonColor="red"
-                style={styles.actionButton}
-                onPress={() => deleteAnnouncement(a.id)}
-              >
-                Eliminar
-              </Button>
+              <Button mode="contained"buttonColor="#f39c12"style={styles.actionButton}onPress={() => handleEdit(a)}>Editar</Button>
+              <Button mode="contained"buttonColor="red"style={styles.actionButton}onPress={() => deleteAnnouncement(a.id)}> Eliminar</Button>
             </View>
           )}
         </View>
       ))}
-
       {currentUser.rol?.toLowerCase() === "admin" && (
-        <Button
-          mode="contained"
-          buttonColor="#0d75bb"
-          style={styles.createButton}
-          onPress={() => {
-            setTitulo("");
-            setContenido("");
-            setImageUri(null);
-            setEditingId(null);
+        <Button mode="contained"buttonColor="#0d75bb"style={styles.createButton}onPress={() => {
+            setTitulo("");  setContenido("");
+            setImageUri(null); setEditingId(null);
             setModalVisible(true);
           }}
-        >
-          Crear Anuncio
+        > Crear Anuncio
         </Button>
       )}
 
@@ -167,7 +136,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
             <Text style={styles.modalTitle}>
               {editingId ? "Editar Anuncio" : "Nuevo Anuncio"}
             </Text>
-
             <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
             <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
             <Button
@@ -182,24 +150,13 @@ export default function HomePage({ currentUser }: HomePageProps) {
             {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
 
             <View style={styles.buttonsRow}>
-              <Button
-                mode="contained"
-                buttonColor="#888"
-                onPress={() => {
+              <Button mode="contained"buttonColor="#888"onPress={() => {
                   setModalVisible(false);
                   setEditingId(null);
                   setImageUri(null);
                 }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                mode="contained"
-                buttonColor="#007bff"
-                onPress={handleSaveAnnouncement}
-              >
-                Guardar
-              </Button>
+              >Cancelar</Button>
+              <Button mode="contained"buttonColor="#007bff"onPress={handleSaveAnnouncement}>Guardar</Button>
             </View>
           </View>
         </View>

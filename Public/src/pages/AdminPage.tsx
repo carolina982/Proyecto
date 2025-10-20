@@ -1,9 +1,9 @@
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { Button } from "react-native-paper";
+import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
-import { User } from "../context/Store";
+import { User } from "../types";
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -49,7 +49,7 @@ export default function AdminPage() {
   const saveChanges = async () => {
     if (!editingUser) return;
 
-    const { nombre, apellido, email, password, rol, photoUrl, _id } = editingUser;
+    const { nombre, apellido, email, password, rol, photoUrl, id } = editingUser;
 
     if (!nombre || !apellido || !email || (!password && isAdding) || !rol) {
       Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
@@ -71,7 +71,7 @@ export default function AdminPage() {
         if (Object.keys(changedFields).length === 0) {
           Alert.alert("Info", "No se realizaron cambios");
         } else {
-          await api.patch(`/users/${_id}`, changedFields);
+          await api.patch(`/users/${id}`, changedFields);
           Alert.alert("Éxito", "Usuario actualizado correctamente");
         }
       }
@@ -85,28 +85,23 @@ export default function AdminPage() {
       Alert.alert("Error", "No se pudo guardar el usuario");
     }
   };
-
-  const handleDelete = (userId: string) => {
+  const handleDelete =(userId:string)=>{
     if (!userId) return;
-
-    Alert.alert("Confirmar", "¿Desea eliminar este usuario?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.delete(`/users/${userId}`);
-            Alert.alert("Éxito", "Usuario eliminado correctamente");
-            await loadUsers();
-          } catch (error) {
-            console.error("Error eliminando usuario", error);
-            Alert.alert("Error", "No se pudo eliminar el usuario");
-          }
-        },
+    Alert.alert("Confrimar" , "¿Desea eliminar este usuario?",[
+      {text:"Cancelar", style:"cancel"},
+      {text:"Eliminar", style:"destructive" , onPress:async()=>{
+        try {
+          await api.delete(`/users/${userId}`);
+          Alert.alert("Exito", "Usuario eliminado correctamente");
+          await loadUsers();
+        }catch (error){
+          console.error("Error eliminado usuario", error);
+          Alert.alert("Error","No se pudo eliminar el usuario");
+        }
       },
-    ]);
-  };
+    },
+  ]);
+};
 
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
@@ -119,7 +114,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item._id || "")}>
+        <TouchableOpacity style={styles.deleteButton} onPress={()=> handleDelete(item.id)}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -129,19 +124,10 @@ export default function AdminPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
-      <Button
-        mode="contained"
-        buttonColor="#0d75bb"
-        textColor="#fff"
-        style={{ borderRadius: 25, marginTop: 10 }}
-        onPress={() => handleEdit()}
-      >
-        Agregar Usuario
-      </Button>
-
+      <Button mode="contained"buttonColor="#0d75bb"textColor="#fff"style={{ borderRadius: 25, marginTop: 10 }}onPress={() => handleEdit()}> Agregar Usuario </Button>
       <FlatList
         data={users}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
       />
@@ -150,34 +136,11 @@ export default function AdminPage() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{isAdding ? "Agregar Usuario" : "Editar Usuario"}</Text>
-
-            <TextInput
-              placeholder="Nombre"
-              style={styles.input}
-              value={editingUser?.nombre}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}
-            
-            />
-            <TextInput
-              placeholder="Apellido"
-              style={styles.input}
-              value={editingUser?.apellido}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, apellido: text })}
-            />
-            <TextInput
-              placeholder="Correo"
-              style={styles.input}
-              value={editingUser?.email}
-              onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}
-            />
+            <TextInput placeholder="Nombre"style={styles.input}value={editingUser?.nombre}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+            <TextInput placeholder="Apellido"style={styles.input}value={editingUser?.apellido}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, apellido: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+            <TextInput placeholder="Correo"style={styles.input}value={editingUser?.email}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
             {isAdding && (
-              <TextInput
-                placeholder="Contraseña"
-                style={styles.input}
-                secureTextEntry
-                value={editingUser?.password}
-                onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}
-              />
+            <TextInput placeholder="Contraseña"style={styles.input}secureTextEntry value={editingUser?.password}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
             )}
             <View style={styles.pickerContainer}>
               <Picker
@@ -226,6 +189,6 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "#fff" },
+   input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
   pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
 });

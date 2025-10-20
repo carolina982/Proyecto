@@ -221,10 +221,8 @@ export default function ViaticosPage() {
           <TextInput value={concepto}    mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" onChangeText={setConcepto} error={!!errors.concepto} style={styles.input} />
           <Text style={styles.label}>Descripción:</Text>
           <TextInput value={descripcion}  mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"onChangeText={setDescripcion} error={!!errors.descripcion} style={styles.input} />
-
           <Text style={styles.label}>Monto:</Text>
           <TextInput value={monto} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"onChangeText={setMonto} keyboardType="numeric" error={!!errors.monto} style={styles.input} />
-
           <Text style={styles.label}>Factura:</Text>
           {ticket ? (
             <>

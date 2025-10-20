@@ -14,10 +14,10 @@ const app = express();
 const PORT = 3000;
 connectDB();
 
-app.use("/uploads",express.static(path.join(__dirname,"../uploads")));
-
 app.use(cors());
 app.use(express.json());
+app.use("/uploads",express.static(path.join(__dirname,"../uploads")));
+
 
 app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);
