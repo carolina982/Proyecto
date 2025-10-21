@@ -120,27 +120,20 @@ export const registerUser = async (req: Request, res: Response) => {
 
 // UPDATE usuario
 export const updateUser = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  if (!id || id.length !== 24) return res.status(400).json({ message: "ID de usuario inválido" });
-
-  try {
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-
-    user.nombre = req.body.nombre || user.nombre;
-    user.apellido = req.body.apellido || user.apellido;
-    user.email = req.body.email || user.email;
-    user.rol = req.body.rol || user.rol;
-
-    if (req.body.password) user.password = await bcrypt.hash(req.body.password, 10);
-    if (req.file) user.photoUrl = `/uploads/${req.file.filename}`;
-
-    await user.save();
-    return res.json({ message: "Usuario actualizado correctamente", ...user.toObject() });
-  } catch (error) {
-    console.error("Error actualizando usuario:", error);
-    return res.status(500).json({ message: "Error actualizando usuario", error });
+ try {
+  const {nombre, apellido, email,rol}=req.body;
+  const updateData:any ={nombre, apellido, email,rol};
+  if (req.file){
+    updateData.photoUrl=`/uploads/${req.file.filename}`;
   }
+ const user=await User.findOneAndUpdate({_id: req.params.id},updateData ,{new:true});
+  if (!user) return
+  res.status(404).json({message:"Usuario no econtrado"});
+  res.json(user);
+ }catch (error){
+  console.error(error);
+  res.status(500).json({message:"Error al actualizar usuario"});
+ }
 };
 
 export const deleteUser = async (req: Request, res: Response) => {

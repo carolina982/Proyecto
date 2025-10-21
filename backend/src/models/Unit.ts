@@ -1,6 +1,5 @@
 
 import mongoose, { Document, Schema } from "mongoose";
-
 export interface IUnit extends Document {
     nombre:string;
     placas:string;
@@ -18,7 +17,6 @@ const uniSchema =new Schema<IUnit> ({
 },
 {timestamps:true}
 );
-
 uniSchema.set("toJSON", {
   virtuals: true,
   versionKey: false,
