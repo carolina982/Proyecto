@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 
@@ -140,43 +140,33 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo guardar el viaje");
     }
   };
-const deleteTrip = (id: string) => {
-  if (!id) return;
-
-  Alert.alert(
-    "Confirmar",
-    "¿Desea eliminar este viaje?",
-    [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: () => {
-          (async () => {
-            try {
-              const fullUrl = `${api.defaults.baseURL}/trips/${id}`;
-              console.log("Eliminando viaje con ID:", id);
-              console.log("URL DELETE:", fullUrl);
-
-              await api.delete(`/trips/${id}`, {
-                headers: { "Content-Type": "application/json" }
-              });
-
-              console.log("Viaje eliminado correctamente");
-              await loadTrips(); // recarga la lista
-              Alert.alert("Éxito", "Viaje eliminado correctamente");
-            } catch (error: any) {
-              console.error("Error eliminando viaje:", error.response?.data || error);
-              Alert.alert("Error", "No se pudo eliminar el viaje");
-            }
-          })();
-        }
-      }
-    ],
-    { cancelable: true }
-  );
+ const deleteTrip = async (id: string) => {
+  console.log("Eliminar viaje ID ", id);
+  let confirmed = false;
+  if (Platform.OS === "web"){
+    confirmed=window.confirm("¿Desea eliminar este viaje?");
+    if (!confirmed) return;
+  }else {
+    confirmed =await new Promise<boolean>((resolve)=>{
+      Alert.alert("Confirmar", "¿Desea eliminar este viaje?",[
+        {text:"Cancelar" , style:"cancel", onPress:()=>resolve(false)},
+        {text:"Eliminar", style:"destructive" ,onPress:()=>resolve(true)},
+      ],
+      {cancelable:true}
+    );
+    });
+    if (!confirmed) return;
+  }
+  try {
+    const res=await api.delete(`/trips/${id}`);
+    console.log("DELETE viaje response", res.data);
+    setTrips((prev)=>prev.filter((t)=> t.id !== id));
+    Alert.alert("Exito", "Viaje eliminado correctamente");
+  }catch (error){
+    console.error("Error eliminando viaje", error);
+    Alert.alert("Error", "No se pudo eliminar el viaje");
+  }
 };
-
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
@@ -227,7 +217,6 @@ const deleteTrip = (id: string) => {
             <Picker.Item label="Selecciona un conductor" value="" />
             {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
           </Picker>
-
           <Text style={styles.label}>Destino:</Text>
           <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
           <Text style={styles.label}>Kilometraje (km):</Text>

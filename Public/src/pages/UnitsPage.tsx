@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput, } from "react-native-paper";
 import { api } from "../api/api";
 
 interface Unit {
-  //id: string;
-  _id:string;
+  id: string;
   nombre: string;
   placas: string;
   modelo: string;
@@ -32,13 +31,12 @@ export default function UnitsPage() {
     try {
       const res = await api.get("/units");
       const mappedUnits= res.data.map((u:any)=> ({
-        id:u._id,
+        id:u.id,
         nombre:u.nombre,
         placas:u.placas,
         modelo:u.modelo,
         capacidad:u.capacidad,
         estado:u.estado,
-        _id:u._id
       }));
       setUnits(mappedUnits);
     } catch (error) {
@@ -78,7 +76,7 @@ export default function UnitsPage() {
 
     try {
       if (editingUnit) {
-        await api.put(`/units/${editingUnit._id}`, unitData);
+        await api.put(`/units/${editingUnit.id}`, unitData);
       } else {
         await api.post("/units", unitData);
       }
@@ -89,25 +87,33 @@ export default function UnitsPage() {
       Alert.alert("Error", "No se pudo guardar la unidad");
     }
   };
-
-  const deleteUnitItem = (id: string) => {
-    console.log("id que se va eliminar",id);
-    Alert.alert("Confirmar","¿?Desea eliminar esta unidad?",[
-      {text:"Cancelar", style:"cancel"},
-      {text:"Eliminar" , style:"destructive", onPress:async()=>{
-        try{
-          const res= await api.delete(`/units/${id}`);
-          console.log("respuesta backend", res.data);
-          setUnits((prev)=>prev.filter((u)=>u._id !==id));
-          await loadUnits ();
-        }catch (error){
-          console.error("Error eliminando unidad", error);
-          Alert.alert("Error","No se puede eliminar la unidad");
-        }
-      },
-    },
-    ]);
-  };
+  const deleteUnit = async(id:string)=>{
+    console.log ("Eliminar unidad id",id);
+    let confirmed =false;
+    if (Platform.OS === "web"){
+      confirmed= window.confirm("¿Desea eliminar esta unidad?");
+      if (!confirmed) return;
+    }else {
+      confirmed = await new Promise<boolean>((resolve)=>{
+        Alert.alert("Confirmar" , "¿Desea eliminar esta unidad?",[
+          {text:"Cancelar" , style:"cancel" , onPress:()=>resolve(false)},
+          {text:"Eliminar", style:"destructive" , onPress:()=>resolve(true)},
+        ],
+        {cancelable:true}
+      );
+      });
+      if (!confirmed) return;
+    }
+    try {
+      const res= await api.delete(`/units/${id}`);
+      console.log("DELETE unidad response", res.data);
+      setUnits((prev)=>prev.filter((u)=> u.id !==id));
+      Alert.alert("Exito", "Unidad eliminada correctamente");
+    }catch (error){
+      console.log("Error eliminando unidad", error);
+      Alert.alert("Error", "No se pudo eliminar la unidad")
+    }
+  }
 
   const renderItem = ({ item }: { item: Unit }) => {
     let estadoColor = "#4caf50"; //Disponible
@@ -129,7 +135,7 @@ export default function UnitsPage() {
           <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
             Editar
           </Button>
-          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnitItem(item._id)}>
+          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnit(item.id)}>
             Eliminar
           </Button>
         </View>
@@ -145,7 +151,7 @@ export default function UnitsPage() {
       </Button>
       <FlatList
         data={units}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />

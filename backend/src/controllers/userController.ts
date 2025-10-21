@@ -115,7 +115,7 @@ export const registerUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Register error:", error);
     res.status(500).json({ message: "Error en el servidor" });
-  }
+}
 };
 
 // UPDATE usuario
@@ -143,18 +143,18 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE usuario
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
-  if (!id || id.length !== 24) return res.status(400).json({ message: "ID de usuario inválido" });
+  console.log("Id recibiendo en backend", id);
 
   try {
     const user = await User.findByIdAndDelete(id);
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-
-    return res.json({ message: "Usuario eliminado correctamente" });
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    res.json({ message: "Usuario eliminado correctamente" });
   } catch (error) {
-    console.error("Error eliminando usuario:", error);
-    return res.status(500).json({ message: "Error eliminando usuario", error });
+    console.error("Error eliminando usuario", error);
+    res.status(500).json({ message: "Error eliminando usuario" });
   }
 };

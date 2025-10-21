@@ -1,6 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 import { User } from "../types";
@@ -24,7 +24,6 @@ export default function AdminPage() {
       console.error("Error cargando usuarios", error);
     }
   };
-
   const handleEdit = (user?: User) => {
     if (user) {
       setEditingUser({ ...user });
@@ -48,9 +47,7 @@ export default function AdminPage() {
 
   const saveChanges = async () => {
     if (!editingUser) return;
-
-    const { nombre, apellido, email, password, rol, photoUrl, id } = editingUser;
-
+    const {nombre, apellido, email, password, rol, photoUrl,_id } = editingUser;
     if (!nombre || !apellido || !email || (!password && isAdding) || !rol) {
       Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
       return;
@@ -71,7 +68,7 @@ export default function AdminPage() {
         if (Object.keys(changedFields).length === 0) {
           Alert.alert("Info", "No se realizaron cambios");
         } else {
-          await api.patch(`/users/${id}`, changedFields);
+          await api.patch(`/users/${_id}`, changedFields);
           Alert.alert("Éxito", "Usuario actualizado correctamente");
         }
       }
@@ -85,24 +82,30 @@ export default function AdminPage() {
       Alert.alert("Error", "No se pudo guardar el usuario");
     }
   };
-  const handleDelete =(userId:string)=>{
-    if (!userId) return;
-    Alert.alert("Confrimar" , "¿Desea eliminar este usuario?",[
-      {text:"Cancelar", style:"cancel"},
-      {text:"Eliminar", style:"destructive" , onPress:async()=>{
-        try {
-          await api.delete(`/users/${userId}`);
-          Alert.alert("Exito", "Usuario eliminado correctamente");
-          await loadUsers();
-        }catch (error){
-          console.error("Error eliminado usuario", error);
-          Alert.alert("Error","No se pudo eliminar el usuario");
-        }
-      },
-    },
-  ]);
+const deleteUser =async (id:string)=>{
+  let confirmed = false ;
+  if (Platform.OS === "web"){
+    confirmed=window.confirm("¿Desea eliminar este usuario?");
+    if (!confirmed) return ;
+  }else {
+    confirmed =await new  Promise<boolean>((resolve)=>{
+      Alert.alert("Confirmar", "¿Desea eliminar este usuario?",[
+        {text:"Cancelar", style:"cancel" , onPress:()=>resolve (false)},
+        {text:"Eliminar", style:"destructive", onPress:()=>resolve(true)},
+      ],
+      {cancelable:true}
+    );
+    });
+    if (!confirmed)return;
+  }
+  try {
+    const res =await api.delete(`/users/${id}`);
+    setUsers((prevUsers)=>prevUsers.filter((u)=>u._id !== id));
+    Alert.alert("Exito","Usuario eliminando correctamente");
+  }catch (error:any){
+    console.error("Error eliminado usuario",)
+  }
 };
-
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
@@ -114,7 +117,7 @@ export default function AdminPage() {
         <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={()=> handleDelete(item.id)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={()=>deleteUser(item._id)}>
           <Text style={styles.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -125,13 +128,7 @@ export default function AdminPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
       <Button mode="contained"buttonColor="#0d75bb"textColor="#fff"style={{ borderRadius: 25, marginTop: 10 }}onPress={() => handleEdit()}> Agregar Usuario </Button>
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}
-      />
-
+      <FlatList data={users} keyExtractor={(item) => item._id}renderItem={renderItem} contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}/>
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>

@@ -1,7 +1,7 @@
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Image, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 
@@ -155,7 +155,33 @@ export default function ViaticosPage() {
       setLoading(false);
     }
   };
-
+ const deleteViatico = async (id: string) => {
+   console.log("Eliminar viatico ID",id);
+   let confirmed = false ;
+   if (Platform.OS === "web"){
+    confirmed=window.confirm("¿Desea eliminar este viatico?");
+    if (!confirmed) return;
+   }else {
+    confirmed=await new Promise<boolean>((resolve)=>{
+      Alert.alert("Confrimar" , "¿Desea confirmar este viatico?",[
+        {text:"Cancelar", style:"cancel", onPress:()=>resolve (false)},
+        {text:"Eliminar", style:"destructive", onPress:()=>resolve(true)},
+      ],
+      {cancelable:true}
+    );
+    });
+    if (!confirmed) return;
+   }
+   try {
+    const res= await api.delete(`/viatics/${id}`);
+    console.log("DELETE  viatico response",res.data);
+    setViaticos((prev)=> prev.filter((v)=> v.id !==id));
+    Alert.alert("Exito", "Viatico eliminado correctamente");
+   }catch (error){
+    console.error("Error eliminando viatico", error);
+    Alert.alert("Error","No se pudo eliminar viatico")
+   }
+};
   const renderItem = ({ item }: { item: Viatico }) => (
     <View style={styles.card}>
       <Text style={styles.title}>{item.nombre}</Text>
@@ -173,24 +199,7 @@ export default function ViaticosPage() {
     </View>
   );
 
-  const deleteViatico = async (id: string) => {
-    Alert.alert("Confirmar", "¿Deseas eliminar este viático?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.delete(`/viatics/${id}`);
-            await loadViaticos();
-          } catch (error) {
-            console.error("Error eliminando viático", error);
-            Alert.alert("Error", "No se pudo eliminar el viático");
-          }
-        },
-      },
-    ]);
-  };
+ 
 
   return (
     <View style={styles.container}>

@@ -26,6 +26,6 @@ app.use("/api/viatics", viaticRoutes);
 app.use("/api/announcements", announcement);
 app.use("/api",authRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

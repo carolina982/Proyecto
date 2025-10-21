@@ -3,7 +3,6 @@ import { Alert, Image, Modal, ScrollView, StyleSheet, Text, View } from "react-n
 import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
-
 interface User {
   id: string;
   nombre: string;
@@ -19,7 +18,6 @@ interface Announcement {
 interface HomePageProps {
   currentUser: User;
 }
-
 export default function HomePage({ currentUser }: HomePageProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
