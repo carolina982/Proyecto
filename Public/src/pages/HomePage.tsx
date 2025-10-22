@@ -202,19 +202,9 @@ export default function HomePage({ currentUser }: HomePageProps) {
             >
               {imageUri ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
-
             {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
-
             <View style={styles.buttonsRow}>
-              <Button
-                mode="contained"
-                buttonColor="#888"
-                onPress={() => {
-                  setModalVisible(false);
-                  setEditingId(null);
-                  setImageUri(null);
-                }}
-              >
+              <Button mode="contained"buttonColor="#888"onPress={() => {setModalVisible(false);setEditingId(null);setImageUri(null);}}>
                 Cancelar
               </Button>
               <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>
