@@ -1,11 +1,11 @@
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Alert, Platform, ScrollView, StyleSheet } from "react-native";
 import { Avatar, Button, Text, TextInput } from "react-native-paper";
 
 interface User {
-  _id: string;
+  id: string;
   nombre: string;
   apellido: string;
   rol: "Admin" | "Chofer";
@@ -15,9 +15,10 @@ interface User {
 
 interface PerfilPageProps {
   currentUser: User;
+  setCurrentUser?: (user: User) => void; // opcional si usas contexto global
 }
 
-export default function PerfilPage({ currentUser }: PerfilPageProps) {
+export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPageProps) {
   const [nombre, setNombre] = useState(currentUser.nombre);
   const [apellido, setApellido] = useState(currentUser.apellido);
   const [rol, setRol] = useState<"Admin" | "Chofer">(currentUser.rol);
@@ -27,20 +28,37 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
   );
   const [isSaving, setIsSaving] = useState(false);
 
-  // --- Seleccionar imagen desde galería ---
+  
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`http://192.168.1.81:3000/api/users/${currentUser.id}`);
+        if (!res.ok) throw new Error("No se pudo obtener el perfil");
+        const data = await res.json();
+
+        setNombre(data.nombre);
+        setApellido(data.apellido);
+        setEmail(data.email);
+        setRol(data.rol);
+        if (data.photoUrl)
+          setPhotoUri(`http://192.168.1.81:3000${data.photoUrl}?t=${Date.now()}`);
+      } catch (error) {
+        console.error("Error cargando perfil:", error);
+      }
+    };
+    fetchUser();
+  }, [currentUser.id]);
+
   const pickImage = async () => {
     try {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        Alert.alert(
-          "Permiso denegado",
-          "Se requiere acceso a la galería para subir foto"
-        );
+        Alert.alert("Permiso denegado", "Se requiere acceso a la galería para subir foto");
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"], // usa cadenas en lugar de MediaTypeOptions
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -54,16 +72,15 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       Alert.alert("Error", "No se pudo seleccionar la imagen");
     }
   };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const userId = currentUser._id;
+      const userId = currentUser.id;
       if (!userId) {
-        Alert.alert("Error", "No se encontró el ID del usuario");
+        Alert.alert("Error", "No se encontró el id del usuario");
         return;
       }
-      console.log("Guardando perfil ..");
-      console.log("Datos a enviar" ,{nombre, apellido, email,rol});
 
       const formData = new FormData();
       formData.append("nombre", nombre);
@@ -72,41 +89,53 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
       formData.append("rol", rol);
 
       if (photoUri && !photoUri.startsWith("http")) {
-        const filename = photoUri.split("/").pop()!;
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` :`image`;
-
-        formData.append("photo", {
-          uri: photoUri,
-          name: filename,
-          type,
-        } as any);
+        if (Platform.OS === "web") {
+          const response = await fetch(photoUri);
+          const blob = await response.blob();
+          const filename = `photo_${Date.now()}.jpg`;
+          const file = new File([blob], filename, { type: blob.type });
+          formData.append("photo", file);
+        } else {
+          const localUri = photoUri.startsWith("file://") ? photoUri : "file://" + photoUri;
+          const filename = localUri.split("/").pop()!;
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1].toLowerCase()}` : "image";
+          formData.append("photo", { uri: localUri, name: filename, type } as any);
+        }
       }
 
-      const response = await fetch(`http://192.168.1.81:3000/api/users/${userId}`,
-        {
-          method:"PATCH",
-          body:formData,
-        });
-        console.log("Respuesta del servidor",response.status);
-        const text=await response.text();
-        console.log("Texto crudo",text)
-      if (!response.ok) {
-        throw new Error( "Error al actualizar perfil");
-      }
+      const response = await fetch(`http://192.168.1.81:3000/api/users/${userId}`, {
+        method: "PATCH",
+        body: formData,
+      });
 
-      const data =JSON.parse(text);
+      const text = await response.text();
+      if (!response.ok) throw new Error(text || "Error al actualizar perfil");
+      const data = JSON.parse(text);
+
+      // Actualizar estado local
       setNombre(data.nombre);
       setApellido(data.apellido);
       setEmail(data.email);
       setRol(data.rol);
-      if (data.photoUrl) {
-        setPhotoUri(`http://192.168.1.81:3000${data.photoUrl}`);
+      if (data.photoUrl)
+        setPhotoUri(`http://192.168.1.81:3000${data.photoUrl}?t=${Date.now()}`);
+
+      // Actualizar el contexto global si existe
+      if (setCurrentUser) {
+        setCurrentUser({
+          ...currentUser,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          email: data.email,
+          rol: data.rol,
+          photoUrl: data.photoUrl,
+        });
       }
 
       Alert.alert("Éxito", "Perfil actualizado correctamente");
     } catch (error: any) {
-      console.error("Error en handleSave:", error);
+      console.error("Error en handleSave", error);
       Alert.alert("Error", error.message || "No se pudo actualizar el perfil");
     } finally {
       setIsSaving(false);
@@ -129,14 +158,45 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
         />
       )}
 
-      <Button mode="outlined"style={styles.changePhotoButton}onPress={pickImage}labelStyle={{ color: "#0d75bb" }}>Cambiar Imagen</Button>
+      <Button
+        mode="outlined"
+        style={styles.changePhotoButton}
+        onPress={pickImage}
+        labelStyle={{ color: "#0d75bb" }}
+      >
+        Cambiar Imagen
+      </Button>
+
       <Text style={styles.title}>Perfil</Text>
-      <TextInput label="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
-      <TextInput label="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
-      <TextInput label="Email"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
-      <Text style={{ alignSelf: "flex-start", marginBottom: 5, color: "#0f0f0f" }}>
-        Rol
-      </Text>
+      <TextInput
+        label="Nombre"
+        value={nombre}
+        onChangeText={setNombre}
+        mode="flat"
+        underlineColor="#0d75bb"
+        activeUnderlineColor="#8bc1e6ff"
+        style={styles.input}
+      />
+      <TextInput
+        label="Apellido"
+        value={apellido}
+        onChangeText={setApellido}
+        mode="flat"
+        underlineColor="#0d75bb"
+        activeUnderlineColor="#8bc1e6ff"
+        style={styles.input}
+      />
+      <TextInput
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        mode="flat"
+        underlineColor="#0d75bb"
+        activeUnderlineColor="#8bc1e6ff"
+        style={styles.input}
+      />
+
+      <Text style={{ alignSelf: "flex-start", marginBottom: 5, color: "#0f0f0f" }}>Rol</Text>
       <Picker
         selectedValue={rol}
         onValueChange={(value: "Admin" | "Chofer") => setRol(value)}
@@ -145,6 +205,7 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
         <Picker.Item label="Admin" value="Admin" />
         <Picker.Item label="Chofer" value="Chofer" />
       </Picker>
+
       <Button
         mode="contained"
         buttonColor="#0d75bb"
@@ -157,16 +218,12 @@ export default function PerfilPage({ currentUser }: PerfilPageProps) {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: { padding: 20, flexGrow: 1, alignItems: "center" },
   avatar: { backgroundColor: "#0d75bb", marginBottom: 10 },
   changePhotoButton: { marginBottom: 20, borderColor: "#0d75bb" },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#0d75bb",
-  },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#0d75bb" },
   input: { width: "100%", marginBottom: 15, backgroundColor: "" },
   picker: { width: "100%", marginBottom: 15, color: "#0d75bb" },
   button: { width: "100%", marginTop: 10 },

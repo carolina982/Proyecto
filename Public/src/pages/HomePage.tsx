@@ -3,21 +3,25 @@ import { Alert, Image, Modal, ScrollView, StyleSheet, Text, View } from "react-n
 import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
+
 interface User {
   id: string;
   nombre: string;
   rol: string;
 }
+
 interface Announcement {
   id: string;
   titulo: string;
   contenido: string;
   fecha: string;
-  image?: string;
+  image?: string | null;
 }
+
 interface HomePageProps {
   currentUser: User;
 }
+
 export default function HomePage({ currentUser }: HomePageProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -29,15 +33,23 @@ export default function HomePage({ currentUser }: HomePageProps) {
   useEffect(() => {
     loadAnnouncements();
   }, []);
+
   const loadAnnouncements = async () => {
     try {
       const res = await api.get("/announcements");
-      setAnnouncements(res.data.map((a: any) => ({ ...a, id: a._id })));
+      setAnnouncements(
+        res.data.map((a: any) => ({
+          ...a,
+          id: a._id,
+          image: a.image ? `http://192.168.1.81:3000${a.image}`: null,
+        }))
+      );
     } catch (error) {
       console.error("Error cargando anuncios", error);
       Alert.alert("Error", "No se pudieron cargar los anuncios");
     }
   };
+
   const handleSelectImage = async () => {
     const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
     if (!result.didCancel && result.assets && result.assets.length > 0) {
@@ -56,31 +68,63 @@ export default function HomePage({ currentUser }: HomePageProps) {
       const formData = new FormData();
       formData.append("titulo", titulo);
       formData.append("contenido", contenido);
-      if (imageUri) {
+
+      if (imageUri && !imageUri.startsWith("http")) {
         formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
       }
 
+      let savedAnnouncement;
+
       if (editingId) {
-        await api.put(`/announcements/${editingId}`, formData, {
+        const res = await api.put(`/announcements/${editingId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        savedAnnouncement = res.data;
         Alert.alert("Éxito", "Anuncio actualizado");
-        } else {
-        await api.post("/announcements", formData, {
+      } else {
+        const res = await api.post("/announcements", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        savedAnnouncement = res.data;
         Alert.alert("Éxito", "Anuncio creado");
       }
+
+      // Convertir la ruta de la imagen a URL completa
+      const updatedAnnouncement: Announcement = {
+        id: savedAnnouncement._id,
+        titulo: savedAnnouncement.titulo,
+        contenido: savedAnnouncement.contenido,
+        fecha: savedAnnouncement.fecha,
+        image: savedAnnouncement.image
+          ? `http://192.168.1.81:3000${savedAnnouncement.image}`
+          : null,
+      };
+
+      // Actualizar la lista local
+      setAnnouncements(prev => {
+        if (editingId) {
+          return prev.map(a => (a.id === editingId ? updatedAnnouncement : a));
+        }
+        return [updatedAnnouncement, ...prev];
+      });
+
       setModalVisible(false);
       setTitulo("");
       setContenido("");
       setImageUri(null);
       setEditingId(null);
-      loadAnnouncements();
     } catch (error) {
       console.error("Error guardando anuncio", error);
       Alert.alert("Error", "No se pudo guardar anuncio");
     }
+  };
+
+  const handleEdit = (a: Announcement) => {
+    setTitulo(a.titulo);
+    setContenido(a.contenido);
+    setImageUri(a.image || null);
+    setEditingId(a.id);
+    setModalVisible(true);
   };
 
   const deleteAnnouncement = async (id: string) => {
@@ -93,17 +137,10 @@ export default function HomePage({ currentUser }: HomePageProps) {
     }
   };
 
-  const handleEdit = (a: Announcement) => {
-    setTitulo(a.titulo);
-    setContenido(a.contenido);
-    setImageUri(a.image || null);
-    setEditingId(a.id);
-    setModalVisible(true);
-  };
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>
+
       {announcements.map(a => (
         <View key={a.id} style={styles.card}>
           <Text style={styles.cardTitle}>{a.titulo}</Text>
@@ -112,32 +149,53 @@ export default function HomePage({ currentUser }: HomePageProps) {
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
           {currentUser.rol?.toLowerCase() === "admin" && (
             <View style={styles.buttonsRow}>
-              <Button mode="contained"buttonColor="#f39c12"style={styles.actionButton}onPress={() => handleEdit(a)}>Editar</Button>
-              <Button mode="contained"buttonColor="red"style={styles.actionButton}onPress={() => deleteAnnouncement(a.id)}> Eliminar</Button>
+              <Button
+                mode="contained"
+                buttonColor="#f39c12"
+                style={styles.actionButton}
+                onPress={() => handleEdit(a)}
+              >
+                Editar
+              </Button>
+              <Button
+                mode="contained"
+                buttonColor="red"
+                style={styles.actionButton}
+                onPress={() => deleteAnnouncement(a.id)}
+              >
+                Eliminar
+              </Button>
             </View>
           )}
         </View>
       ))}
+
       {currentUser.rol?.toLowerCase() === "admin" && (
-        <Button mode="contained"buttonColor="#0d75bb"style={styles.createButton}onPress={() => {
-            setTitulo("");  setContenido("");
-            setImageUri(null); setEditingId(null);
+        <Button
+          mode="contained"
+          buttonColor="#0d75bb"
+          style={styles.createButton}
+          onPress={() => {
+            setTitulo("");
+            setContenido("");
+            setImageUri(null);
+            setEditingId(null);
             setModalVisible(true);
           }}
-        > Crear Anuncio
+        >
+          Crear Anuncio
         </Button>
       )}
 
+      {/* Modal de creación/edición */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>
-              {editingId ? "Editar Anuncio" : "Nuevo Anuncio"}
-            </Text>
+            <Text style={styles.modalTitle}>{editingId ? "Editar Anuncio" : "Nuevo Anuncio"}</Text>
+
             <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
             <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
-            <Button
-              mode="contained"
+            <Button mode="contained"
               buttonColor={imageUri ? "#28a745" : "#007bff"}
               style={{ marginBottom: 10 }}
               onPress={handleSelectImage}
@@ -148,13 +206,20 @@ export default function HomePage({ currentUser }: HomePageProps) {
             {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
 
             <View style={styles.buttonsRow}>
-              <Button mode="contained"buttonColor="#888"onPress={() => {
+              <Button
+                mode="contained"
+                buttonColor="#888"
+                onPress={() => {
                   setModalVisible(false);
                   setEditingId(null);
                   setImageUri(null);
                 }}
-              >Cancelar</Button>
-              <Button mode="contained"buttonColor="#007bff"onPress={handleSaveAnnouncement}>Guardar</Button>
+              >
+                Cancelar
+              </Button>
+              <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>
+                Guardar
+              </Button>
             </View>
           </View>
         </View>

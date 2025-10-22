@@ -119,23 +119,31 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 // UPDATE usuario
-export const updateUser = async (req: Request, res: Response) => {
- try {
-  const {nombre, apellido, email,rol}=req.body;
-  const updateData:any ={nombre, apellido, email,rol};
-  if (req.file){
-    updateData.photoUrl=`/uploads/${req.file.filename}`;
+export const updateUser=  async (req:Request, res:Response)=>{
+    console.log("====UPDATE USER DEBUG====");
+    console.log("Recibida peticion PATCH para actualizar usuario");
+    console.log("req.params.id", req.params.id);
+    console.log("req.body",req.body);
+    console.log("req.file",req.file);
+    console.log("====================");
+  try {
+    const {nombre,apellido,email,rol}=req.body;
+    const updateData: any ={nombre, apellido,email, rol};
+    if (req.file){
+      updateData.photoUrl =`/uploads/${req.file.filename}`;
+    }
+    const user =await User.findByIdAndUpdate(req.params.id,updateData,{new:true});
+    if (!user){
+      return res.status(404).json({message:"Usuario no econtrado"});
+    }
+    res.json(user);
+  }catch (error){
+    console.error("Error al actualizar usuario", error);
+    res.status(500).json({message:"Error al actualizar usuario"});
   }
- const user=await User.findOneAndUpdate({_id: req.params.id},updateData ,{new:true});
-  if (!user) return
-  res.status(404).json({message:"Usuario no econtrado"});
-  res.json(user);
- }catch (error){
-  console.error(error);
-  res.status(500).json({message:"Error al actualizar usuario"});
- }
 };
 
+//Delete 
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   console.log("Id recibiendo en backend", id);
