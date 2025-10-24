@@ -6,7 +6,7 @@ export  interface IUser extends Document {
  email:string;
  password:string ;
  rol:string; 
- photoUrl?:string|null;
+ imagenUrl?:string|null;
 
 }
 const userSchema  = new Schema <IUser>({
@@ -15,7 +15,7 @@ const userSchema  = new Schema <IUser>({
     email:{type:String , required:true},
     password:{type:String, required:true},
     rol:{type:String, enum:["Admin","Chofer"], required:true},
-    photoUrl:{type:String, default:null},
+    imagenUrl:{type:String, default:null},
 },
  {timestamps:true}
 );

@@ -74,7 +74,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const userData = {
       id: user._id,nombre: user.nombre,
       apellido: user.apellido, email: user.email,
-      rol: user.rol, photoUrl: user.photoUrl || null,
+      rol: user.rol, photoUrl: user.imagenUrl|| null,
     };
     res.json(userData);
   } catch (error) {
@@ -108,7 +108,7 @@ export const registerUser = async (req: Request, res: Response) => {
       apellido: newUser.apellido,
       email: newUser.email,
       rol: newUser.rol,
-      photoUrl: newUser.photoUrl || null,
+      photoUrl: newUser.imagenUrl || null,
     };
 
     res.status(201).json(userData);

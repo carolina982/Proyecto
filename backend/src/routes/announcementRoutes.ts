@@ -2,6 +2,7 @@ import express from "express";
 import { createAnnouncements, deleteAnnouncement, getAnnouncements, updateAnnouncement } from "../controllers/announcementController";
 import { upload } from "../middlewares/upload";
 
+
 const router =express.Router();
 router.get("/",getAnnouncements);
 router.post("/",upload.single("image"),createAnnouncements);

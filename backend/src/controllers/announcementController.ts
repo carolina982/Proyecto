@@ -13,21 +13,41 @@ export const getAnnouncements = async (req: Request, res: Response) => {
   }
 };
 
-export const createAnnouncements = async(req:Request, res:Response)=>{
+export const createAnnouncements = async (req: Request, res: Response) => {
   try {
-    const {titulo, contenido}=req.body;
-    const imagePath= req.file ?`/uploads/annnouncements/${req.file.filename}`:null;
-     
-    const newAnnouncement=new Announcement({titulo ,contenido, fecha:new Date(),image:imagePath,});
+    console.log("Body recibido:", req.body);
+    console.log("Archivo recibido:", req.file);
+
+    const { titulo, contenido } = req.body;
+
+    if (!titulo || !contenido) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
+
+    const imagePath = req.file ?`/uploads/${req.file.filename}`: null;
+
+    const newAnnouncement = new Announcement({
+      titulo,
+      contenido,
+      fecha: new Date(),
+      image: imagePath,
+    });
+
     await newAnnouncement.save();
     res.status(201).json(newAnnouncement);
-  }catch (error){
-    console.error("Error creando anuncio", error);
-    res.status(500).json({message:"Error al crear anuncio"});
+  } catch (error) {
+    console.error("Error creando anuncio:", error);
+    res.status(500).json({ message: "Error al crear el anuncio" });
   }
-}
+};
 
 export const updateAnnouncement = async (req: Request, res: Response) => {
+      console.log("====UPDATE USER DEBUG====");
+    console.log("Recibida peticion PATCH para actualizar anuncio");
+    console.log("req.params.id", req.params.id);
+    console.log("req.body",req.body);
+    console.log("req.file",req.file);
+    console.log("====================");
   try {
     const { titulo, contenido } = req.body;
     const { id } = req.params;
@@ -39,10 +59,10 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
 
     if (req.file) {
       if (existing.image) {
-        const oldPath = path.join(__dirname, "../../public", existing.image);
+        const oldPath = path.join(__dirname, "../../uploads", existing.image);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
-      existing.image =`/uploads/announcements/${req.file.filename}`;
+      existing.image =`/uploads/${req.file.filename}`;
     }
 
     existing.titulo = titulo || existing.titulo;
@@ -65,7 +85,7 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
     }
 
     if (existing.image) {
-      const oldPath = path.join(__dirname, "../../public", existing.image);
+      const oldPath = path.join(__dirname, "../../uploads", existing.image);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 

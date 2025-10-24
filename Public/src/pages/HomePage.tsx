@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
-import { api } from "../api/api";
+import { api, BASE_URL } from "../api/api";
 
 interface User {
   id: string;
@@ -29,6 +29,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const [contenido, setContenido] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null); // solo web
 
   useEffect(() => {
     loadAnnouncements();
@@ -41,26 +42,42 @@ export default function HomePage({ currentUser }: HomePageProps) {
         res.data.map((a: any) => ({
           ...a,
           id: a._id,
-          image: a.image ? `http://192.168.1.81:3000${a.image}`: null,
+          image: a.image ? `${BASE_URL.replace("/api", "")}${a.image}`: null,
         }))
       );
     } catch (error) {
       console.error("Error cargando anuncios", error);
-      Alert.alert("Error", "No se pudieron cargar los anuncios");
+      Platform.OS === "web"
+        ? alert("No se pudieron cargar los anuncios")
+        : Alert.alert("Error", "No se pudieron cargar los anuncios");
     }
   };
 
   const handleSelectImage = async () => {
-    const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
-    if (!result.didCancel && result.assets && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      if (uri) setImageUri(uri);
+    if (Platform.OS === "web") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = () => {
+        if (input.files && input.files.length > 0) {
+          setImageFile(input.files[0]);
+        }
+      };
+      input.click();
+    } else {
+      const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
+      if (!result.didCancel && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        if (uri) setImageUri(uri);
+      }
     }
   };
 
   const handleSaveAnnouncement = async () => {
     if (!titulo || !contenido) {
-      Alert.alert("Error", "Completa todos los campos");
+      Platform.OS === "web"
+        ? alert("Completa todos los campos")
+        : Alert.alert("Error", "Completa todos los campos");
       return;
     }
 
@@ -69,60 +86,66 @@ export default function HomePage({ currentUser }: HomePageProps) {
       formData.append("titulo", titulo);
       formData.append("contenido", contenido);
 
-      if (imageUri && !imageUri.startsWith("http")) {
-        formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
-      }
-
-      let savedAnnouncement;
-
-      if (editingId) {
-        const res = await api.put(`/announcements/${editingId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        savedAnnouncement = res.data;
-        Alert.alert("Éxito", "Anuncio actualizado");
+      if (Platform.OS === "web") {
+        if (imageFile) formData.append("image", imageFile);
       } else {
-        const res = await api.post("/announcements", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        savedAnnouncement = res.data;
-        Alert.alert("Éxito", "Anuncio creado");
+        if (imageUri && !imageUri.startsWith("http")) {
+          formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
+        }
       }
 
-      // Convertir la ruta de la imagen a URL completa
+      const url = editingId ? `/announcements/${editingId}` : "/announcements";
+
+      const res = await api({
+        method: editingId ? "put" : "post",
+        url,
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const savedAnnouncement = res.data;
+
       const updatedAnnouncement: Announcement = {
         id: savedAnnouncement._id,
         titulo: savedAnnouncement.titulo,
         contenido: savedAnnouncement.contenido,
         fecha: savedAnnouncement.fecha,
         image: savedAnnouncement.image
-          ? `http://192.168.1.81:3000${savedAnnouncement.image}`
+          ? `${BASE_URL.replace("/api", "")}${savedAnnouncement.image}`
           : null,
       };
 
-      // Actualizar la lista local
-      setAnnouncements(prev => {
-        if (editingId) {
-          return prev.map(a => (a.id === editingId ? updatedAnnouncement : a));
-        }
-        return [updatedAnnouncement, ...prev];
-      });
+      setAnnouncements((prev) =>
+        editingId
+          ? prev.map((a) => (a.id === editingId ? updatedAnnouncement : a))
+          : [updatedAnnouncement, ...prev]
+      );
 
       setModalVisible(false);
       setTitulo("");
       setContenido("");
       setImageUri(null);
+      setImageFile(null);
       setEditingId(null);
+
+      const successMsg = editingId ? "Anuncio actualizado" : "Anuncio creado";
+      Platform.OS === "web" ? alert(successMsg) : Alert.alert("Éxito", successMsg);
     } catch (error) {
       console.error("Error guardando anuncio", error);
-      Alert.alert("Error", "No se pudo guardar anuncio");
+      Platform.OS === "web"
+        ? alert("No se pudo guardar el anuncio")
+        : Alert.alert("Error", "No se pudo guardar el anuncio");
     }
   };
 
   const handleEdit = (a: Announcement) => {
     setTitulo(a.titulo);
     setContenido(a.contenido);
-    setImageUri(a.image || null);
+    if (Platform.OS === "web") {
+      setImageFile(null);
+    } else {
+      setImageUri(a.image || null);
+    }
     setEditingId(a.id);
     setModalVisible(true);
   };
@@ -130,10 +153,12 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const deleteAnnouncement = async (id: string) => {
     try {
       await api.delete(`/announcements/${id}`);
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
     } catch (error) {
       console.error("Error eliminando anuncio", error);
-      Alert.alert("Error", "No se pudo eliminar anuncio");
+      Platform.OS === "web"
+        ? alert("No se pudo eliminar anuncio")
+        : Alert.alert("Error", "No se pudo eliminar anuncio");
     }
   };
 
@@ -141,11 +166,16 @@ export default function HomePage({ currentUser }: HomePageProps) {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>
 
-      {announcements.map(a => (
+      {announcements.map((a) => (
         <View key={a.id} style={styles.card}>
           <Text style={styles.cardTitle}>{a.titulo}</Text>
           <Text>{a.contenido}</Text>
-          {a.image && <Image source={{ uri: a.image }} style={styles.announcementImage} />}
+          {a.image && (
+            <Image
+              source={{ uri: a.image }}
+              style={styles.announcementImage}
+            />
+          )}
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
           {currentUser.rol?.toLowerCase() === "admin" && (
             <View style={styles.buttonsRow}>
@@ -179,6 +209,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
             setTitulo("");
             setContenido("");
             setImageUri(null);
+            setImageFile(null);
             setEditingId(null);
             setModalVisible(true);
           }}
@@ -187,24 +218,59 @@ export default function HomePage({ currentUser }: HomePageProps) {
         </Button>
       )}
 
-      {/* Modal de creación/edición */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>{editingId ? "Editar Anuncio" : "Nuevo Anuncio"}</Text>
 
-            <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
-            <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
-            <Button mode="contained"
-              buttonColor={imageUri ? "#28a745" : "#007bff"}
+            <TextInput
+              label="Titulo"
+              value={titulo}
+              onChangeText={setTitulo}
+              mode="flat"
+              underlineColor="#0d75bb"
+              activeUnderlineColor="#0d75bb"
+              style={styles.input}
+            />
+            <TextInput
+              label="Contenido"
+              value={contenido}
+              onChangeText={setContenido}
+              mode="flat"
+              underlineColor="#0d75bb"
+              activeUnderlineColor="#0d75bb"
+              multiline
+              style={styles.input}
+            />
+            <Button
+              mode="contained"
+              buttonColor={imageUri || imageFile ? "#28a745" : "#007bff"}
               style={{ marginBottom: 10 }}
               onPress={handleSelectImage}
             >
-              {imageUri ? "Cambiar Imagen" : "Agregar Imagen"}
+              {imageUri || imageFile ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
-            {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
+
+            {(imageUri || imageFile) && (
+              <Image
+                source={{
+                  uri: Platform.OS === "web" ? URL.createObjectURL(imageFile!) : imageUri!,
+                }}
+                style={styles.previewImage}
+              />
+            )}
+
             <View style={styles.buttonsRow}>
-              <Button mode="contained"buttonColor="#888"onPress={() => {setModalVisible(false);setEditingId(null);setImageUri(null);}}>
+              <Button
+                mode="contained"
+                buttonColor="#888"
+                onPress={() => {
+                  setModalVisible(false);
+                  setEditingId(null);
+                  setImageUri(null);
+                  setImageFile(null);
+                }}
+              >
                 Cancelar
               </Button>
               <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>
@@ -221,8 +287,8 @@ export default function HomePage({ currentUser }: HomePageProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  card: { backgroundColor: "#fff", padding: 12, borderRadius: 8, marginBottom: 10 },
-  cardTitle: { fontSize: 18, fontWeight: "bold" },
+  card: { backgroundColor: "#fff", padding: 12, borderRadius: 8, marginBottom: 15 },
+  cardTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   date: { fontSize: 12, color: "#666", marginTop: 5 },
   buttonsRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   actionButton: { flex: 1, marginHorizontal: 5 },
@@ -231,6 +297,20 @@ const styles = StyleSheet.create({
   modalContainer: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   input: { marginBottom: 15, backgroundColor: "#fff" },
-  announcementImage: { width: "100%", height: 200, marginTop: 10, borderRadius: 8 },
-  previewImage: { width: "100%", height: 150, marginBottom: 10, borderRadius: 8 },
-});
+  announcementImage: {
+    width: "100%",
+    height: 180,
+    aspectRatio: 1.6, // proporción tipo post Facebook
+    borderRadius: 10,
+    resizeMode: "contain",
+    marginTop: 10,
+    backgroundColor: "",
+  },
+  previewImage: {
+    width: "100%",
+    height: 150,
+    aspectRatio: 1.6,
+    borderRadius: 10,
+    resizeMode: "contain",
+    marginBottom:10 , backgroundColor:"",}
+  });

@@ -5,7 +5,7 @@ export interface IViatic extends Document {
   concepto: string;
   descripcion: string;
   monto: number;
-  ticket?:string;
+  factura?:string;
   nombre:string;
 }
 
@@ -14,7 +14,7 @@ const viaticSchema = new Schema<IViatic>({
   concepto: { type: String, required: true },
   descripcion: { type: String, required: true },
   monto: { type: Number, required: true },
-  ticket:{type:String},
+  factura:{type:String},
   nombre:{type:String , required:true},
 });
 

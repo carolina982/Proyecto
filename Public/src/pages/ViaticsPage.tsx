@@ -1,9 +1,9 @@
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Image, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
-import { api } from "../api/api";
+import { api, BASE_URL } from "../api/api";
 
 interface Trip {
   id: string;
@@ -17,7 +17,7 @@ interface Viatico {
   monto: number;
   descripcion: string;
   concepto: string;
-  ticketUrl?: string;
+  facturaUrl?: string;
 }
 
 export default function ViaticosPage() {
@@ -31,10 +31,11 @@ export default function ViaticosPage() {
   const [monto, setMonto] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [concepto, setConcepto] = useState("");
-  const [ticket, setTicket] = useState<string | null>(null);
-  const [ticketRemoved, setTicketRemoved] = useState(false);
+  const [factura, setFactura] = useState<string | null>(null);
+  const [facturaRemoved, setFacturaRemoved] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+  const [showFactura, setShowFactura]=useState(false);
 
   useEffect(() => {
     loadViaticos();
@@ -42,13 +43,16 @@ export default function ViaticosPage() {
   }, []);
 
   const loadViaticos = async () => {
-    try {
-      const res = await api.get("/viatics");
-      setViaticos(res.data.map((v: any) => ({ ...v, id: v._id })));
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "No se pudieron cargar los viáticos");
-    }
+   try {
+    const res=await api.get("/viatics");
+    setViaticos(res.data.map((v:any)=>({
+      ...v, id:v._id ,facturaUrl:v.factura ? `${BASE_URL.replace("/api","")}${v.factura}`:undefined,
+    }))
+  );
+   }catch (error){
+    console.error(error);
+    Alert.alert("Error", "No se pudieron cargar los viaticos");
+   }
   };
 
   const loadTrips = async () => {
@@ -68,7 +72,8 @@ export default function ViaticosPage() {
       setMonto(String(viatico.monto));
       setDescripcion(viatico.descripcion);
       setConcepto(viatico.concepto);
-      setTicket(viatico.ticketUrl || null);
+      setFactura(viatico.facturaUrl || null);
+      setShowFactura(false);
     } else {
       setEditingViatico(null);
       setNombre("");
@@ -76,14 +81,15 @@ export default function ViaticosPage() {
       setMonto("");
       setDescripcion("");
       setConcepto("");
-      setTicket(null);
+      setFactura(null);
+      setShowFactura(false);
     }
-    setTicketRemoved(false);
+    setFacturaRemoved(false);
     setErrors({});
     setModalVisible(true);
   };
 
-  const pickTicket = async () => {
+  const pickFactura = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["image/*", "application/pdf"],
@@ -97,64 +103,70 @@ export default function ViaticosPage() {
         return;
       }
 
-      setTicket(file.uri);
-      setTicketRemoved(false);
+      setFactura(file.uri);
+      setFacturaRemoved(false);
     } catch (error) {
       console.error("Error seleccionando archivo:", error);
       Alert.alert("Error", "Ocurrió un problema al seleccionar el archivo");
     }
   };
+const saveViatico = async () => {
+  setLoading(true);
 
-  const saveViatico = async () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
-    if (!tripId) newErrors.tripId = "Debes seleccionar un viaje";
-    if (!concepto.trim()) newErrors.concepto = "El concepto es obligatorio";
-    if (!descripcion.trim()) newErrors.descripcion = "La descripción es obligatoria";
-    if (!monto.trim() || isNaN(Number(monto)) || Number(monto) <= 0)
-      newErrors.monto = "Monto inválido";
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    setLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("nombre", nombre.trim());
-      formData.append("tripId", tripId);
-      formData.append("concepto", concepto.trim());
-      formData.append("descripcion", descripcion.trim());
-      formData.append("monto", String(Number(monto)));
-
-      if (ticket) {
-        const filename = ticket.split("/").pop()!;
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? (match[1].toLowerCase() === "pdf" ? "application/pdf" :`image/${match[1]}`) : "image";
-        formData.append("ticket", { uri: ticket, name: filename, type } as any);
-      } else if (ticketRemoved) {
-        formData.append("ticket", "");
-      }
-
-      if (editingViatico) {
-        await api.put(`/viatics/${editingViatico.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+  try {
+    const formData = new FormData();
+    formData.append("nombre", nombre.trim());
+    formData.append("tripId", tripId);
+    formData.append("concepto", concepto.trim());
+    formData.append("descripcion", descripcion.trim());
+    formData.append("monto", String(Number(monto)));
+    if (factura) {
+      if (Platform.OS === "web") {
+        const response = await fetch(factura);
+        const blob = await response.blob();
+        const filename = `factura_${Date.now()}.jpg`;
+        const file = new File([blob], filename, { type: blob.type });
+        formData.append("factura", file);
       } else {
-        await api.post("/viatics", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+        const localUri = factura.startsWith("file://") ? factura : "file://" + factura;
+        const filename = localUri.split("/").pop()!;
+        const match = /\.(\w+)$/.exec(filename);
+        let type = "image/jpeg";
+        if (filename.toLowerCase().endsWith(".pdf")) type = "application/pdf";
+        else if (filename.toLowerCase().endsWith(".png")) type = "image/png";
+        else if (filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg"))
+          type = "image/jpeg";
 
-      await loadViaticos();
-      setModalVisible(false);
-    } catch (error) {
-      console.error("Error guardando viático:", error);
-      Alert.alert("Error", "No se pudo guardar el viático");
-    } finally {
-      setLoading(false);
+        formData.append("factura", { uri: localUri, name: filename, type } as any);
+      }
+    } else if (facturaRemoved) {
+      formData.append("factura", "");
     }
-  };
+    let res;
+    if (editingViatico) {
+      res = await fetch(`${BASE_URL}/viatics/${editingViatico.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+    } else {
+      res = await fetch(`${BASE_URL}/viatics`, {
+        method: "POST",
+        body: formData,
+      });
+    }
+
+    const text = await res.text();
+    if (!res.ok) throw new Error(text || "Error guardando viático");
+    const data = JSON.parse(text);
+    await loadViaticos();
+    setModalVisible(false);
+  } catch (error) {
+    console.error("Error guardando viático:", error);
+    Alert.alert("Error", "No se pudo guardar el viático");
+  } finally {
+    setLoading(false);
+  }
+};
  const deleteViatico = async (id: string) => {
    console.log("Eliminar viatico ID",id);
    let confirmed = false ;
@@ -189,18 +201,13 @@ export default function ViaticosPage() {
       <Text>Concepto: {item.concepto}</Text>
       <Text>Descripción: {item.descripcion}</Text>
       <Text>Monto: ${item.monto}</Text>
-      {item.ticketUrl && (
-        <Image source={{ uri: item.ticketUrl }} style={styles.ticketPreview} />
-      )}
+       
       <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
         <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
         <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>
       </View>
     </View>
   );
-
- 
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
@@ -232,18 +239,30 @@ export default function ViaticosPage() {
           <TextInput value={descripcion}  mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"onChangeText={setDescripcion} error={!!errors.descripcion} style={styles.input} />
           <Text style={styles.label}>Monto:</Text>
           <TextInput value={monto} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"onChangeText={setMonto} keyboardType="numeric" error={!!errors.monto} style={styles.input} />
-          <Text style={styles.label}>Factura:</Text>
-          {ticket ? (
+          <Text style ={styles.label}>factura:</Text>
+          {factura ?(
             <>
-              <Image source={{ uri: ticket }} style={styles.ticketPreview} />
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
-                <Button mode="contained" buttonColor="#17d1f1ff" onPress={pickTicket}>Reemplazar Ticket</Button>
-                <Button mode="contained" buttonColor="#e27975ff" onPress={() => { setTicket(null); setTicketRemoved(true); }}>Eliminar</Button>
+            {showFactura ?( factura.toLowerCase().endsWith(".pdf")?(
+              <View style ={{marginBottom:10}}>
+                <Text>Factura en pdf</Text>
+                <Button mode="contained" onPress={()=>{
+                  if (Platform.OS ==="web")window.open(factura,"_blank");
+                  else Linking.openURL(factura);}}>Abrir PDF</Button>
               </View>
-            </>
-          ) : (
-            <Button mode="contained" buttonColor="#4caf50" onPress={pickTicket}>Subir Factura</Button>
-          )}
+              ):(
+                <Image source={{uri:factura}} style={styles.facturaPreview}/>
+              )
+            ):(
+              <Button mode="contained" onPress={()=> setShowFactura(true)}>Mostrar Factura</Button>
+            )}
+            <View style={{flexDirection:"row",justifyContent:"space-between",gap:10,marginTop:5}}>
+              <Button mode="contained" buttonColor="#17d1f1ff" onPress={pickFactura}>Remplazar factura</Button>
+              <Button mode="contained" buttonColor="#e27975ff" onPress={()=>{setFactura(null);setFacturaRemoved(true);setShowFactura(false);}}>Eliminar</Button>
+            </View>
+             </>
+            ):(
+              <Button mode="contained" buttonColor="#4caf50" onPress={pickFactura}>Subir factura</Button>
+            )}
 
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
             <View style={styles.modalButtons}>
@@ -268,5 +287,5 @@ const styles = StyleSheet.create({
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   error: { color: "red", fontSize: 12, marginBottom: 8 },
   modalButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
-  ticketPreview: { width: "100%", height: 180, borderRadius: 8, marginBottom: 10, resizeMode: "contain" },
+  facturaPreview: { width: "100%", height: 180, borderRadius: 8, marginBottom: 10, resizeMode: "contain" },
 });
