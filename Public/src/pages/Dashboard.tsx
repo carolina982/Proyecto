@@ -8,6 +8,7 @@ import PerfilePage from "./PerfilePage";
 import TripsPage from "./TripsPage";
 import UnitsPage from "./UnitsPage";
 import ViaticsPage from "./ViaticsPage";
+
 export default function Dashboard() {
   const { currentUser, setCurrentUser } = useStore();
   const [tab, setTab] = useState< "Inicio" | "Perfil" | "Viajes" | "Viáticos" | "Unidades" | "Usuarios">("Inicio");

@@ -14,10 +14,9 @@ interface User {
 }
 
 interface PerfilPageProps {
-  currentUser: User;
-  setCurrentUser?: (user: User) => void; // opcional si usas contexto global
+  currentUser: User ;
+  setCurrentUser?: (user: User) => void;
 }
-
 export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPageProps) {
   const [nombre, setNombre] = useState(currentUser.nombre);
   const [apellido, setApellido] = useState(currentUser.apellido);

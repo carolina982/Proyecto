@@ -83,42 +83,35 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-
-export const registerUser = async (req: Request, res: Response) => {
-  const { nombre, apellido, email, password, rol } = req.body;
-
-  if (!nombre || !email || !password || !rol) {
-    return res.status(400).json({ message: "Faltan datos" });
-  }
+export const registerUser = async(req:Request, res:Response)=>{
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "Usuario ya existe" });
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      nombre,
-      apellido,
-      email,
-      password: hashedPassword,
-      rol,
+    const {nombre , apellido, email,password,rol}=req.body;
+    if (!nombre||!apellido||!email||!password||!rol){
+      return res.status(400).json({message:"Faltan datos obligatorios"});
+    }
+    const existingUser=await User.findOne({email});
+    if (existingUser) {
+      return res.status(400).json({message:"Usuario ya exite"});
+    }
+    const hashedPassword =await bcrypt.hash(password,10);
+    let photoUrl= null;
+    if (req.file){
+      photoUrl=`/uploads/${req.file.filename}`;
+    }
+    const newUser=await User.create({nombre,apellido,email,password:hashedPassword,rol,imagenUrl:photoUrl,});
+    return res.status(201).json({id:newUser._id,
+      nombre:newUser.nombre,
+      apellido:newUser.apellido,
+      email:newUser.email,
+      rol:newUser.rol,
+      photoUrl:newUser.imagenUrl || null,
     });
-
-    const userData = {
-      id: newUser._id,
-      nombre: newUser.nombre,
-      apellido: newUser.apellido,
-      email: newUser.email,
-      rol: newUser.rol,
-      photoUrl: newUser.imagenUrl || null,
-    };
-
-    res.status(201).json(userData);
-  } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: "Error en el servidor" });
-}
+  }catch (error){
+    console.error("Error registrando usuario",error);
+    return res.status(500).json({message:"Error inteerno del servidor"});
+  }
 };
 
-// UPDATE usuario
 export const updateUser=  async (req:Request, res:Response)=>{
     console.log("====UPDATE USER DEBUG====");
     console.log("Recibida peticion PATCH para actualizar usuario");

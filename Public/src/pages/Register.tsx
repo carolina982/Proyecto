@@ -1,20 +1,21 @@
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { TextInput } from "react-native-paper";
 import { api } from "../api/api";
 import { useStore } from "../context/Store";
 
 export default function Register({ navigation }: any) {
   const { addUser, login } = useStore();
+
   const [email, setEmail] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer"); 
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer");
 
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const pickImageFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -24,7 +25,6 @@ export default function Register({ navigation }: any) {
     });
     if (!result.canceled) setPhotoUrl(result.assets[0].uri);
   };
-
   const takePhoto = async () => {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
@@ -35,38 +35,72 @@ export default function Register({ navigation }: any) {
   };
 
   const handleRegister = async () => {
-    if (!email || !nombre || !apellido || !password) {
+    if (!email || !nombre || !apellido || !password || !rol) {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
     }
-
     try {
-      const newUser = { nombre, apellido, email, password, rol, photoUrl };
-      
-      console.log("Datos a enviar al backend:", newUser); // Verificación
+      let res;
 
-      const res = await api.post("/users/register", newUser);
-      
-      if (res.status === 201 || res.status === 200) {
+      if (photoUrl) {
+        const formData = new FormData();
+        formData.append("nombre", nombre);
+        formData.append("apellido", apellido);
+        formData.append("email", email);
+        formData.append("password", password);
+        formData.append("rol", rol);
+
+        if (Platform.OS === "web") {
+          const response = await fetch(photoUrl);
+          const blob = await response.blob();
+          const filename =`photo_${Date.now()}.jpg`;
+          formData.append("photo", new File([blob], filename, { type: blob.type }));
+          res = await api.post("/users/register", formData); 
+        } else {
+          const uriParts = photoUrl.split(".");
+          const fileType = uriParts[uriParts.length - 1];
+          formData.append(
+            "photo",
+            { uri: photoUrl, name:`photo.${fileType}`,type:`image/${fileType}`} as any
+          );
+          res = await api.post("/users/register", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+      } else {
+        const newUser = { nombre, apellido, email, password, rol, photoUrl: null };
+        res = await api.post("/users/register", newUser);
+      }
+
+      if (res.status === 200 || res.status === 201) {
         Alert.alert("Éxito", "Usuario registrado correctamente");
-        navigation.navigate("Dashboard");
+        addUser(res.data?.user || {
+          id:res.data?.id,
+          nombre, apellido,email,rol,
+          photoUrl:res.data?.photoUrl || null,
+        });
+
       } else {
         Alert.alert("Error", "No se pudo registrar el usuario");
       }
     } catch (error: any) {
       console.error("Error registrando usuario:", error.response || error);
-      Alert.alert("Error", error.response?.data?.message || "Algo salió mal al registrar el usuario");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Algo salió mal al registrar el usuario"
+      );
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Registro</Text>
-
-      <TextInput placeholder="Nombre" value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} />
-      <TextInput placeholder="Apellido" value={apellido} onChangeText={setApellido} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} />
-      <TextInput placeholder="Correo" value={email} onChangeText={setEmail} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="Contraseña" value={password} onChangeText={setPassword} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} secureTextEntry />
+      <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+      <TextInput placeholder="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+      <TextInput placeholder="Correo"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}keyboardType="email-address"/>
+      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}
+        secureTextEntry
+      />
 
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
       <Picker
@@ -99,6 +133,7 @@ export default function Register({ navigation }: any) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },

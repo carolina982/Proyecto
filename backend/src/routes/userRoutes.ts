@@ -4,7 +4,7 @@ import { upload } from "../middlewares/upload";
 const router = express.Router();
 
 router.post("/login", loginUser);
-router.post("/register", registerUser);
+router.post("/register",upload.single("imagenUrl"), registerUser);
 router.get("/", getUser);
 router.get("/:id", getUserById);
 router.post("/", createUser);
