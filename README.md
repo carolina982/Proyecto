@@ -51,7 +51,18 @@ Join our community of developers creating universal apps.
 
 
 - Este programa es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuruios 
-administrador --> inicio , perdil , viajes , unidades, usuarios 
-chofer/usuario -->inicio , perdil , viajes, viaticos 
---> funciona ya los botones de eliminar , editar , guardar en el cula se agrego un apartado de incio y crear anuncios 
-- falta que solo muetre los viajes , viaticos dependeindo en que rol estan si es de chofer que solo mustre el del chofer como ejemplo juan que solo vea sus viajes y viticos y que pueda editar en viajes el estado de pendiente, en proceso , completo  y si es de adminitrador ver todos viajed y viaticos 
+- administrador --> inicio , perdil , viajes , unidades, usuarios 
+- chofer/usuario -->inicio , perdil , viajes, viaticos 
+--> funciona ya los botones de eliminar , editar , guardar en el cula se agrego un apartado de incio y crear anuncios tambien ya aguarda las imagenes
+- falta que solo muestre los viajes , viaticos dependeindo en que rol estan si es de chofer que solo mustre el del chofer como ejemplo juan que solo vea sus viajes y viticos y que pueda editar en viajes el estado de pendiente, en proceso , completo  y si es de adminitrador ver todos viajed y viaticos 
+- cehar por que no se aguarda la foto en chofer cada que le pongo guardar cambios pero en admin si aguarda la foto aun que cambie de apartado prtenece la misma imagen pero en choder no 
+
+- Levantar el servidors de base de datos es 
+--->npx ts-node src/server.ts 
+- reniciar  el servidor 
+--->npm run dev 
+
+- Aplicacion 
+---> npx expo start
+
+-Checar por que sale error al mometo en abrir en el mulador en expo go
