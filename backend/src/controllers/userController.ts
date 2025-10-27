@@ -74,7 +74,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const userData = {
       id: user._id,nombre: user.nombre,
       apellido: user.apellido, email: user.email,
-      rol: user.rol, photoUrl: user.imagenUrl|| null,
+      rol: user.rol, photoUrl: user.photoUrl|| null,
     };
     res.json(userData);
   } catch (error) {
@@ -104,7 +104,7 @@ export const registerUser = async(req:Request, res:Response)=>{
       apellido:newUser.apellido,
       email:newUser.email,
       rol:newUser.rol,
-      photoUrl:newUser.imagenUrl || null,
+      photoUrl:newUser.photoUrl|| null,
     });
   }catch (error){
     console.error("Error registrando usuario",error);

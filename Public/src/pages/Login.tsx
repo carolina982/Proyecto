@@ -36,13 +36,11 @@ export default function Login({ navigation }: any) {
       }
 
       login(data);
-
       if (data.rol?.toLowerCase() === "admin") {
         navigation.navigate("AdminPage");
       } else {
         navigation.navigate("Dashboard");
       }
-
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Error", "No se pudo iniciar sesión. Intenta más tarde.");
@@ -50,54 +48,27 @@ export default function Login({ navigation }: any) {
       setLoading(false);
     }
   };
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+      behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <FontAwesome5 name="truck-moving" size={85.5} color="#007bff" style={styles.icon} />
       <Text style={styles.title}>Volta</Text>
-      <TextInput
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        mode="flat" 
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#0d75bb"
-         dense style={styles.input}
-      />
-      <TextInput
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        mode="flat" 
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#0d75bb"
-         dense style={styles.input}
-      />
-      <TouchableOpacity
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
+      <TextInput placeholder="Correo electrónico"value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input}/>
+      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}secureTextEntry mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} />
+      <TouchableOpacity  style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>
           {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.registerButton}
-        onPress={() => navigation.navigate("Register")}
-      >
+        onPress={() => navigation.navigate("Register")}>
         <Text style={styles.registerText}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
   icon: { marginBottom: 20 },

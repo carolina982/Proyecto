@@ -71,7 +71,6 @@ export default function Register({ navigation }: any) {
         const newUser = { nombre, apellido, email, password, rol, photoUrl: null };
         res = await api.post("/users/register", newUser);
       }
-
       if (res.status === 200 || res.status === 201) {
         Alert.alert("Éxito", "Usuario registrado correctamente");
         addUser(res.data?.user || {
@@ -79,7 +78,6 @@ export default function Register({ navigation }: any) {
           nombre, apellido,email,rol,
           photoUrl:res.data?.photoUrl || null,
         });
-
       } else {
         Alert.alert("Error", "No se pudo registrar el usuario");
       }
@@ -91,17 +89,13 @@ export default function Register({ navigation }: any) {
       );
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Registro</Text>
       <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
       <TextInput placeholder="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
       <TextInput placeholder="Correo"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}keyboardType="email-address"/>
-      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}
-        secureTextEntry
-      />
-
+      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} secureTextEntry/>
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
       <Picker
         selectedValue={rol}
@@ -111,7 +105,6 @@ export default function Register({ navigation }: any) {
         <Picker.Item label="Chofer" value="Chofer" />
         <Picker.Item label="Admin" value="Admin" />
       </Picker>
-
       <View style={styles.photoButtons}>
         <TouchableOpacity style={styles.photoButton} onPress={pickImageFromGallery}>
           <Text style={styles.photoButtonText}>Elegir foto</Text>
@@ -120,13 +113,10 @@ export default function Register({ navigation }: any) {
           <Text style={styles.photoButtonText}>Tomar foto</Text>
         </TouchableOpacity>
       </View>
-
       {photoUrl && <Image source={{ uri: photoUrl }} style={styles.avatarPreview} />}
-
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Registrarse</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("Login")}>
         <Text style={styles.registerText}>¿Ya tienes cuenta? Inicia Sesión</Text>
       </TouchableOpacity>

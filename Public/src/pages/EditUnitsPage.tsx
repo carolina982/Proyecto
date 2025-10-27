@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useState } from "react";
 import { Button, FlatList, StyleSheet, Text, TextInput, View } from "react-native";
 import { useStore } from "../context/Store";
 
@@ -21,7 +21,7 @@ export default  function EditUnitsPage (){
      const handleRemoveItem =(unitId:string , item:string) => {
         const unit = units.find ((u)=>u.id === unitId);
         if (!unit ) return ;
-        const updated ={...unit ,items : unit.items.filter ((i)=> i!== item)};
+        const updated ={...unit ,items : unit.items.filter ((i: string)=> i!== item)};
         updateUnit (updated);
      };
       return (
@@ -33,11 +33,11 @@ export default  function EditUnitsPage (){
             renderItem={({item}) =>(
                 <View style ={styles.unitCard}>
                     <Text style ={styles.unitName}>{item.nombre}</Text>
-                    <Text>Lista de Cosas :</Text> {item.items.map((i, idx) =>(
+                    <Text>Lista de Cosas :</Text> {item.items.map((i: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) =>(
                         <View key={idx} style ={styles.itemRow}>
                             <Text>-{i}</Text>
                             <Button title ="x"
-                            onPress={()=>handleRemoveItem (item.id, i )} />
+                            onPress={()=>handleRemoveItem (item.id, i)} />
                              </View>
                     ))}
                     {selectedUnit === item.id ? (

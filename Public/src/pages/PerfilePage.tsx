@@ -31,10 +31,9 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`http://192.168.1.81:3000/api/users/${currentUser.id}`);
+        const res = await fetch(`http://192.168.1.81:3000/api/users/${currentUser.id}`); 
         if (!res.ok) throw new Error("No se pudo obtener el perfil");
         const data = await res.json();
-
         setNombre(data.nombre);
         setApellido(data.apellido);
         setEmail(data.email);
@@ -55,10 +54,7 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
         Alert.alert("Permiso denegado", "Se requiere acceso a la galería para subir foto");
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({
-
-        
         mediaTypes: ["images"],
       });
 
@@ -79,13 +75,11 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
         Alert.alert("Error", "No se encontró el id del usuario");
         return;
       }
-
       const formData = new FormData();
       formData.append("nombre", nombre);
       formData.append("apellido", apellido);
       formData.append("email", email);
       formData.append("rol", rol);
-
       if (photoUri && !photoUri.startsWith("http")) {
         if (Platform.OS === "web") {
           const response = await fetch(photoUri);
@@ -101,25 +95,19 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
           formData.append("photo", { uri: localUri, name: filename, type } as any);
         }
       }
-
       const response = await fetch(`http://192.168.1.81:3000/api/users/${userId}`, {
         method: "PATCH",
         body: formData,
       });
-
       const text = await response.text();
       if (!response.ok) throw new Error(text || "Error al actualizar perfil");
       const data = JSON.parse(text);
-
-      // Actualizar estado local
       setNombre(data.nombre);
       setApellido(data.apellido);
       setEmail(data.email);
       setRol(data.rol);
       if (data.photoUrl)
-        setPhotoUri(`http://192.168.1.81:3000${data.photoUrl}?t=${Date.now()}`);
-
-      // Actualizar el contexto global si existe
+        setPhotoUri(`http://192.168.1.81:3000${data.photoUrl}?t=${Date.now()}`); 
       if (setCurrentUser) {
         setCurrentUser({
           ...currentUser,
@@ -130,7 +118,6 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
           photoUrl: data.photoUrl,
         });
       }
-
       Alert.alert("Éxito", "Perfil actualizado correctamente");
     } catch (error: any) {
       console.error("Error en handleSave", error);
@@ -139,12 +126,11 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       setIsSaving(false);
     }
   };
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {photoUri ? (
         <Avatar.Image size={100} source={{ uri: photoUri }} style={styles.avatar} />
-      ) : (
+         ) : (
         <Avatar.Text
           size={100}
           label={(nombre ?? "")
@@ -156,67 +142,22 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
         />
       )}
 
-      <Button
-        mode="outlined"
-        style={styles.changePhotoButton}
-        onPress={pickImage}
-        labelStyle={{ color: "#0d75bb" }}
-      >
-        Cambiar Imagen
-      </Button>
-
+      <Button mode="outlined"style={styles.changePhotoButton}onPress={pickImage}labelStyle={{ color: "#0d75bb" }}>Cambiar Imagen</Button>
       <Text style={styles.title}>Perfil</Text>
-      <TextInput
-        label="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#8bc1e6ff"
-        style={styles.input}
-      />
-      <TextInput
-        label="Apellido"
-        value={apellido}
-        onChangeText={setApellido}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#8bc1e6ff"
-        style={styles.input}
-      />
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        mode="flat"
-        underlineColor="#0d75bb"
-        activeUnderlineColor="#8bc1e6ff"
-        style={styles.input}
-      />
-
+      <TextInput label="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
+      <TextInput label="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
+      <TextInput label="Email"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
       <Text style={{ alignSelf: "flex-start", marginBottom: 5, color: "#0f0f0f" }}>Rol</Text>
-      <Picker
-        selectedValue={rol}
-        onValueChange={(value: "Admin" | "Chofer") => setRol(value)}
-        style={styles.picker}
-      >
+      <Picker selectedValue={rol}onValueChange={(value: "Admin" | "Chofer") => setRol(value)}style={styles.picker}>
         <Picker.Item label="Admin" value="Admin" />
         <Picker.Item label="Chofer" value="Chofer" />
       </Picker>
-
-      <Button
-        mode="contained"
-        buttonColor="#0d75bb"
-        style={styles.button}
-        onPress={handleSave}
-        loading={isSaving}
-      >
+      <Button mode="contained"buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}>
         Guardar Cambios
       </Button>
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: { padding: 20, flexGrow: 1, alignItems: "center" },
   avatar: { backgroundColor: "#0d75bb", marginBottom: 10 },

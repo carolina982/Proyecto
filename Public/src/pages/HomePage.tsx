@@ -217,40 +217,19 @@ export default function HomePage({ currentUser }: HomePageProps) {
           Crear Anuncio
         </Button>
       )}
-
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>{editingId ? "Editar Anuncio" : "Nuevo Anuncio"}</Text>
-
-            <TextInput
-              label="Titulo"
-              value={titulo}
-              onChangeText={setTitulo}
-              mode="flat"
-              underlineColor="#0d75bb"
-              activeUnderlineColor="#0d75bb"
-              style={styles.input}
-            />
-            <TextInput
-              label="Contenido"
-              value={contenido}
-              onChangeText={setContenido}
-              mode="flat"
-              underlineColor="#0d75bb"
-              activeUnderlineColor="#0d75bb"
-              multiline
-              style={styles.input}
-            />
-            <Button
-              mode="contained"
+            <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
+            <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
+            <Button mode="contained"
               buttonColor={imageUri || imageFile ? "#28a745" : "#007bff"}
               style={{ marginBottom: 10 }}
               onPress={handleSelectImage}
             >
               {imageUri || imageFile ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
-
             {(imageUri || imageFile) && (
               <Image
                 source={{
@@ -259,7 +238,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
                 style={styles.previewImage}
               />
             )}
-
             <View style={styles.buttonsRow}>
               <Button
                 mode="contained"
@@ -297,20 +275,5 @@ const styles = StyleSheet.create({
   modalContainer: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   input: { marginBottom: 15, backgroundColor: "#fff" },
-  announcementImage: {
-    width: "100%",
-    height: 180,
-    aspectRatio: 1.6, // proporción tipo post Facebook
-    borderRadius: 10,
-    resizeMode: "contain",
-    marginTop: 10,
-    backgroundColor: "",
-  },
-  previewImage: {
-    width: "100%",
-    height: 150,
-    aspectRatio: 1.6,
-    borderRadius: 10,
-    resizeMode: "contain",
-    marginBottom:10 , backgroundColor:"",}
-  });
+  announcementImage: {width: "100%",height: 180,aspectRatio: 1.6, borderRadius: 10,resizeMode: "contain",marginTop: 10,backgroundColor: "",},
+  previewImage: {width: "100%",height: 150, aspectRatio: 1.6,borderRadius: 10,resizeMode: "contain",marginBottom:10 , backgroundColor:"",}});

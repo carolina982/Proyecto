@@ -84,7 +84,6 @@ export default function TripsPage() {
       console.error("Error cargando usuarios:", error);
     }
   };
-
   const openModal = (trip?: Trip) => {
     if (trip) {
       setEditingTrip(trip);
@@ -205,13 +204,11 @@ export default function TripsPage() {
             <>
               <Text style={styles.label}>Nombre:</Text>
               <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-
               <Text style={styles.label}>Unidad:</Text>
               <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
                 <Picker.Item label="Selecciona una unidad" value="" />
                 {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
               </Picker>
-
               <Text style={styles.label}>Conductor:</Text>
               <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
                 <Picker.Item label="Selecciona un conductor" value="" />
