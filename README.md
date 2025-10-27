@@ -54,7 +54,6 @@ Join our community of developers creating universal apps.
 - administrador --> inicio , perdil , viajes , unidades, usuarios 
 - chofer/usuario -->inicio , perdil , viajes, viaticos 
 --> funciona ya los botones de eliminar , editar , guardar en el cula se agrego un apartado de incio y crear anuncios tambien ya aguarda las imagenes
-- falta que solo muestre los viajes , viaticos dependeindo en que rol estan si es de chofer que solo mustre el del chofer como ejemplo juan que solo vea sus viajes y viticos y que pueda editar en viajes el estado de pendiente, en proceso , completo  y si es de adminitrador ver todos viajed y viaticos 
 - cehar por que no se aguarda la foto en chofer cada que le pongo guardar cambios pero en admin si aguarda la foto aun que cambie de apartado prtenece la misma imagen pero en choder no 
 
 - Levantar el servidors de base de datos es 
@@ -66,3 +65,4 @@ Join our community of developers creating universal apps.
 ---> npx expo start
 
 -Checar por que sale error al mometo en abrir en el mulador en expo go
+- checar si se arroga una alerta de que si se registro el area de registro 

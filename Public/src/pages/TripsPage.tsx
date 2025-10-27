@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
+import { useStore } from '../context/Store';
 
 interface Trip {
   id: string;
@@ -20,6 +21,7 @@ interface Unit { id: string; nombre: string; }
 interface User { id: string; nombre: string; apellido?: string; }
 
 export default function TripsPage() {
+  const { currentUser } = useStore();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -36,23 +38,36 @@ export default function TripsPage() {
   const [kilometraje, setKilometraje] = useState("");
 
   useEffect(() => {
-    loadTrips();
-    loadUnits();
-    loadUsers();
-  }, []);
+    if (currentUser) {
+      loadTrips();
+      loadUnits();
+      loadUsers();
+    }
+  }, [currentUser]);
 
-  // Cargar viajes
+  if (!currentUser) {
+    return (
+      <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+        <Text>Cargando usuario...</Text>
+      </View>
+    );
+  }
+
+  const isAdmin = currentUser.rol === "Admin";
+
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
-      setTrips(res.data.map((t: any) => ({ ...t, id: t._id })));
+      let allTrips = res.data.map((t: any) => ({ ...t, id: t._id }));
+      if (!isAdmin) {
+        allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
+      }
+      setTrips(allTrips);
     } catch (error) {
       console.error("Error cargando viajes:", error);
       Alert.alert("Error", "No se pudieron cargar los viajes");
     }
   };
-
-  // Cargar unidades
   const loadUnits = async () => {
     try {
       const res = await api.get("/units");
@@ -61,8 +76,6 @@ export default function TripsPage() {
       console.error("Error cargando unidades:", error);
     }
   };
-
-  // Cargar usuarios
   const loadUsers = async () => {
     try {
       const res = await api.get("/users");
@@ -72,7 +85,6 @@ export default function TripsPage() {
     }
   };
 
-  // Abrir modal para crear/editar viaje
   const openModal = (trip?: Trip) => {
     if (trip) {
       setEditingTrip(trip);
@@ -92,46 +104,28 @@ export default function TripsPage() {
     setModalVisible(true);
   };
 
-  // Parsear fecha DD/MM/YYYY a objeto Date
   const parseDate = (dateStr: string) => {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
 
-  // Guardar viaje (nuevo o editar)
   const saveTrip = async () => {
-    if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino || !kilometraje) {
-      Alert.alert("Error", "Completa todos los datos");
-      return;
-    }
-
-    const salida = parseDate(fechaSalida);
-    const llegada = parseDate(fechaLlegada);
-
-    if (isNaN(salida.getTime()) || isNaN(llegada.getTime())) {
-      Alert.alert("Error", "Formato de fecha inválido (DD/MM/YYYY)");
-      return;
-    }
-
-    if (Number(kilometraje) <= 0) {
-      Alert.alert("Error", "El kilometraje debe ser mayor a 0");
-      return;
-    }
-
-    const tripData = {
-      nombre,
-      unidadId,
-      conductorId,
-      fechaSalida: salida,
-      fechaLlegada: llegada,
-      destino,
-      estado,
-      kilometraje: Number(kilometraje),
-    };
+    const tripData = isAdmin
+      ? {
+          nombre,
+          unidadId,
+          conductorId,
+          fechaSalida: parseDate(fechaSalida),
+          fechaLlegada: parseDate(fechaLlegada),
+          destino,
+          estado,
+          kilometraje: Number(kilometraje),
+        }
+      : { estado }; // Chofer solo puede cambiar estado
 
     try {
       if (editingTrip) await api.put(`/trips/${editingTrip.id}`, tripData);
-      else await api.post("/trips", tripData);
+      else if (isAdmin) await api.post("/trips", tripData);
 
       await loadTrips();
       setModalVisible(false);
@@ -140,36 +134,39 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo guardar el viaje");
     }
   };
- const deleteTrip = async (id: string) => {
-  console.log("Eliminar viaje ID ", id);
-  let confirmed = false;
-  if (Platform.OS === "web"){
-    confirmed=window.confirm("¿Desea eliminar este viaje?");
-    if (!confirmed) return;
-  }else {
-    confirmed =await new Promise<boolean>((resolve)=>{
-      Alert.alert("Confirmar", "¿Desea eliminar este viaje?",[
-        {text:"Cancelar" , style:"cancel", onPress:()=>resolve(false)},
-        {text:"Eliminar", style:"destructive" ,onPress:()=>resolve(true)},
-      ],
-      {cancelable:true}
-    );
-    });
-    if (!confirmed) return;
-  }
-  try {
-    const res=await api.delete(`/trips/${id}`);
-    console.log("DELETE viaje response", res.data);
-    setTrips((prev)=>prev.filter((t)=> t.id !== id));
-    Alert.alert("Exito", "Viaje eliminado correctamente");
-  }catch (error){
-    console.error("Error eliminando viaje", error);
-    Alert.alert("Error", "No se pudo eliminar el viaje");
-  }
-};
+
+  const deleteTrip = async (id: string) => {
+    if (!isAdmin) return;
+    let confirmed = false;
+    if (Platform.OS === "web") {
+      confirmed = window.confirm("¿Desea eliminar este viaje?");
+      if (!confirmed) return;
+    } else {
+      confirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert("Confirmar", "¿Desea eliminar este viaje?", [
+          { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
+          { text: "Eliminar", style: "destructive", onPress: () => resolve(true) },
+        ], { cancelable: true });
+      });
+      if (!confirmed) return;
+    }
+
+    try {
+      await api.delete(`/trips/${id}`);
+      setTrips((prev) => prev.filter((t) => t.id !== id));
+      Alert.alert("Éxito", "Viaje eliminado correctamente");
+    } catch (error) {
+      console.error("Error eliminando viaje", error);
+      Alert.alert("Error", "No se pudo eliminar el viaje");
+    }
+  };
+
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
+
+    const canEdit = isAdmin || currentUser.id === item.conductorId;
+    const canDelete = isAdmin;
 
     return (
       <View style={styles.card}>
@@ -182,8 +179,8 @@ export default function TripsPage() {
         <Text style={styles.textSmall}>Estado: {item.estado}</Text>
         <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
         <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
-          <Button mode="contained" buttonColor="red" onPress={() => deleteTrip(item.id)}>Eliminar</Button>
+          {canEdit && <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>}
+          {canDelete && <Button mode="contained" buttonColor="red" onPress={() => deleteTrip(item.id)}>Eliminar</Button>}
         </View>
       </View>
     );
@@ -192,46 +189,51 @@ export default function TripsPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
-      <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>
+      {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
       <FlatList
         data={trips}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         style={{ marginTop: 15 }}
       />
+
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
 
-          <Text style={styles.label}>Nombre:</Text>
-          <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
+          {isAdmin ? (
+            <>
+              <Text style={styles.label}>Nombre:</Text>
+              <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
 
-          <Text style={styles.label}>Unidad:</Text>
-          <Picker selectedValue={unidadId} onValueChange={setUnidadId}  style={styles.picker}>
-            <Picker.Item label="Selecciona una unidad" value="" />
-            {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
-          </Picker>
+              <Text style={styles.label}>Unidad:</Text>
+              <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
+                <Picker.Item label="Selecciona una unidad" value="" />
+                {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+              </Picker>
 
-          <Text style={styles.label}>Conductor:</Text>
-          <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
-            <Picker.Item label="Selecciona un conductor" value="" />
-            {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
-          </Picker>
-          <Text style={styles.label}>Destino:</Text>
-          <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
-          <Text style={styles.label}>Kilometraje (km):</Text>
-          <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input}/>
-          <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
-          <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
-          <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-          <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
-          <Text style={styles.label}>Estado:</Text>
-          <Picker selectedValue={estado} onValueChange={setEstado}  style={styles.picker}>
+              <Text style={styles.label}>Conductor:</Text>
+              <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
+                <Picker.Item label="Selecciona un conductor" value="" />
+                {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
+              </Picker>
+              <Text style={styles.label}>Destino:</Text>
+              <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Text style={styles.label}>Kilometraje (km):</Text>
+              <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
+              <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
+              <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+            </>
+          ) : (
+            <Text style={styles.label}>Estado:</Text>
+          )}
+          <Picker selectedValue={estado} onValueChange={setEstado} style={styles.picker}>
             <Picker.Item label="Pendiente" value="pendiente" />
             <Picker.Item label="En progreso" value="en progreso" />
             <Picker.Item label="Completado" value="completado" />
           </Picker>
-
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
             <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar</Button>

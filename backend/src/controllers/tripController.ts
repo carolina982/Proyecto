@@ -3,17 +3,24 @@ import Trip from "../models/Trip";
 
 
 export const getTrip = async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const trips =
-      user?.rol === "Chofer"
-        ? await Trip.find({ conductorId: user.id })
-        : await Trip.find();
-    res.json(trips);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener el viaje" });
+try {
+  const user =(req as any).user;
+  if (!user){
+    return res.status(401).json({message:"Usuario no autenticado"});
   }
+  let trips;
+  if (user.rol === "chofer"){
+    trips=await Trip.find({conductorId:user.id}).populate("conductorID","Nombre apellido email")
+    .populate("unidades") .populate("viaticos");
+  }else {
+    trips=await Trip.find().populate("conductorID","Nombre apellido email")
+    .populate("unidades") .populate("viaticos");
+  }
+  return res.status(200).json(trips);
+}catch (error){
+  console.error("Error al obtener los viajes",error);
+  return res.status(500).json({message:"Error al obtener los viajes"});
+}
 };
 
 export const getTripById = async (req: Request, res: Response) => {
