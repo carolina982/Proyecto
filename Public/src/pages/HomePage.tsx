@@ -80,12 +80,10 @@ export default function HomePage({ currentUser }: HomePageProps) {
         : Alert.alert("Error", "Completa todos los campos");
       return;
     }
-
     try {
       const formData = new FormData();
       formData.append("titulo", titulo);
       formData.append("contenido", contenido);
-
       if (Platform.OS === "web") {
         if (imageFile) formData.append("image", imageFile);
       } else {
@@ -93,18 +91,14 @@ export default function HomePage({ currentUser }: HomePageProps) {
           formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
         }
       }
-
       const url = editingId ? `/announcements/${editingId}` : "/announcements";
-
       const res = await api({
         method: editingId ? "put" : "post",
         url,
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       const savedAnnouncement = res.data;
-
       const updatedAnnouncement: Announcement = {
         id: savedAnnouncement._id,
         titulo: savedAnnouncement.titulo,
@@ -149,7 +143,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
     setEditingId(a.id);
     setModalVisible(true);
   };
-
   const deleteAnnouncement = async (id: string) => {
     try {
       await api.delete(`/announcements/${id}`);
@@ -161,11 +154,9 @@ export default function HomePage({ currentUser }: HomePageProps) {
         : Alert.alert("Error", "No se pudo eliminar anuncio");
     }
   };
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>
-
       {announcements.map((a) => (
         <View key={a.id} style={styles.card}>
           <Text style={styles.cardTitle}>{a.titulo}</Text>
@@ -179,27 +170,12 @@ export default function HomePage({ currentUser }: HomePageProps) {
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
           {currentUser.rol?.toLowerCase() === "admin" && (
             <View style={styles.buttonsRow}>
-              <Button
-                mode="contained"
-                buttonColor="#f39c12"
-                style={styles.actionButton}
-                onPress={() => handleEdit(a)}
-              >
-                Editar
-              </Button>
-              <Button
-                mode="contained"
-                buttonColor="red"
-                style={styles.actionButton}
-                onPress={() => deleteAnnouncement(a.id)}
-              >
-                Eliminar
-              </Button>
+              <Button mode="contained"buttonColor="#f39c12"style={styles.actionButton}onPress={() => handleEdit(a)}>Editar</Button>
+              <Button mode="contained"buttonColor="red"style={styles.actionButton}onPress={() => deleteAnnouncement(a.id)}>Eliminar</Button>
             </View>
           )}
         </View>
       ))}
-
       {currentUser.rol?.toLowerCase() === "admin" && (
         <Button
           mode="contained"

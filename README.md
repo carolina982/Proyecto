@@ -50,13 +50,13 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 
-- Este programa es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuruios 
-- administrador--> inicio , perdil , viajes , unidades, usuarios 
+- Este programa es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
+- administrador-->inicio , perdil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perdil , viajes, viaticos 
 - Levantar el servidors de base de datos
   npx ts-node src/server.ts 
 - reniciar  el servidor 
- npm run dev 
+  npm run dev 
 - Aplicacion 
   npx expo start 
 - Checar por que sale error al mometo en abrir en el mulador en expo go
