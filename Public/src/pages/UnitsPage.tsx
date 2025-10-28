@@ -68,7 +68,6 @@ export default function UnitsPage() {
       Alert.alert("Error", "Completa todos los datos");
       return;
     }
-
     const unitData = {
       nombre, placas,
       modelo,capacidad: Number(capacidad),estado,
@@ -140,7 +139,6 @@ export default function UnitsPage() {
       </View>
     );
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Unidades Registradas</Text>

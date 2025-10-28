@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Appbar, Menu } from "react-native-paper";
 import { useStore } from "../context/Store";
 import AdminPage from "./AdminPage";
@@ -20,8 +20,6 @@ export default function Dashboard() {
   return (
     <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column" }}>
       {isLargeScreen ? ( <View style={styles.sideMenu}>
-          {currentUser.photoUrl && (
-            <Image source={{ uri: currentUser.photoUrl }} style={styles.avatar} />)}
           <Text style={styles.name}>
           {currentUser.nombre} {currentUser.apellido}
           </Text>
@@ -53,7 +51,7 @@ export default function Dashboard() {
         </View>
       ) : (
         <Appbar.Header>
-          <Appbar.Content title="Dashboard" />
+          Appbar.Content title="Dashboard" 
           <Menu visible={menuVisible}onDismiss={() => setMenuVisible(false)}anchor={
                <Appbar.Action icon="menu"color="white"onPress={() => setMenuVisible(true)}
               />
@@ -75,7 +73,7 @@ export default function Dashboard() {
       )}
       <ScrollView style={styles.contentContainer}>
         {tab === "Inicio" && <HomePage currentUser={currentUser} />}
-        {tab === "Perfil" && <PerfilePage currentUser={currentUser} />}
+        {tab === "Perfil" && <PerfilePage currentUser={undefined} />}
         {tab === "Viajes" && <TripsPage />}
         {tab === "Viáticos" && <ViaticsPage />}
         {tab === "Unidades" && currentUser.rol?.toLowerCase() === "admin" && <UnitsPage />}
@@ -90,15 +88,9 @@ const styles = StyleSheet.create({
   sideTab: { padding: 10, marginVertical: 5, borderRadius: 5 },
   sideTabActive: { backgroundColor: "#007bff" },
   tabText: { color: "#000" },
-  logoutButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#ff4d4d",
-    borderRadius: 5,
-  },
+  logoutButton: { marginTop: 20,padding: 10,backgroundColor: "#ff4d4d",borderRadius: 5,},
   logoutText: { color: "#fff", textAlign: "center" },
   contentContainer: { flex: 1, padding: 10 },
-  avatar: { width: 80, height: 80, borderRadius: 40, marginBottom: 10 },
-  name: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
-  role: { fontSize: 14, marginBottom: 15, color: "#555" },
+  name: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
+  role: { fontSize: 15, marginBottom: 15, color: "#555" },
 });

@@ -30,11 +30,9 @@ export default function HomePage({ currentUser }: HomePageProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null); // solo web
-
   useEffect(() => {
     loadAnnouncements();
   }, []);
-
   const loadAnnouncements = async () => {
     try {
       const res = await api.get("/announcements");
@@ -52,7 +50,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
         : Alert.alert("Error", "No se pudieron cargar los anuncios");
     }
   };
-
   const handleSelectImage = async () => {
     if (Platform.OS === "web") {
       const input = document.createElement("input");
@@ -72,7 +69,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
       }
     }
   };
-
   const handleSaveAnnouncement = async () => {
     if (!titulo || !contenido) {
       Platform.OS === "web"
@@ -215,9 +211,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
               />
             )}
             <View style={styles.buttonsRow}>
-              <Button
-                mode="contained"
-                buttonColor="#888"
+              <Button mode="contained"buttonColor="#888"
                 onPress={() => {
                   setModalVisible(false);
                   setEditingId(null);
@@ -227,9 +221,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
               >
                 Cancelar
               </Button>
-              <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>
-                Guardar
-              </Button>
+              <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>Guardar</Button>
             </View>
           </View>
         </View>
@@ -238,7 +230,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   );
 }
 
-const styles = StyleSheet.create({
+ const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   card: { backgroundColor: "#fff", padding: 12, borderRadius: 8, marginBottom: 15 },
@@ -252,4 +244,5 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   input: { marginBottom: 15, backgroundColor: "#fff" },
   announcementImage: {width: "100%",height: 180,aspectRatio: 1.6, borderRadius: 10,resizeMode: "contain",marginTop: 10,backgroundColor: "",},
-  previewImage: {width: "100%",height: 150, aspectRatio: 1.6,borderRadius: 10,resizeMode: "contain",marginBottom:10 , backgroundColor:"",}});
+  previewImage: {width: "100%",height:150, aspectRatio: 1.6,borderRadius: 10,resizeMode: "contain",marginBottom:10 , backgroundColor:"",}
+});

@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export  interface IUser extends Document {
  nombre :string ;
- apellido?:string;
+ apellido:string;
  email:string;
  password:string ;
  rol:string; 

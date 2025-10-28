@@ -3,7 +3,7 @@ export interface User {
     _id: string;
     id:string;
     nombre:string;
-    apellido?:string;
+    apellido:string;
     email:string ;
     password?:string ;
     rol :"Admin" |"Chofer";
@@ -11,6 +11,7 @@ export interface User {
 }
 //Unidad 
  export interface Unit {
+    items: any;
     id:string;
     nombre:string;
     tipo:string;

@@ -28,7 +28,6 @@ export default function ViaticosPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingViatico, setEditingViatico] = useState<Viatico | null>(null);
-
   const [nombre, setNombre] = useState("");
   const [tripId, setTripId] = useState("");
   const [monto, setMonto] = useState("");
@@ -38,7 +37,6 @@ export default function ViaticosPage() {
   const [facturaRemoved, setFacturaRemoved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFactura, setShowFactura] = useState(false);
-
   if (!currentUser) {
     return (
       <View style={{ flex:1, justifyContent:"center", alignItems:"center" }}>
@@ -83,7 +81,6 @@ export default function ViaticosPage() {
       Alert.alert("Error", "No se pudieron cargar los viáticos");
     }
   };
-
   const openModal = (viatico?: Viatico) => {
     if (viatico) {
       setEditingViatico(viatico);

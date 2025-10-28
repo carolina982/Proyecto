@@ -9,7 +9,7 @@ export default function Login({ navigation }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [showPassword, setShowPassword]=useState(false);
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Por favor completa todos los campos");
@@ -34,7 +34,6 @@ export default function Login({ navigation }: any) {
         Alert.alert("Error", data.message || "Ocurrió un problema al iniciar sesión");
         return;
       }
-
       login(data);
       if (data.rol?.toLowerCase() === "admin") {
         navigation.navigate("AdminPage");
@@ -55,7 +54,8 @@ export default function Login({ navigation }: any) {
       <FontAwesome5 name="truck-moving" size={85.5} color="#007bff" style={styles.icon} />
       <Text style={styles.title}>Volta</Text>
       <TextInput placeholder="Correo electrónico"value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input}/>
-      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}secureTextEntry mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} />
+      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}secureTextEntry={!showPassword}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} 
+      right={<TextInput.Icon icon={showPassword ? "eye-off":"eye"}color="#007bff"onPress={()=>setShowPassword(!showPassword)}/>}/>
       <TouchableOpacity  style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>
           {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
