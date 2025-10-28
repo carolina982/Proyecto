@@ -59,6 +59,5 @@ Join our community of developers creating universal apps.
   npm run dev 
 - Aplicacion 
   npx expo start 
-- Checar por que sale error al mometo en abrir en el mulador en expo go
-- checar si se arroga una alerta de que si se registro el area de registro 
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
+- Buscar la forma de como quitar  las pablabras login y dashboard dentro de las paginas 
