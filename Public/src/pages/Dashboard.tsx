@@ -51,7 +51,7 @@ export default function Dashboard() {
         </View>
       ) : (
         <Appbar.Header>
-          Appbar.Content title="Dashboard" 
+          <Appbar.Content title=""/>
           <Menu visible={menuVisible}onDismiss={() => setMenuVisible(false)}anchor={
                <Appbar.Action icon="menu"color="white"onPress={() => setMenuVisible(true)}
               />
@@ -72,9 +72,9 @@ export default function Dashboard() {
         </Appbar.Header>
       )}
       <ScrollView style={styles.contentContainer}>
-        {tab === "Inicio" && <HomePage currentUser={currentUser} />}
-        {tab === "Perfil" && <PerfilePage currentUser={undefined} />}
-        {tab === "Viajes" && <TripsPage />}
+        {tab === "Inicio"   && <HomePage currentUser={currentUser} />}
+        {tab === "Perfil"   && <PerfilePage currentUser={currentUser} />}
+        {tab === "Viajes"   && <TripsPage />}
         {tab === "Viáticos" && <ViaticsPage />}
         {tab === "Unidades" && currentUser.rol?.toLowerCase() === "admin" && <UnitsPage />}
         {tab === "Usuarios" && currentUser.rol?.toLowerCase() === "admin" && <AdminPage />}

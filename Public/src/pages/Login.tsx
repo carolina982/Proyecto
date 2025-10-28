@@ -15,9 +15,7 @@ export default function Login({ navigation }: any) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await fetch("http://192.168.1.81:3000/api/users/login", {
         method: "POST",
@@ -27,9 +25,7 @@ export default function Login({ navigation }: any) {
           password,
         }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         Alert.alert("Error", data.message || "Ocurrió un problema al iniciar sesión");
         return;
@@ -70,7 +66,7 @@ export default function Login({ navigation }: any) {
   );
 }
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "" },
   icon: { marginBottom: 20 },
   title: { fontSize: 28, marginBottom: 30, fontWeight: "bold" },
   input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
