@@ -60,4 +60,6 @@ Join our community of developers creating universal apps.
 - Aplicacion 
   npx expo start 
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
-- Buscar la forma de como quitar  las pablabras login y dashboard dentro de las paginas 
+
+
+
