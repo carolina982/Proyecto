@@ -172,7 +172,7 @@ export default function UnitsPage() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff",padding: 15,marginBottom: 12,borderRadius: 12,shadowColor: "#000",shadowOpacity: 0.05,shadowOffset: { width: 0, height: 2 },shadowRadius: 5,elevation: 2, },
-  title: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
   pageTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15, color: "#0d75bb" },
   estadoBadge: {paddingHorizontal: 8,paddingVertical: 3,borderRadius: 12,},
   estadoText: { color: "#fff", fontWeight: "bold" },

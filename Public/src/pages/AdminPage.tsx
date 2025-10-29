@@ -173,7 +173,7 @@ const deleteUser =async (id:string)=>{
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
   userCard: { flexDirection: "row", backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10, alignItems: "center" },
   userInfo: { flex: 1 },
   name: { fontSize: 16, fontWeight: "bold" },
@@ -186,6 +186,6 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-   input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
+  input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
   pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
 });

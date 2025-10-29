@@ -71,6 +71,8 @@ export default function Dashboard() {
           </Menu>
         </Appbar.Header>
       )}
+
+      
       <ScrollView style={styles.contentContainer}>
         {tab === "Inicio"   && <HomePage currentUser={currentUser} />}
         {tab === "Perfil"   && <PerfilePage currentUser={currentUser} />}
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
   sideMenu: { width: 200, backgroundColor: "#f0f0f0", padding: 10 },
   sideTab: { padding: 10, marginVertical: 5, borderRadius: 5 },
   sideTabActive: { backgroundColor: "#007bff" },
-  tabText: { color: "#000" },
+  tabText: { color: "#0f0f0fff" },
   logoutButton: { marginTop: 20,padding: 10,backgroundColor: "#ff4d4d",borderRadius: 5,},
   logoutText: { color: "#fff", textAlign: "center" },
   contentContainer: { flex: 1, padding: 10 },

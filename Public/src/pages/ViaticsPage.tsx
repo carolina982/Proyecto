@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
   modalContent: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
-  input: { backgroundColor: "#fff", marginBottom: 10 },
+  input: { backgroundColor: "#fff", marginBottom: 15 },
   label: { fontWeight: "bold", marginTop: 10, marginBottom: 5 },
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   error: { color: "red", fontSize: 12, marginBottom: 8 },

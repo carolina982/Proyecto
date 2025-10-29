@@ -23,12 +23,12 @@ function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: true }}>
         {!currentUser ? (
           <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Register" component={Register} />
+            <Stack.Screen name="Login" component={Login} options={{headerShown:false}}/>
+            <Stack.Screen name="Register" component={Register} options={{headerShown:false}}/>
           </>
         ) :  (
           <>
-            <Stack.Screen name="Dashboard" component={Dashboard} />
+            <Stack.Screen name="Dashboard" component={Dashboard}options={{headerShown:false}} />
             <Stack.Screen name="TripsPage" component={TripsPage} />
             <Stack.Screen name="ViaticsPage" component={ViaticsPage} />
             <Stack.Screen name="AdminPage" component={AdminPage} />
