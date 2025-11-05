@@ -57,6 +57,9 @@ export default function Login({ navigation }: any) {
           {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={()=> navigation.navigate("forgotPassword")}>
+        <Text style={{color:"#007bff",marginTop:10}}>Olvidastes tu contraseña</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.registerButton}
         onPress={() => navigation.navigate("Register")}>

@@ -4,6 +4,7 @@ import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, View } 
 import { Button, TextInput } from "react-native-paper";
 import { api } from "../api/api";
 import { useStore } from '../context/Store';
+const RNHTMLtoPDF = require('react-native-html-to-pdf');
 
 interface Trip {
   id: string;
@@ -37,7 +38,8 @@ export default function TripsPage() {
   const [estado, setEstado] = useState("pendiente");
   const [kilometraje, setKilometraje] = useState("");
   const [acompanate,setAcompanate]=useState("");
-
+  const [dailyReport, setDailyReport]=useState<{[key:string]:number}>({});
+  const [monthlyReport , setMonthlyReport]=useState<{[key:string]:number}>({});
   useEffect(() => {
     if (currentUser) {
       loadTrips();
@@ -61,6 +63,7 @@ export default function TripsPage() {
         allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
       }
       setTrips(allTrips);
+      generateReports(allTrips);
     } catch (error) {
       console.error("Error cargando viajes:", error);
       Alert.alert("Error", "No se pudieron cargar los viajes");
@@ -74,6 +77,19 @@ export default function TripsPage() {
       console.error("Error cargando unidades:", error);
     }
   };
+  const generateReports =(tripsData:Trip[])=>{
+    const daily:{[key:string]:number}={};
+    const monthly:{[key:string]:number}={};
+    tripsData.forEach((trip)=>{
+      const salida=new Date(trip.fechaSalida);
+      const daykey =salida.toLocaleDateString("es-ES");
+      const monthkey =`${salida.getMonth ()+1}/${salida.getFullYear()}`;
+      daily[daykey]=(daily[daykey] || 0)+1;
+      monthly[monthkey]=(monthly[monthkey] || 0) +1;
+    });
+    setDailyReport(daily);
+    setMonthlyReport(monthly);
+  }
   const loadUsers = async () => {
     try {
       const res = await api.get("/users");
@@ -162,6 +178,53 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo eliminar el viaje");
     }
   };
+ 
+
+const exportToPDF = async () => {
+  let htmlContent = `
+    <h1 style="text-align:center;">Reporte de Viajes</h1>
+    <h2>📅 Por Día</h2>
+    <ul>
+      ${Object.entries(dailyReport)
+        .map(([day, count]) => `<li>${day}: ${count} viaje${count > 1 ? "s" : ""}</li>`)
+        .join("")}
+    </ul>
+    <h2>🗓 Por Mes</h2>
+    <ul>
+      ${Object.entries(monthlyReport)
+        .map(([month, count]) => `<li>${month}: ${count} viaje${count > 1 ? "s" : ""}</li>`)
+        .join("")}
+    </ul>
+
+    <h2>📋 Detalle de Viajes</h2>
+    <table border="1" cellspacing="0" cellpadding="4">
+      <tr>
+        <th>Nombre</th><th>Destino</th><th>Salida</th><th>Llegada</th><th>Estado</th><th>Kilometraje</th>
+      </tr>
+      ${trips.map(t => `
+        <tr>
+          <td>${t.nombre}</td>
+          <td>${t.destino}</td>
+          <td>${new Date(t.fechaSalida).toLocaleDateString("es-ES")}</td>
+          <td>${new Date(t.fechaLlegada).toLocaleDateString("es-ES")}</td>
+          <td>${t.estado}</td>
+          <td>${t.kilometraje ?? 0}</td>
+        </tr>`).join("")}
+    </table>
+  `;
+  try {
+    const file = await RNHTMLtoPDF.convert({
+      html: htmlContent,
+      fileName: 'Reporte_Viajes',
+      base64: false,
+    });
+    Alert.alert("Éxito", `PDF generado en: ${file.filePath}`);
+  } catch (error) {
+    console.error("Error generando PDF:", error);
+    Alert.alert("Error", "No se pudo generar el PDF");
+  }
+};
+
 
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
@@ -192,6 +255,7 @@ export default function TripsPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
       {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
+      <Button mode="contained" buttonColor="#007bff" style={{marginVertical:10}} onPress={exportToPDF}>Generar  PDF</Button>
       <FlatList data={trips}keyExtractor={(item) => item.id} renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
@@ -249,3 +313,5 @@ const styles = StyleSheet.create({
   label: { fontWeight: "bold", marginBottom: 5 },
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
 });
+
+

@@ -4,9 +4,11 @@ import "expo-router/entry";
 import React from "react";
 import { StoreProvider, useStore } from "../Public/src/context/Store";
 
+import ResetPassword from "@/Public/src/pages/ResetPassword";
 import AdminPage from "../Public/src/pages/AdminPage";
 import Dashboard from "../Public/src/pages/Dashboard";
 import EditUnitsPage from "../Public/src/pages/EditUnitsPage";
+import ForgotPassword from "../Public/src/pages/ForgotPassword";
 import Login from "../Public/src/pages/Login";
 import Register from "../Public/src/pages/Register";
 import TripsPage from "../Public/src/pages/TripsPage";
@@ -25,6 +27,8 @@ function AppNavigator() {
           <>
             <Stack.Screen name="Login" component={Login} options={{headerShown:false}}/>
             <Stack.Screen name="Register" component={Register} options={{headerShown:false}}/>
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword}/>
+            <Stack.Screen name="ResetPassword" component={ResetPassword}/>
           </>
         ) :  (
           <>

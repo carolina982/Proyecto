@@ -31,4 +31,4 @@ export default function ForgotPassword (){
 const styles=StyleSheet.create({
     container:{flex:1, justifyContent:"center",padding:20},
     input:{marginBottom:15}
-})
+});
