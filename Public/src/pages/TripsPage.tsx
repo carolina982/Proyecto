@@ -27,7 +27,6 @@ export default function TripsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-
   const [nombre, setNombre] = useState("");
   const [unidadId, setUnidadId] = useState("");
   const [conductorId, setConductorId] = useState("");
@@ -44,7 +43,6 @@ export default function TripsPage() {
       loadUsers();
     }
   }, [currentUser]);
-
   if (!currentUser) {
     return (
       <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
@@ -52,9 +50,7 @@ export default function TripsPage() {
       </View>
     );
   }
-
   const isAdmin = currentUser.rol === "Admin";
-
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
@@ -102,12 +98,10 @@ export default function TripsPage() {
     }
     setModalVisible(true);
   };
-
   const parseDate = (dateStr: string) => {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
-
   const saveTrip = async () => {
     const tripData = isAdmin
       ? {
@@ -120,8 +114,7 @@ export default function TripsPage() {
           estado,
           kilometraje: Number(kilometraje),
         }
-      : { estado }; // Chofer solo puede cambiar estado
-
+      : { estado }; 
     try {
       if (editingTrip) await api.put(`/trips/${editingTrip.id}`, tripData);
       else if (isAdmin) await api.post("/trips", tripData);
@@ -133,7 +126,6 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo guardar el viaje");
     }
   };
-
   const deleteTrip = async (id: string) => {
     if (!isAdmin) return;
     let confirmed = false;
@@ -163,7 +155,6 @@ export default function TripsPage() {
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
-
     const canEdit = isAdmin || currentUser.id === item.conductorId;
     const canDelete = isAdmin;
 
@@ -189,17 +180,10 @@ export default function TripsPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
       {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
-      <FlatList
-        data={trips}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        style={{ marginTop: 15 }}
-      />
-
+      <FlatList data={trips}keyExtractor={(item) => item.id} renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
-
           {isAdmin ? (
             <>
               <Text style={styles.label}>Nombre:</Text>
@@ -240,7 +224,6 @@ export default function TripsPage() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 },

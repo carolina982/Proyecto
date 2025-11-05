@@ -39,6 +39,6 @@ export default function ViaticList({ viewOnly }: ViaticListProps) {
           )}
         </Card>
       )}
-    />
-  );
+/>
+);
 }

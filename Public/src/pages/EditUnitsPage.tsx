@@ -33,15 +33,14 @@ export default  function EditUnitsPage (){
             renderItem={({item}) =>(
                 <View style ={styles.unitCard}>
                     <Text style ={styles.unitName}>{item.nombre}</Text>
-                    <Text>Lista de Cosas :</Text> {item.items.map((i: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) =>(
+                    <Text>Lista de Cosas :</Text> {item.items.map((i:string|number|bigint|boolean|ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, idx: Key | null | undefined) =>(
                         <View key={idx} style ={styles.itemRow}>
                             <Text>-{i}</Text>
                             <Button title ="x"
                             onPress={()=>handleRemoveItem (item.id, i)} />
-                             </View>
-                    ))}
-                    {selectedUnit === item.id ? (
-                        <View style={styles.addRow}>
+                             </View>))}
+                            {selectedUnit === item.id ? (
+                            <View style={styles.addRow}>
                             <TextInput 
                             placeholder ="Nuevo item "
                             value={newItem}
@@ -51,13 +50,13 @@ export default  function EditUnitsPage (){
                             <Button title="Agregar " onPress={handleAddItem} />
                             </View>
                     ):(
-                        <Button title="Editar esta unidad " onPress={() => setSelectedUnit (item.id)}/>
-                )}
-                 </View>
+            <Button title="Editar esta unidad " onPress={() => setSelectedUnit (item.id)}/>
+           )}
+        </View>
       )}
-            />
-         </View>
-      );
+    />
+    </View>
+  );
 }
 
 const styles =StyleSheet.create ({

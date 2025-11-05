@@ -22,7 +22,7 @@ export default function UploadTicket({ tripId }: UploadTicketProps) {
         const uris = Array.from(input.files).map(f => URL.createObjectURL(f));
         setImages([...images, ...uris]);
         const trip = trips.find(t => t.id === tripId);
-        if (trip) addTrip({ ...trip, tickets: [...(trip.tickets || []), ...uris] });
+        if (trip) addTrip({ ...trip, facturas: [...(trip.facturas || []), ...uris] });
       };
       input.click();
     } else {
@@ -34,7 +34,7 @@ export default function UploadTicket({ tripId }: UploadTicketProps) {
         const uris = result.assets.map(a => a.uri);
         setImages([...images, ...uris]);
         const trip = trips.find(t => t.id === tripId);
-        if (trip) addTrip({ ...trip, tickets: [...(trip.tickets || []), ...uris] });
+        if (trip) addTrip({ ...trip, facturas: [...(trip.facturas || []), ...uris] });
       }
     }
   };

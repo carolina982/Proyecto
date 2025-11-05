@@ -7,7 +7,6 @@ export interface IUnit extends Document {
     capacidad:number;
     estado:"Disponible" | "Mantenimiento " | "Ocupado";
 }
-
 const uniSchema =new Schema<IUnit> ({
     nombre:{type:String , required:true},
     placas:{type:String , required:true},

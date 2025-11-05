@@ -71,8 +71,6 @@ export default function Dashboard() {
           </Menu>
         </Appbar.Header>
       )}
-
-      
       <ScrollView style={styles.contentContainer}>
         {tab === "Inicio"   && <HomePage currentUser={currentUser} />}
         {tab === "Perfil"   && <PerfilePage currentUser={currentUser} />}
@@ -84,7 +82,6 @@ export default function Dashboard() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   sideMenu: { width: 200, backgroundColor: "#f0f0f0", padding: 10 },
   sideTab: { padding: 10, marginVertical: 5, borderRadius: 5 },

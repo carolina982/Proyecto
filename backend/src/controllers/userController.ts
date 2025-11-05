@@ -2,10 +2,7 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import User, { IUser } from "../models/User";
 
-// Secreto para JWT
 const JWT_SECRET = process.env.JWT_SECRET || "mi_super_secreto";
-
-// GET todos los usuarios
 export const getUser = async (req: Request, res: Response) => {
   try {
     const users: IUser[] = await User.find();
@@ -15,14 +12,11 @@ export const getUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
-
-// GET usuario por ID
 export const getUserById = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id || id.length !== 24) {
     return res.status(400).json({ message: "ID de usuario inválido" });
   }
-
   try {
     const user: IUser | null = await User.findById(id);
     if (!user) {
@@ -34,8 +28,6 @@ export const getUserById = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
-
-// CREATE usuario directo
 export const createUser = async (req: Request, res: Response) => {
   const { nombre, email, password, rol } = req.body;
   if (!nombre || !email || !password || !rol) {
@@ -55,22 +47,17 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error creando usuario", error });
   }
 };
-// LOGIN usuario
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
-    return res.status(400).json({ message: "Faltan datos" });
-  }
+    return res.status(400).json({ message: "Faltan datos" });}
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    }
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });}
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    }
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });}
     const userData = {
       id: user._id,nombre: user.nombre,
       apellido: user.apellido, email: user.email,
@@ -91,13 +78,11 @@ export const registerUser = async(req:Request, res:Response)=>{
     }
     const existingUser=await User.findOne({email});
     if (existingUser) {
-      return res.status(400).json({message:"Usuario ya exite"});
-    }
+      return res.status(400).json({message:"Usuario ya exite"});}
     const hashedPassword =await bcrypt.hash(password,10);
     let photoUrl= null;
     if (req.file){
-      photoUrl=`/uploads/${req.file.filename}`;
-    }
+      photoUrl=`/uploads/${req.file.filename}`;}
     const newUser=await User.create({nombre,apellido,email,password:hashedPassword,rol,imagenUrl:photoUrl,});
     return res.status(201).json({id:newUser._id,
       nombre:newUser.nombre,
@@ -113,22 +98,14 @@ export const registerUser = async(req:Request, res:Response)=>{
 };
 
 export const updateUser=  async (req:Request, res:Response)=>{
-    console.log("====UPDATE USER DEBUG====");
-    console.log("Recibida peticion PATCH para actualizar usuario");
-    console.log("req.params.id", req.params.id);
-    console.log("req.body",req.body);
-    console.log("req.file",req.file);
-    console.log("====================");
   try {
     const {nombre,apellido,email,rol}=req.body;
     const updateData: any ={nombre, apellido,email, rol};
     if (req.file){
-      updateData.photoUrl =`/uploads/${req.file.filename}`;
-    }
+      updateData.photoUrl =`/uploads/${req.file.filename}`;}
     const user =await User.findByIdAndUpdate(req.params.id,updateData,{new:true});
     if (!user){
-      return res.status(404).json({message:"Usuario no econtrado"});
-    }
+      return res.status(404).json({message:"Usuario no econtrado"});}
     res.json(user);
   }catch (error){
     console.error("Error al actualizar usuario", error);
@@ -136,11 +113,9 @@ export const updateUser=  async (req:Request, res:Response)=>{
   }
 };
 
-//Delete 
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   console.log("Id recibiendo en backend", id);
-
   try {
     const user = await User.findByIdAndDelete(id);
     if (!user) {

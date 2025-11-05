@@ -6,7 +6,6 @@ const JWT_SECRET = process.env.JWT_SECRET ||"Clave temporal";
 interface JwtPayload {
     id :string;
 }
-
 export const verifyToken=async(req:Request , res:Response , next:NextFunction)=>{
     try {
         const token =req.header("Authorization")?.replace ("Bearer" , "").trim();

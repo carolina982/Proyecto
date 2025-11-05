@@ -89,7 +89,6 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       formData.append("apellido", apellido);
       formData.append("email", email);
       formData.append("rol", rol);
-
       if (photoUri && !photoUri.startsWith("http")) {
         if (Platform.OS === "web") {
           const response = await fetch(photoUri);
@@ -105,7 +104,6 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
           formData.append("photo", { uri: localUri, name: filename, type } as any);
         }
       }
-
       const response = await fetch(`http://192.168.1.81:3000/api/users/${userId}`, {
         method: "PATCH",
         body: formData,

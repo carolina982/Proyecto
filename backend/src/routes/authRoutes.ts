@@ -7,15 +7,12 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Faltan datos" });
-    }
+      return res.status(400).json({ message: "Faltan datos" });}
     const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    }
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });}
     if (user.password !== password) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    }
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" }); }
     const { password: _pass, ...userData } = user.toObject();
     return res.json(userData);
   } catch (error) {

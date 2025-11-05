@@ -22,7 +22,6 @@ export const getUnits =async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error obteniendo unidades" , error});
     }
 };
-
 export const getUnitById= async (req:Request , res:Response)=>{
     try {
        const {id}=req.params;
@@ -39,7 +38,6 @@ export const getUnitById= async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error al obtener unidad ", error})
     }
 };
-
 export const updateUnit = async(req:Request , res:Response)=>{
     try{
         const {id}=req.params;
@@ -56,21 +54,18 @@ export const updateUnit = async(req:Request , res:Response)=>{
         res.status(500).json({messga:"Error al actualizar unidad" , error});
     }
 };
-
 export const deleteUnit = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     console.log("ID recibido para eliminar:", id);
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "ID inválido" });
-    }
+      return res.status(400).json({ message: "ID inválido" });}
     const unit = await Unit.findByIdAndDelete(id);
     if (!unit) {
-      return res.status(404).json({ message: "Unidad no encontrada" });
-    }
+      return res.status(404).json({ message: "Unidad no encontrada" });}
     console.log("Unidad eliminada:", unit.nombre);
     return res.status(200).json({ message: "Unidad eliminada correctamente", id });
-  } catch (error) {
+    } catch (error) {
     console.error("Error eliminando unidad:", error);
     return res.status(500).json({ message: "Error eliminando unidad", error });
   }

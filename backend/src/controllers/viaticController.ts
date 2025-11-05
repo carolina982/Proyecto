@@ -19,7 +19,6 @@ export const getViatic = async(req:Request , res:Response)=>{
     res.status(500).json({message:"Error al obtener viaticos"});
   }
 };
-
 export const getViaticById =async(req:Request , res:Response)=>{
   try{
     const viatic =await Viatic.findById(req.params.id);
@@ -37,7 +36,6 @@ export const getViaticById =async(req:Request , res:Response)=>{
     res.status(500).json({message:"Error al obtener viatico"});
   }
 };
-
 export const getViaticByTrip = async (req:Request , res:Response)=>{
   try{
     const tripId =req.params.tripId;
@@ -55,24 +53,16 @@ export const getViaticByTrip = async (req:Request , res:Response)=>{
 };
 
 export const createViatic = async (req: Request, res: Response) => {
-    console.log("====UPDATE USER DEBUG====");
-    console.log("Recibida peticion PATCH para actualizar usuario");
-    console.log("req.params.id", req.params.id);
-    console.log("req.body",req.body);
-    console.log("req.file",req.file);
-    console.log("====================");
   try {
     const { tripId, concepto, descripcion, monto, nombre } = req.body;
     const factura = req.file ? `/uploads/${req.file.filename}` : null;
     const user = (req as any).user;
-
     if (user?.rol === "Chofer") {
       const trip = await Trip.findById(tripId);
       if (!trip || trip.conductorId.toString() !== user.id.toString()) {
         return res.status(403).json({ message: "No puedes agregar viáticos a este viaje" });
       }
     }
-
     const newViatic = await Viatic.create({ tripId, concepto, descripcion, monto, nombre, factura});
     res.json({ message: "Viático registrado exitosamente", viatic: newViatic });
   } catch (error) {
@@ -80,7 +70,6 @@ export const createViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al crear viático" });
   }
 };
-
 export const updateViatic = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatic.findById(req.params.id);
@@ -93,7 +82,6 @@ export const updateViatic = async (req: Request, res: Response) => {
         return res.status(403).json({ message: "No tienes permisos para actualizar este viático" });
       }
     }
-
     if (req.file) viatic.factura = `/uploads/${req.file.filename}`;
     Object.assign(viatic, req.body);
     await viatic.save();
@@ -104,7 +92,6 @@ export const updateViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al actualizar viático" });
   }
 };
-
 export const deleteViatic = async (req:Request , res:Response)=>{
   try{
     const viatic=await Viatic.findById(req.params.id);
