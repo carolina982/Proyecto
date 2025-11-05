@@ -28,7 +28,7 @@
     "@types/multer": "^2.0.0",
     "@types/serve-static": "^1.15.9",
     "axios": "^1.12.2",
-    "bcryptjs": "^3.0.2",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "expo": "~54.0.1",

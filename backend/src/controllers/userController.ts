@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
+import * as crypto from "crypto";
 import { Request, Response } from "express";
+import { transporter } from "../config/mailer";
 import User, { IUser } from "../models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET || "mi_super_secreto";
@@ -125,5 +127,56 @@ export const deleteUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error eliminando usuario", error);
     res.status(500).json({ message: "Error eliminando usuario" });
+  }
+};
+
+//enviar correo para restablecer contraseña 
+export const forgotPassword =async (req:Request, res:Response)=>{
+  const {email}=req.body;
+  try {
+    const user=await User.findOne({email});
+    if (!user) return 
+    res.status(404).json({message:"Usuario no econtrado"});
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetToken=token;
+    user.resetTokenExp=new Date (Date.now()+3600000);
+    await user.save();
+    const resetUrl =`http://192.168.1.81:3000/api/users/reset-password/${token}`;
+    await transporter.sendMail({
+      to:user.email,
+      from:"correo@volta.com",
+      subject:"Restablece tu contraseña",
+      html:`<p>Solicitastes restablecer tu contraseña</p>
+      <p>Haz clic aqui para crear una nueva contraseña:</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>Este enlace expira en 1 hora</p>`,
+    });
+    res.json({message:"Correo enviado correctamete"});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al enviar correo"});
+  }
+};
+
+//restablecer contraseña
+export const resetPassword=async(req:Request,res:Response)=>{
+  const {token}=req.params;
+  const {password}=req.body;
+  try {
+    const user =await User.findOne({
+      resetToken:token,
+      resetTokenExp:{$gt:new Date()},
+    });
+    if (!user) return
+    res.status(400).json({message:"Token invalido o expirado"});
+    const  hashed=await bcrypt.hash(password,10);
+    user.password=hashed;
+    user.resetToken=undefined;
+    user.resetTokenExp=undefined;
+    await user .save();
+    res.json({message:"Contraseña restablecida correctamente"});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({message:"Error al restablecer contraseña"});
   }
 };

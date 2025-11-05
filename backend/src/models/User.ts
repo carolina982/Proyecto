@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs/umd/types";
+import bcrypt from "bcryptjs";
 import mongoose, { Document, Schema } from "mongoose";
 
 export  interface IUser extends Document {
@@ -9,7 +9,7 @@ export  interface IUser extends Document {
  rol:string; 
  photoUrl?:string|null;
  resetToken?:string;
- resetTokenExp:Date;
+ resetTokenExp?:Date;
  comparePassword(password:string):Promise<boolean>;
 
 }
