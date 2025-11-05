@@ -4,14 +4,14 @@ export interface IUnit extends Document {
     nombre:string;
     placas:string;
     modelo:string;
-    capacidad:number;
+    capacidad:string;
     estado:"Disponible" | "Mantenimiento " | "Ocupado";
 }
 const uniSchema =new Schema<IUnit> ({
     nombre:{type:String , required:true},
     placas:{type:String , required:true},
     modelo:{type:String,  required:true},
-    capacidad:{type:Number , required:true},
+    capacidad:{type:String , required:true},
     estado:{type:String , enum:["Disponible" , "Mantenimiento" , "Ocupado"]},
 },
 {timestamps:true}

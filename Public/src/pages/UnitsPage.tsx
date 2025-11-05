@@ -8,7 +8,7 @@ interface Unit {
   nombre: string;
   placas: string;
   modelo: string;
-  capacidad: number;
+  capacidad: string;
   estado: "Disponible" | "Mantenimiento" | "Ocupado";
 }
 
@@ -35,7 +35,7 @@ export default function UnitsPage() {
         nombre:u.nombre,
         placas:u.placas,
         modelo:u.modelo,
-        capacidad:u.capacidad,
+        capacidad:String (u.capacidad),
         estado:u.estado,
       }));
       setUnits(mappedUnits);
@@ -69,8 +69,11 @@ export default function UnitsPage() {
       return;
     }
     const unitData = {
-      nombre, placas,
-      modelo,capacidad: Number(capacidad),estado,
+      nombre, 
+      placas,
+      modelo,
+      capacidad,
+      estado,
     };
 
     try {
@@ -152,7 +155,7 @@ export default function UnitsPage() {
           <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
           <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
           <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
-          <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"keyboardType="numeric"dense style={styles.input}/>
+          <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
           <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
             activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>

@@ -51,6 +51,7 @@
     "mongoose": "^8.18.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "nodemailer": "^7.0.10",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-native": "^0.81.4",

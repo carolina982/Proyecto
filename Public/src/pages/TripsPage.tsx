@@ -15,6 +15,7 @@ interface Trip {
   destino: string;
   estado: string;
   kilometraje?: number;
+  acompanate:string;
 }
 
 interface Unit { id: string; nombre: string; }
@@ -35,6 +36,7 @@ export default function TripsPage() {
   const [destino, setDestino] = useState("");
   const [estado, setEstado] = useState("pendiente");
   const [kilometraje, setKilometraje] = useState("");
+  const [acompanate,setAcompanate]=useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -91,10 +93,18 @@ export default function TripsPage() {
       setDestino(trip.destino);
       setEstado(trip.estado);
       setKilometraje(trip.kilometraje?.toString() || "");
+      setAcompanate(trip.acompanate)
     } else {
       setEditingTrip(null);
-      setNombre(""); setUnidadId(""); setConductorId(""); setFechaSalida("");
-      setFechaLlegada(""); setDestino(""); setEstado("pendiente"); setKilometraje("");
+      setNombre(""); 
+      setUnidadId(""); 
+      setConductorId(""); 
+      setFechaSalida("");
+      setFechaLlegada(""); 
+      setDestino(""); 
+      setEstado("pendiente"); 
+      setKilometraje("");
+      setAcompanate("");
     }
     setModalVisible(true);
   };
@@ -113,6 +123,7 @@ export default function TripsPage() {
           destino,
           estado,
           kilometraje: Number(kilometraje),
+          acompanate,
         }
       : { estado }; 
     try {
@@ -163,6 +174,7 @@ export default function TripsPage() {
         <Text style={styles.title}>{item.nombre}</Text>
         <Text style={styles.textSmall}>Unidad: {unidadNombre}</Text>
         <Text style={styles.textSmall}>Conductor: {conductorNombre}</Text>
+        <Text style={styles.textSmall}>Acompañante: {item.acompanate}</Text>
         <Text style={styles.textSmall}>Destino: {item.destino}</Text>
         <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
@@ -198,6 +210,8 @@ export default function TripsPage() {
                 <Picker.Item label="Selecciona un conductor" value="" />
                 {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
               </Picker>
+              <Text style={styles.label}>Acompañante:</Text>
+              <TextInput value={acompanate} onChangeText={setAcompanate} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Destino:</Text>
               <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Kilometraje (km):</Text>
