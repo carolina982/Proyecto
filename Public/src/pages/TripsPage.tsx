@@ -1,12 +1,16 @@
 import { Picker } from '@react-native-picker/picker';
+import * as FileSystem from "expo-file-system";
+import { shareAsync } from "expo-sharing";
+import { saveAs } from "file-saver";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
+import * as XLSX from "xlsx";
 import { api } from "../api/api";
 import { useStore } from '../context/Store';
-const RNHTMLtoPDF = require('react-native-html-to-pdf');
 
 interface Trip {
+  daf: string;
   id: string;
   nombre: string;
   unidadId: string;
@@ -17,6 +21,7 @@ interface Trip {
   estado: string;
   kilometraje?: number;
   acompanate:string;
+  Daf:string;
 }
 
 interface Unit { id: string; nombre: string; }
@@ -38,8 +43,8 @@ export default function TripsPage() {
   const [estado, setEstado] = useState("pendiente");
   const [kilometraje, setKilometraje] = useState("");
   const [acompanate,setAcompanate]=useState("");
-  const [dailyReport, setDailyReport]=useState<{[key:string]:number}>({});
-  const [monthlyReport , setMonthlyReport]=useState<{[key:string]:number}>({});
+  const [daf,setDaf]=useState("");
+
   useEffect(() => {
     if (currentUser) {
       loadTrips();
@@ -87,8 +92,7 @@ export default function TripsPage() {
       daily[daykey]=(daily[daykey] || 0)+1;
       monthly[monthkey]=(monthly[monthkey] || 0) +1;
     });
-    setDailyReport(daily);
-    setMonthlyReport(monthly);
+
   }
   const loadUsers = async () => {
     try {
@@ -110,6 +114,7 @@ export default function TripsPage() {
       setEstado(trip.estado);
       setKilometraje(trip.kilometraje?.toString() || "");
       setAcompanate(trip.acompanate)
+      setDaf(trip.daf || "");
     } else {
       setEditingTrip(null);
       setNombre(""); 
@@ -121,6 +126,7 @@ export default function TripsPage() {
       setEstado("pendiente"); 
       setKilometraje("");
       setAcompanate("");
+      setDaf("");
     }
     setModalVisible(true);
   };
@@ -140,6 +146,7 @@ export default function TripsPage() {
           estado,
           kilometraje: Number(kilometraje),
           acompanate,
+          daf,
         }
       : { estado }; 
     try {
@@ -178,54 +185,107 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo eliminar el viaje");
     }
   };
- 
 
-const exportToPDF = async () => {
-  let htmlContent = `
-    <h1 style="text-align:center;">Reporte de Viajes</h1>
-    <h2>📅 Por Día</h2>
-    <ul>
-      ${Object.entries(dailyReport)
-        .map(([day, count]) => `<li>${day}: ${count} viaje${count > 1 ? "s" : ""}</li>`)
-        .join("")}
-    </ul>
-    <h2>🗓 Por Mes</h2>
-    <ul>
-      ${Object.entries(monthlyReport)
-        .map(([month, count]) => `<li>${month}: ${count} viaje${count > 1 ? "s" : ""}</li>`)
-        .join("")}
-    </ul>
-
-    <h2>📋 Detalle de Viajes</h2>
-    <table border="1" cellspacing="0" cellpadding="4">
-      <tr>
-        <th>Nombre</th><th>Destino</th><th>Salida</th><th>Llegada</th><th>Estado</th><th>Kilometraje</th>
-      </tr>
-      ${trips.map(t => `
-        <tr>
-          <td>${t.nombre}</td>
-          <td>${t.destino}</td>
-          <td>${new Date(t.fechaSalida).toLocaleDateString("es-ES")}</td>
-          <td>${new Date(t.fechaLlegada).toLocaleDateString("es-ES")}</td>
-          <td>${t.estado}</td>
-          <td>${t.kilometraje ?? 0}</td>
-        </tr>`).join("")}
-    </table>
-  `;
+  const exportToExcel = async () => {
   try {
-    const file = await RNHTMLtoPDF.convert({
-      html: htmlContent,
-      fileName: 'Reporte_Viajes',
-      base64: false,
-    });
-    Alert.alert("Éxito", `PDF generado en: ${file.filePath}`);
+    const sortedTrips = [...trips].sort(
+      (a, b) =>
+        new Date(a.fechaSalida).getTime() - new Date(b.fechaSalida).getTime()
+    );
+
+    const rows: any[] = [];
+    let currentMonth = "";
+    let currentWeek = 0;
+    let currentDay = "";
+    let monthTripCount = 0;
+
+    for (const t of sortedTrips) {
+      const salida = new Date(t.fechaSalida);
+      const monthName = salida.toLocaleString("es-ES", { month: "long", year: "numeric" });
+      const weekNumber = Math.ceil(salida.getDate() / 7);
+      const dayKey = salida.toLocaleDateString("es-ES");
+      if (monthName !== currentMonth) {
+        if (monthTripCount > 0) {
+          rows.push({
+            Nombre: `TOTAL DE VIAJES DEL MES: ${monthTripCount}`,
+            __style: `{ bold: true, color: "#C62828" }`,
+          });
+          rows.push({}); 
+        }
+
+        rows.push({ Nombre:  `MES: ${monthName.toUpperCase()}`, __style: { bold: true, color: "#1565C0" } });
+        currentMonth = monthName;
+        monthTripCount = 0;
+        currentWeek = 0;
+        currentDay = "";
+      }
+      if (weekNumber !== currentWeek) {
+        rows.push({ Nombre:  `SEMANA ${weekNumber}`, __style: { bold: true, color: "#0288D1" } });
+        currentWeek = weekNumber;
+      }
+      if (dayKey !== currentDay) {
+        rows.push({ Nombre:`  DÍA: ${dayKey}`, __style: { bold: true, color: "#00796B" } });
+        currentDay = dayKey;
+      }
+      rows.push({
+        Nombre: t.nombre,
+        Destino: t.destino,
+        "Fecha Salida": new Date(t.fechaSalida).toLocaleDateString("es-ES"),
+        "Fecha Llegada": new Date(t.fechaLlegada).toLocaleDateString("es-ES"),
+        Conductor: users.find((u) => u.id === t.conductorId)?.nombre || "N/A",
+        Acompañante: t.acompanate || "N/A",
+        Kilometraje: t.kilometraje ?? 0,
+        Estado: t.estado,
+      });
+
+      monthTripCount++;
+    }
+    if (monthTripCount > 0) {
+      rows.push({
+        Nombre: ` TOTAL DE VIAJES DEL MES: ${monthTripCount}`,
+        __style: { bold: true, color: "#C62828" },
+      });
+    }
+    const ws = XLSX.utils.json_to_sheet(rows.map(r => {
+      const { __style, ...data } = r;
+      return data;
+    }));
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      const firstCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+      const row = rows[R];
+      if (row?.__style) {
+        firstCell.s = {
+          font: { bold: true, color: { rgb: row.__style.color.replace("#", "") } },
+          fill: { fgColor: { rgb: "E3F2FD" } },
+        };
+      }
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte_Viajes");
+    const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+
+    if (Platform.OS === "web") {
+      const blob = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const file = new Blob([blob], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(file, "Reporte_Viajes.xlsx");
+    } else {
+      const fileUri = `${FileSystem.cacheDirectory}Reporte_Viajes.xlsx`;
+      await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: "base64" });
+      await shareAsync(fileUri, {
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        dialogTitle: "Compartir Reporte de Viajes",
+      });
+    }
+
+    Alert.alert("Éxito", "Reporte Excel generado correctamente");
   } catch (error) {
-    console.error("Error generando PDF:", error);
-    Alert.alert("Error", "No se pudo generar el PDF");
+    console.error("Error exportando Excel:", error);
+    Alert.alert("Error", "No se pudo generar el archivo Excel");
   }
 };
-
-
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
@@ -242,6 +302,7 @@ const exportToPDF = async () => {
         <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Estado: {item.estado}</Text>
+        <Text style={styles.textSmall}>Daf</Text>
         <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
         <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
           {canEdit && <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>}
@@ -255,7 +316,7 @@ const exportToPDF = async () => {
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
       {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
-      <Button mode="contained" buttonColor="#007bff" style={{marginVertical:10}} onPress={exportToPDF}>Generar  PDF</Button>
+      {isAdmin && (<Button mode="contained" buttonColor="#0d75bb" style={{marginTop:10}} onPress={ exportToExcel}>Exportar Excel</Button>)}
       <FlatList data={trips}keyExtractor={(item) => item.id} renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
@@ -276,6 +337,8 @@ const exportToPDF = async () => {
               </Picker>
               <Text style={styles.label}>Acompañante:</Text>
               <TextInput value={acompanate} onChangeText={setAcompanate} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Text style={styles.label}>Daf</Text>
+              <TextInput value={daf} onChangeText={setDaf} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Destino:</Text>
               <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Kilometraje (km):</Text>

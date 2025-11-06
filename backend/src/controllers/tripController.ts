@@ -37,12 +37,12 @@ export const getTripById = async (req: Request, res: Response) => {
 };
 export const createTrip = async (req: Request, res: Response) => {
   try {
-    const { nombre,unidadId,conductorId,fechaSalida,fechaLlegada,destino,estado,kilometraje,} = req.body;
-    if (!nombre ||!unidadId ||!conductorId ||!fechaSalida ||!fechaLlegada ||!destino ||!estado ||!kilometraje ) {
+    const { nombre,unidadId,conductorId,fechaSalida,fechaLlegada,destino,estado,kilometraje,acompanate,daf} = req.body;
+    if (!nombre ||!unidadId ||!conductorId ||!fechaSalida ||!fechaLlegada ||!destino ||!estado ||!kilometraje ||!acompanate ||!daf) {
       return res.status(400).json({ message: "Todos los campos son requeridos" });
     }
     const newTrip = new Trip({
-      nombre,unidadId,conductorId,fechaSalida: new Date(fechaSalida),fechaLlegada: new Date(fechaLlegada),destino,estado,kilometraje: Number(kilometraje),
+      nombre,unidadId,conductorId,fechaSalida: new Date(fechaSalida),fechaLlegada: new Date(fechaLlegada),destino,estado,kilometraje: Number(kilometraje),acompanate,daf,
     });
     await newTrip.save();
     res.status(201).json(newTrip);

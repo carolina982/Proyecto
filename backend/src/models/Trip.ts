@@ -8,7 +8,9 @@ export interface ITrip extends Document {
   conductorId: string;   
   unidadId:string;      
   estado: string;   
-  kilometraje?:number;       
+  kilometraje?:number;     
+  acompanate:string;
+  daf:string;  
 }
 const tripSchema = new Schema<ITrip>(
   {
@@ -19,7 +21,10 @@ const tripSchema = new Schema<ITrip>(
     conductorId:{type:String, required:true},
     unidadId:{type:String , required:true},
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
-      kilometraje:{type:Number , default: 0},
+    kilometraje:{type:Number , default: 0},
+    acompanate:{type:String},
+    daf:{type:String},
+
 },
   {timestamps:true}
 );
