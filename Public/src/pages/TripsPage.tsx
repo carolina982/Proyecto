@@ -10,18 +10,12 @@ import { api } from "../api/api";
 import { useStore } from '../context/Store';
 
 interface Trip {
-  daf: string;
-  id: string;
-  nombre: string;
-  unidadId: string;
-  conductorId: string;
-  fechaSalida: string;
-  fechaLlegada: string;
-  destino: string;
-  estado: string;
-  kilometraje?: number;
-  acompanate:string;
-  Daf:string;
+  id: string; nombre: string;
+  unidadId: string; conductorId: string;
+  fechaSalida: string; fechaLlegada: string;
+  destino: string;  estado: string;
+  kilometraje?: number; acompanate:string;
+  def:string;
 }
 
 interface Unit { id: string; nombre: string; }
@@ -43,7 +37,7 @@ export default function TripsPage() {
   const [estado, setEstado] = useState("pendiente");
   const [kilometraje, setKilometraje] = useState("");
   const [acompanate,setAcompanate]=useState("");
-  const [daf,setDaf]=useState("");
+  const [def,setDef]=useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -59,21 +53,39 @@ export default function TripsPage() {
       </View>
     );
   }
-  const isAdmin = currentUser.rol === "Admin";
-  const loadTrips = async () => {
-    try {
-      const res = await api.get("/trips");
-      let allTrips = res.data.map((t: any) => ({ ...t, id: t._id }));
-      if (!isAdmin) {
-        allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
-      }
-      setTrips(allTrips);
-      generateReports(allTrips);
-    } catch (error) {
-      console.error("Error cargando viajes:", error);
-      Alert.alert("Error", "No se pudieron cargar los viajes");
+  const isAdmin= currentUser.rol?.toLocaleLowerCase() ==="admin";
+const loadTrips = async () => {
+  try {
+    let token: string | null = null;
+    if (Platform.OS === "web") {
+      token = localStorage.getItem("token");
+    } else {
+      const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+      token = await AsyncStorage.getItem("token");
     }
-  };
+    if (!token) {
+      console.warn("No hay token disponible. No se pudo cargar los viajes.");
+      Alert.alert("Error", "No se pudo cargar viajes: token no disponible");
+      return;
+    }
+    console.log("Token usando en loadTrips:", token);
+    const res = await api.get("/trips", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    let allTrips = res.data.map((t: any) => ({ ...t, id: t._id }));
+    if (!isAdmin) {
+      allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
+    }
+    setTrips(allTrips);
+    generateReports(allTrips);
+  } catch (error: any) {
+    console.error("Error cargando viajes:", error.response?.data || error);
+    Alert.alert("Error", "No se pudieron cargar los viajes. Ver consola para más detalles.");
+  }
+};
+
   const loadUnits = async () => {
     try {
       const res = await api.get("/units");
@@ -114,19 +126,15 @@ export default function TripsPage() {
       setEstado(trip.estado);
       setKilometraje(trip.kilometraje?.toString() || "");
       setAcompanate(trip.acompanate)
-      setDaf(trip.daf || "");
+      setDef(trip.def || "");
     } else {
       setEditingTrip(null);
-      setNombre(""); 
-      setUnidadId(""); 
-      setConductorId(""); 
-      setFechaSalida("");
-      setFechaLlegada(""); 
-      setDestino(""); 
-      setEstado("pendiente"); 
-      setKilometraje("");
+      setNombre("");  setUnidadId(""); 
+      setConductorId("");  setFechaSalida("");
+      setFechaLlegada("");  setDestino(""); 
+      setEstado("pendiente");   setKilometraje("");
       setAcompanate("");
-      setDaf("");
+      setDef("");
     }
     setModalVisible(true);
   };
@@ -146,14 +154,14 @@ export default function TripsPage() {
           estado,
           kilometraje: Number(kilometraje),
           acompanate,
-          daf,
+          def,
         }
       : { estado }; 
     try {
       if (editingTrip) await api.put(`/trips/${editingTrip.id}`, tripData);
       else if (isAdmin) await api.post("/trips", tripData);
 
-      await loadTrips();
+       await loadTrips();
       setModalVisible(false);
     } catch (error: any) {
       console.error("Error guardando viaje:", error.response?.data || error);
@@ -302,7 +310,7 @@ export default function TripsPage() {
         <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Estado: {item.estado}</Text>
-        <Text style={styles.textSmall}>Daf</Text>
+        <Text style={styles.textSmall}>Def:{item.def}</Text>
         <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
         <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
           {canEdit && <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>}
@@ -337,8 +345,8 @@ export default function TripsPage() {
               </Picker>
               <Text style={styles.label}>Acompañante:</Text>
               <TextInput value={acompanate} onChangeText={setAcompanate} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
-              <Text style={styles.label}>Daf</Text>
-              <TextInput value={daf} onChangeText={setDaf} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Text style={styles.label}>Def</Text>
+              <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Destino:</Text>
               <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Kilometraje (km):</Text>

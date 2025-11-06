@@ -10,39 +10,43 @@ export default function Login({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword]=useState(false);
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor completa todos los campos");
+
+  const handleLogin = async ()=>{
+    if (!email || !password){
+      Alert.alert("Error" ,"Por favor completa todos los campos");
       return;
     }
     setLoading(true);
     try {
-      const response = await fetch("http://192.168.1.81:3000/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-        }),
+      const response =await fetch("http://192.168.1.81:3000/api/users/login",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email:email.trim().toLocaleLowerCase(),password}),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        Alert.alert("Error", data.message || "Ocurrió un problema al iniciar sesión");
+      const data=await response.json();
+      if (!response.ok){
+        Alert.alert("Error", data.message || "Ocurrio un problema al iniciar sesion");
         return;
       }
+      if (Platform.OS === "web"){
+        localStorage.setItem("token",data.token);
+      }else{
+        const AsyncStorage=(await import("@react-native-async-storage/async-storage")).default;
+        await AsyncStorage.setItem("token",data.token);
+      }
       login(data);
-      if (data.rol?.toLowerCase() === "admin") {
+      if (data.rol?.toLocaleLowerCase () === "admin"){
         navigation.navigate("AdminPage");
-      } else {
+      }else{
         navigation.navigate("Dashboard");
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      Alert.alert("Error", "No se pudo iniciar sesión. Intenta más tarde.");
-    } finally {
-      setLoading(false);
+    }catch (error){
+      console.error("Login error",error);
+      Alert.alert("Error", "No se pudo iniciar sesion .Intenta mas tarde");
+    }finally{
+      setLoading (false);
     }
-  };
+  }
   return (
     <KeyboardAvoidingView
       style={styles.container}
