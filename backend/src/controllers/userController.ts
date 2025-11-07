@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
 import * as crypto from "crypto";
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/config";
 import { transporter } from "../config/mailer";
 import User, { IUser } from "../models/User";
-
-const JWT_SECRET = process.env.JWT_SECRET || "mi_super_secreto";
 export const getUser = async (req: Request, res: Response) => {
   try {
     const users: IUser[] = await User.find();
@@ -49,56 +49,88 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error creando usuario", error });
   }
 };
+
+// Registrar usuario
+export const registerUser = async (req: Request, res: Response) => {
+  try {
+    const { nombre, apellido, email, password, rol } = req.body;
+
+    if (!nombre || !apellido || !email || !password || !rol) {
+      return res.status(400).json({ message: "Faltan datos obligatorios" });
+    }
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Usuario ya existe" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      nombre,
+      apellido,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      rol,
+      photoUrl: req.file ? `/uploads/${req.file.filename} `: null,
+    });
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email, rol: newUser.rol },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+    res.status(201).json({
+      id: newUser._id,
+      nombre: newUser.nombre,
+      apellido: newUser.apellido,
+      email: newUser.email,
+      rol: newUser.rol,
+      photoUrl: newUser.photoUrl || null,
+      token, 
+    });
+  } catch (error) {
+    console.error("Error registrando usuario", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+// Login usuario
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
+  console.log("Datos recibidos en login",{email,password});
   if (!email || !password) {
-    return res.status(400).json({ message: "Faltan datos" });}
+    return res.status(400).json({ message: "Faltan datos" });
+  }
+
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });}
+      console.log("Usuario no econtrado");
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+    }
+    console.log("usuario econtrado", user.email);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });}
-    const userData = {
-      id: user._id,nombre: user.nombre,
-      apellido: user.apellido, email: user.email,
-      rol: user.rol, photoUrl: user.photoUrl|| null,
-    };
-    res.json(userData);
+      console.log("contraseña incorrecta");
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+    }
+    const token = jwt.sign(
+      { id: user._id, email: user.email, rol: user.rol },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+    console .log ("Token generado", token ? "ok":"Error");
+    res.json({
+      id: user._id,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      email: user.email,
+      rol: user.rol,
+      photoUrl: user.photoUrl || null,
+      token,
+    });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Error en el servidor" });
-  }
+    res.status(500).json({ message: "Error en el servidor" });
+}
 };
-
-export const registerUser = async(req:Request, res:Response)=>{
-  try {
-    const {nombre , apellido, email,password,rol}=req.body;
-    if (!nombre||!apellido||!email||!password||!rol){
-      return res.status(400).json({message:"Faltan datos obligatorios"});
-    }
-    const existingUser=await User.findOne({email});
-    if (existingUser) {
-      return res.status(400).json({message:"Usuario ya exite"});}
-    const hashedPassword =await bcrypt.hash(password,10);
-    let photoUrl= null;
-    if (req.file){
-      photoUrl=`/uploads/${req.file.filename}`;}
-    const newUser=await User.create({nombre,apellido,email,password:hashedPassword,rol,imagenUrl:photoUrl,});
-    return res.status(201).json({id:newUser._id,
-      nombre:newUser.nombre,
-      apellido:newUser.apellido,
-      email:newUser.email,
-      rol:newUser.rol,
-      photoUrl:newUser.photoUrl|| null,
-    });
-  }catch (error){
-    console.error("Error registrando usuario",error);
-    return res.status(500).json({message:"Error inteerno del servidor"});
-  }
-};
-
+  
 export const updateUser=  async (req:Request, res:Response)=>{
   try {
     const {nombre,apellido,email,rol}=req.body;
@@ -157,7 +189,6 @@ export const forgotPassword =async (req:Request, res:Response)=>{
     res.status(500).json({message:"Error al enviar correo"});
   }
 };
-
 //restablecer contraseña
 export const resetPassword=async(req:Request,res:Response)=>{
   const {token}=req.params;

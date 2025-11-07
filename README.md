@@ -60,6 +60,4 @@ Join our community of developers creating universal apps.
 - Aplicacion 
   npx expo start 
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
-
-
-
+- cambiar lo de viaticos

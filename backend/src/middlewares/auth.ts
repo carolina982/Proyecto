@@ -1,21 +1,27 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/config";
 import User from "../models/User";
 
-const JWT_SECRET = process.env.JWT_SECRET ||"Clave temporal";
 interface JwtPayload {
-    id :string;
+    id:string;
 }
-export const verifyToken=async(req:Request , res:Response , next:NextFunction)=>{
+export const verifyToken =async (req:Request, res:Response,next:NextFunction)=>{
     try {
-        const token =req.header("Authorization")?.replace ("Bearer" , "").trim();
-        if(!token) return res.status(401).json({message:"Token no proporcionado"});
-        const decoded =jwt.verify(token,JWT_SECRET) as JwtPayload;
-        const user=await User.findById(decoded.id);
-        if (!user) return res.status(401).json({message:"Usuario no econtrado "});
-        req.user =user;
-        next();
+        const authHeader =req.header("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer")){
+            return res.status(401).json({message:"Token no proporcionado o fromato incorrecto"});
+        }
+        const token =authHeader.split(" ") [1].trim();
+       const decoded =jwt.verify(token,JWT_SECRET) as JwtPayload;
+       const user =await User.findById(decoded.id);
+       if (!user){
+        return res.status(401).json({message:"Usuario no econtrado"});
+       }
+       (req as any).user =user;
+       next();
     }catch (error){
-        res.status(401).json({message:"Token invalido o expirado "});
+        console.error("Error verificando token",error);
+        res.status(401).json({mesage:"Token invalido o expirado"});
     }
 };

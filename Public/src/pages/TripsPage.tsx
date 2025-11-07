@@ -68,11 +68,11 @@ const loadTrips = async () => {
       Alert.alert("Error", "No se pudo cargar viajes: token no disponible");
       return;
     }
-    console.log("Token usando en loadTrips:", token);
-    const res = await api.get("/trips", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    console.log ("Token usando en loadtrips",token);
+    const res =await api.get("/trips",{
+      headers:{
+        Authorization:`Bearer ${token}`,
+      }
     });
     let allTrips = res.data.map((t: any) => ({ ...t, id: t._id }));
     if (!isAdmin) {
@@ -194,98 +194,102 @@ const loadTrips = async () => {
     }
   };
 
-  const exportToExcel = async () => {
+const exportToExcel = async () => {
   try {
+    // Ordenar viajes por fecha de salida
     const sortedTrips = [...trips].sort(
-      (a, b) =>
-        new Date(a.fechaSalida).getTime() - new Date(b.fechaSalida).getTime()
+      (a, b) => new Date(a.fechaSalida).getTime() - new Date(b.fechaSalida).getTime()
     );
 
-    const rows: any[] = [];
+    const ws_data: any[][] = [];
     let currentMonth = "";
     let currentWeek = 0;
-    let currentDay = "";
     let monthTripCount = 0;
 
     for (const t of sortedTrips) {
       const salida = new Date(t.fechaSalida);
+      const llegada = new Date(t.fechaLlegada);
+
       const monthName = salida.toLocaleString("es-ES", { month: "long", year: "numeric" });
       const weekNumber = Math.ceil(salida.getDate() / 7);
-      const dayKey = salida.toLocaleDateString("es-ES");
+      const dayNumber = salida.getDate();
+
+      // Nuevo mes
       if (monthName !== currentMonth) {
+        // Total del mes anterior
         if (monthTripCount > 0) {
-          rows.push({
-            Nombre: `TOTAL DE VIAJES DEL MES: ${monthTripCount}`,
-            __style: `{ bold: true, color: "#C62828" }`,
-          });
-          rows.push({}); 
+          ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
+          ws_data.push([]);
         }
 
-        rows.push({ Nombre:  `MES: ${monthName.toUpperCase()}`, __style: { bold: true, color: "#1565C0" } });
+        // Fila del mes
+        ws_data.push([` MES: ${monthName.toUpperCase()}`]);
+
+        // Fila de encabezados
+        ws_data.push([
+          "Semana",
+          "Nombre",
+          "Destino",
+          "Fecha Salida",
+          "Fecha Llegada",
+          "Día",
+          "Conductor",
+          "Acompañante",
+          "Kilometraje",
+          "Estado",
+        ]);
+
         currentMonth = monthName;
+        currentWeek = 0; // Reiniciar semana
         monthTripCount = 0;
-        currentWeek = 0;
-        currentDay = "";
       }
+
+      // Fila de semana
       if (weekNumber !== currentWeek) {
-        rows.push({ Nombre:  `SEMANA ${weekNumber}`, __style: { bold: true, color: "#0288D1" } });
+        ws_data.push([`Semana ${weekNumber}`]); // Solo una fila de semana por semana
         currentWeek = weekNumber;
       }
-      if (dayKey !== currentDay) {
-        rows.push({ Nombre:`  DÍA: ${dayKey}`, __style: { bold: true, color: "#00796B" } });
-        currentDay = dayKey;
-      }
-      rows.push({
-        Nombre: t.nombre,
-        Destino: t.destino,
-        "Fecha Salida": new Date(t.fechaSalida).toLocaleDateString("es-ES"),
-        "Fecha Llegada": new Date(t.fechaLlegada).toLocaleDateString("es-ES"),
-        Conductor: users.find((u) => u.id === t.conductorId)?.nombre || "N/A",
-        Acompañante: t.acompanate || "N/A",
-        Kilometraje: t.kilometraje ?? 0,
-        Estado: t.estado,
-      });
+
+      // Fila de viaje
+      ws_data.push([
+        weekNumber,
+        t.nombre,
+        t.destino,
+        salida.toLocaleDateString("es-ES"),
+        llegada.toLocaleDateString("es-ES"),
+        dayNumber,
+        users.find((u) => u.id === t.conductorId)?.nombre || "N/A",
+        t.acompanate || "N/A",
+        t.kilometraje ?? 0,
+        t.estado,
+      ]);
 
       monthTripCount++;
     }
+
+    // Total del último mes
     if (monthTripCount > 0) {
-      rows.push({
-        Nombre: ` TOTAL DE VIAJES DEL MES: ${monthTripCount}`,
-        __style: { bold: true, color: "#C62828" },
-      });
+      ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
     }
-    const ws = XLSX.utils.json_to_sheet(rows.map(r => {
-      const { __style, ...data } = r;
-      return data;
-    }));
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-    for (let R = range.s.r; R <= range.e.r; R++) {
-      const firstCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
-      const row = rows[R];
-      if (row?.__style) {
-        firstCell.s = {
-          font: { bold: true, color: { rgb: row.__style.color.replace("#", "") } },
-          fill: { fgColor: { rgb: "E3F2FD" } },
-        };
-      }
-    }
+
+    // Crear hoja de Excel
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // Crear libro de Excel
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reporte_Viajes");
-    const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
 
+    // Guardar archivo según plataforma
     if (Platform.OS === "web") {
       const blob = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const file = new Blob([blob], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+      const file = new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
       saveAs(file, "Reporte_Viajes.xlsx");
     } else {
-      const fileUri = `${FileSystem.cacheDirectory}Reporte_Viajes.xlsx`;
+      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      const cacheDir = (FileSystem as any).cacheDirectory ?? (FileSystem as any).documentDirectory ?? "";
+      const fileUri =` ${cacheDir}Reporte_Viajes.xlsx`;
       await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: "base64" });
-      await shareAsync(fileUri, {
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        dialogTitle: "Compartir Reporte de Viajes",
-      });
+      await shareAsync(fileUri);
     }
 
     Alert.alert("Éxito", "Reporte Excel generado correctamente");
