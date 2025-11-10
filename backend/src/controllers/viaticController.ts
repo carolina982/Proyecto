@@ -2,12 +2,10 @@ import { Request, Response } from "express";
 import Trip from "../models/Trip";
 import Viatico from "../models/Viatic";
 
-// Obtener todos los viáticos
 export const getViatic = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     let viatics;
-
     if (user?.rol === "Chofer") {
       const trips = await Trip.find({ conductorId: user.id.toString() });
       const tripsIds = trips.map(t => t.id);
@@ -15,7 +13,6 @@ export const getViatic = async (req: Request, res: Response) => {
     } else {
       viatics = await Viatico.find();
     }
-
     res.json(viatics);
   } catch (error) {
     console.error(error);
@@ -23,7 +20,6 @@ export const getViatic = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener viático por ID
 export const getViaticById = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);
@@ -36,7 +32,6 @@ export const getViaticById = async (req: Request, res: Response) => {
         return res.status(403).json({ message: "No tienes permisos para ver este viático" });
       }
     }
-
     res.json(viatic);
   } catch (error) {
     console.error(error);
@@ -44,7 +39,6 @@ export const getViaticById = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener viáticos por viaje
 export const getViaticByTrip = async (req: Request, res: Response) => {
   try {
     const tripId = req.params.tripId;
@@ -63,7 +57,6 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
   }
 };
 
-// Crear viático
 export const createViatic = async (req: Request, res: Response) => {
   try {
     const { tripId, conceptos, dieselCantidad, dieselCosto, tag, total } = req.body;
@@ -76,7 +69,6 @@ export const createViatic = async (req: Request, res: Response) => {
         return res.status(403).json({ message: "No puedes agregar viáticos a este viaje" });
       }
     }
-
     const newViatic = await Viatico.create({
       tripId,
       conceptos: JSON.parse(conceptos),
@@ -94,7 +86,6 @@ export const createViatic = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar viático
 export const updateViatic = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);
@@ -109,8 +100,6 @@ export const updateViatic = async (req: Request, res: Response) => {
     }
 
     if (req.file) viatic.factura = `/uploads/${req.file.filename}`;
-
-    // Actualizar solo los campos nuevos
     const { conceptos, dieselCantidad, dieselCosto, tag, total } = req.body;
     if (conceptos) viatic.conceptos = JSON.parse(conceptos);
     if (dieselCantidad !== undefined) viatic.dieselCantidad = Number(dieselCantidad);
@@ -126,7 +115,6 @@ export const updateViatic = async (req: Request, res: Response) => {
   }
 };
 
-// Eliminar viático
 export const deleteViatic = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);
@@ -139,7 +127,6 @@ export const deleteViatic = async (req: Request, res: Response) => {
         return res.status(403).json({ message: "No tienes permisos para eliminar este viático" });
       }
     }
-
     await viatic.deleteOne();
     res.json({ message: "Viático eliminado" });
   } catch (error) {

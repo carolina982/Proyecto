@@ -1,5 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 
 export const BASE_URL =
   Platform.OS === "web" ? "http://localhost:3000/api" :"http://192.168.1.81:3000/api";
@@ -28,3 +29,19 @@ export const BASE_URL =
   },
   (error) => Promise.reject(error)
 );
+
+api.interceptors.response.use((response)=> response,
+ async (error)=>{
+  if (error.response && error.response.status === 401){
+    console.log("Token expirado o invalido. Cerrar sesion");
+    if (Platform.OS === "web"){
+      localStorage.removeItem("token");
+    }else{
+      await AsyncStorage.removeItem("token");
+    }
+     Alert.alert("Sesión expirada","Tu sesión ha caducado  porfavor inisia sesión nuevamente");
+     return Promise.reject(error);
+  }
+  return Promise.reject(error);
+ }
+)
