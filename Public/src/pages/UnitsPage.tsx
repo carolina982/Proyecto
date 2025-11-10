@@ -115,7 +115,7 @@ export default function UnitsPage() {
       console.log("Error eliminando unidad", error);
       Alert.alert("Error", "No se pudo eliminar la unidad")
     }
-  }
+  };
   const renderItem = ({ item }: { item: Unit }) => {
     let estadoColor = "#4caf50"; //Disponible
     if (item.estado === "Mantenimiento") estadoColor = "#ff9800";

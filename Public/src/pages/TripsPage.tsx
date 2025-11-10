@@ -272,14 +272,11 @@ const exportToExcel = async () => {
       ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
     }
 
-    // Crear hoja de Excel
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-    // Crear libro de Excel
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reporte_Viajes");
 
-    // Guardar archivo según plataforma
     if (Platform.OS === "web") {
       const blob = XLSX.write(wb, { bookType: "xlsx", type: "array" });
       const file = new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
