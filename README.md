@@ -54,11 +54,13 @@ Join our community of developers creating universal apps.
 - administrador-->inicio , perdil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perdil , viajes, viaticos 
 - Levantar el servidors de base de datos
-  npx ts-node src/server.ts 
-- reniciar  el servidor 
-  npm run dev 
+---->npx ts-node src/server.ts
+- reniciar  el servidor de base de datos 
+---->npm run dev 
 - Aplicacion 
-  npx expo start 
+---->npx expo start 
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
 - cambiar lo de viaticos
+- Solo por lo mientras funcionan local todavia no esta subia a hosting 
+- checar el api para restablecer la contraseña 
 - 
