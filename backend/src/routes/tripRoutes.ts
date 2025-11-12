@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { createTrip, deleteTrip, getTrip, getTripById, updateTrip } from "../controllers/tripController";
+import { verifyToken } from "../middlewares/auth";
+const router =Router ();
+router.post("/",verifyToken,createTrip);
+router.get("/",verifyToken,getTrip);
+router.get("/:id",verifyToken,getTripById);
+router.put("/:id" ,verifyToken, updateTrip);
+router.delete("/:id",verifyToken , deleteTrip);
+export default router ;
