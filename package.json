@@ -29,6 +29,7 @@
     "@types/serve-static": "^1.15.9",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "expo": "~54.0.1",

@@ -130,7 +130,6 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
           photoUrl: data.photoUrl,
         });
       }
-
       Alert.alert("Éxito", "Perfil actualizado correctamente");
     } catch (error: any) {
       console.error("Error en handleSave", error);

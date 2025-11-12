@@ -35,7 +35,6 @@ export const createUser = async (req: Request, res: Response) => {
   if (!nombre || !email || !password || !rol) {
     return res.status(400).json({ message: "Faltan datos" });
   }
-
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Usuario ya existe" });
@@ -49,7 +48,6 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error creando usuario", error });
   }
 };
-
 // Registrar usuario
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -146,7 +144,6 @@ export const updateUser=  async (req:Request, res:Response)=>{
     res.status(500).json({message:"Error al actualizar usuario"});
   }
 };
-
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   console.log("Id recibiendo en backend", id);
@@ -162,52 +159,63 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-//enviar correo para restablecer contraseña 
-export const forgotPassword =async (req:Request, res:Response)=>{
-  const {email}=req.body;
+export const forgotPassword = async (req: Request, res: Response) => {
+  console.log("📩 Petición recibida en forgotPassword:", req.body); // ← depuración
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email es requerido" });
+  }
+
   try {
-    const user=await User.findOne({email});
-    if (!user) return 
-    res.status(404).json({message:"Usuario no econtrado"});
+    const user = await User.findOne({ email: email.toLowerCase() }); // ← siempre minúsculas
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
     const token = crypto.randomBytes(32).toString("hex");
-    user.resetToken=token;
-    user.resetTokenExp=new Date (Date.now()+3600000);
+    user.resetToken = token;
+    user.resetTokenExp = new Date(Date.now() + 3600000);
     await user.save();
-    const resetUrl =`http://192.168.1.81:3000/api/users/reset-password/${token}`;
+
+    const resetUrl = `http://192.168.1.81:3000/api/users/reset-password/${token}`;
+
     await transporter.sendMail({
-      to:user.email,
-      from:"correo@volta.com",
-      subject:"Restablece tu contraseña",
-      html:`<p>Solicitastes restablecer tu contraseña</p>
-      <p>Haz clic aqui para crear una nueva contraseña:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
-      <p>Este enlace expira en 1 hora</p>`,
+      to: user.email,
+      from: "correo@volta.com",
+      subject: "Restablece tu contraseña",
+      html: `<p>Solicitaste restablecer tu contraseña</p>
+             <p>Haz clic aqui para crear una nueva contraseña:</p>
+             <a href="${resetUrl}">${resetUrl}</a>
+             <p>Este enlace expira en 1 hora</p>`,
     });
-    res.json({message:"Correo enviado correctamete"});
-  }catch (error){
+
+    res.json({ message: "Correo enviado correctamente" });
+  } catch (error) {
     console.error(error);
-    res.status(500).json({message:"Error al enviar correo"});
+    res.status(500).json({ message: "Error al enviar correo" });
   }
 };
-//restablecer contraseña
-export const resetPassword=async(req:Request,res:Response)=>{
+
+export const resetPassword =async (req:Request, res:Response) =>{
   const {token}=req.params;
   const {password}=req.body;
   try {
-    const user =await User.findOne({
-      resetToken:token,
-      resetTokenExp:{$gt:new Date()},
+    const user =await User.findOne ({resetToken:token,
+      resetTokenExp:{$gt:new Date ()},
     });
-    if (!user) return
-    res.status(400).json({message:"Token invalido o expirado"});
-    const  hashed=await bcrypt.hash(password,10);
+    if (!user){
+      return res.status(400).json({message:"Token invalido o expirado"});
+    }
+    const hashed=await bcrypt.hash(password,10);
     user.password=hashed;
     user.resetToken=undefined;
     user.resetTokenExp=undefined;
-    await user .save();
-    res.json({message:"Contraseña restablecida correctamente"});
+    await user.save();
+
+    res.json({message:"Contraseña restablecidad correctamente"});
   }catch (error){
-    console.error(error);
+    console.error("Error en resetPassword", error);
     res.status(500).json({message:"Error al restablecer contraseña"});
   }
 };

@@ -354,31 +354,6 @@ export default function ViaticosPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
-
-      {/* FILTROS */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-        <View style={{ flex: 1, marginRight: 5 }}>
-          <Text style={{ marginBottom: 4 }}>Filtro de tiempo:</Text>
-          <Picker selectedValue={filter} onValueChange={setFilter} style={styles.picker}>
-            <Picker.Item label="Por Día" value="day" />
-            <Picker.Item label="Por Semana" value="week" />
-            <Picker.Item label="Por Mes" value="month" />
-          </Picker>
-        </View>
-
-        <View style={{ flex: 1, marginLeft: 5 }}>
-          <Text style={{ marginBottom: 4 }}>Filtro por Conductor:</Text>
-          <Picker selectedValue={conductorFilter} onValueChange={setConductorFilter} style={styles.picker}>
-            <Picker.Item label="Todos los conductores" value="" />
-            {
-              // construimos lista única de conductores desde trips
-              [...new Map(trips.filter(t => t.conductorId).map(t => [t.conductorId, t.conductorNombre])).entries()]
-                .map(([id, nombre]: any) => <Picker.Item key={id} label={nombre || "Sin nombre"} value={id} />)
-            }
-          </Picker>
-        </View>
-      </View>
-
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viático</Button>
       <Button mode="contained" buttonColor="#0d75bb" style={{ marginTop: 10 }} onPress={exportViaticosToExcel}>Exportar Viáticos a Excel</Button>
 

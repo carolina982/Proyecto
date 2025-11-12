@@ -4,8 +4,6 @@ import path from "path";
 import connectDB from "./config/db";
 
 
-import bcrypt from "bcryptjs/umd/types";
-import User from "./models/User";
 import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";
 import tripRoutes from "./routes/tripRoutes";
@@ -16,19 +14,6 @@ import viaticRoutes from "./routes/viaticRoutes";
 const app = express();
 const PORT = 3000;
 connectDB();
-
-(async ()=>{
- try {
-    const hash= await bcrypt.hash("123456789",10);
-    await User.updateOne(
-   {email:"admin1@volta.com"},
-  {$set:{password:hash}}
-    );
-   console.log("contraseña del adminactualizada correctamente a 123456789");
- }catch (error){
-   console.error("Error actualizando contraseña del admin",error);
-  }
-})();
 
 app.use(cors());
 app.use(express.json());

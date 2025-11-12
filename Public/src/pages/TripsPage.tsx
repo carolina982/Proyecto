@@ -10,6 +10,9 @@ import { api } from "../api/api";
 import { useStore } from '../context/Store';
 
 interface Trip {
+  Viaje: any;
+  tripId: unknown;
+  conductorNombre: any;
   id: string; nombre: string;
   unidadId: string; conductorId: string;
   fechaSalida: string; fechaLlegada: string;
@@ -240,16 +243,13 @@ const exportToExcel = async () => {
         ]);
 
         currentMonth = monthName;
-        currentWeek = 0; // Reiniciar semana
+        currentWeek = 0; 
         monthTripCount = 0;
       }
-
-      // Fila de semana
       if (weekNumber !== currentWeek) {
         ws_data.push([`Semana ${weekNumber}`]); // Solo una fila de semana por semana
         currentWeek = weekNumber;
       }
-
       // Fila de viaje
       ws_data.push([
         weekNumber,
@@ -266,7 +266,6 @@ const exportToExcel = async () => {
 
       monthTripCount++;
     }
-
     // Total del último mes
     if (monthTripCount > 0) {
       ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
@@ -320,7 +319,9 @@ const exportToExcel = async () => {
       </View>
     );
   };
-
+  function setFilter(itemValue: { new(fileBits: BlobPart[], fileName: string, options?: FilePropertyBag | undefined): File; prototype: File; }, itemIndex: number): void {
+    throw new Error('Function not implemented.');
+  }
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
