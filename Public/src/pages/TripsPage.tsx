@@ -247,10 +247,9 @@ const exportToExcel = async () => {
         monthTripCount = 0;
       }
       if (weekNumber !== currentWeek) {
-        ws_data.push([`Semana ${weekNumber}`]); // Solo una fila de semana por semana
+        ws_data.push([`Semana ${weekNumber}`]);
         currentWeek = weekNumber;
       }
-      // Fila de viaje
       ws_data.push([
         weekNumber,
         t.nombre,
@@ -266,7 +265,6 @@ const exportToExcel = async () => {
 
       monthTripCount++;
     }
-    // Total del último mes
     if (monthTripCount > 0) {
       ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
     }
@@ -299,7 +297,6 @@ const exportToExcel = async () => {
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
     const canEdit = isAdmin || currentUser.id === item.conductorId;
     const canDelete = isAdmin;
-
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{item.nombre}</Text>

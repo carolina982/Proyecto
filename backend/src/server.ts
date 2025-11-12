@@ -3,7 +3,6 @@ import express from "express";
 import path from "path";
 import connectDB from "./config/db";
 
-
 import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";
 import tripRoutes from "./routes/tripRoutes";
@@ -18,7 +17,6 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname,"../uploads")));
-
 
 app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);

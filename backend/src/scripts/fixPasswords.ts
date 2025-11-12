@@ -11,8 +11,6 @@ async function fixPasswords (){
         let updateCount =0;
         for (const user of users){
             const password =user.password;
-
-
             if (typeof password === "string" && !password.startsWith ("$2b$")){
                 console.log(`Re-hasheando contraseña de :${user.email}`);
                 const newHash =await  bcrypt.hash(password,10);

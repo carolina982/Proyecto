@@ -50,7 +50,7 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 
-- Este programa es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
+- Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
 - administrador-->inicio , perdil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perdil , viajes, viaticos 
 - Levantar el servidors de base de datos
@@ -61,3 +61,4 @@ Join our community of developers creating universal apps.
   npx expo start 
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
 - cambiar lo de viaticos
+- 
