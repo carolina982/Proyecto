@@ -59,7 +59,6 @@ export default function Register({ navigation }: any) {
         formData.append("email", email.toLowerCase());
         formData.append("password", password);
         formData.append("rol", rol);
-
         if (Platform.OS === "web") {
           const response = await fetch(photoUrl);
           const blob = await response.blob();
@@ -104,8 +103,8 @@ export default function Register({ navigation }: any) {
       <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
       <TextInput placeholder="Apellido"value={apellido}onChangeText={setApellido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
       <TextInput placeholder="Correo"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}keyboardType="email-address"/>
-      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}secureTextEntry={!showPassword}
-      right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"}color="#007bff"forceTextInputFocus={false}onPress={() => setShowPassword(!showPassword)} />}/>
+      <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}secureTextEntry={!showPassword}right={
+      <TextInput.Icon icon={showPassword ? "eye-off" : "eye"}color="#007bff"forceTextInputFocus={false}onPress={() => setShowPassword(!showPassword)} />}/>
       <TextInput placeholder="Confirmar contraseña"value={confirmPassword}onChangeText={setConfirmPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}secureTextEntry={!showConfirmPassword}
       right={<TextInput.Icon icon={showConfirmPassword ? "eye-off" : "eye"}color="#007bff"forceTextInputFocus={false}onPress={() => setShowConfirmPassword(!showConfirmPassword)} />}/>
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>

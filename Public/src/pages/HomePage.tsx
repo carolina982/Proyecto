@@ -173,11 +173,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
         </View>
       ))}
       {currentUser.rol?.toLowerCase() === "admin" && (
-        <Button
-          mode="contained"
-          buttonColor="#0d75bb"
-          style={styles.createButton}
-          onPress={() => {
+        <Button mode="contained"buttonColor="#0d75bb"style={styles.createButton}onPress={() => {
             setTitulo("");
             setContenido("");
             setImageUri(null);

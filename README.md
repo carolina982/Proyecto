@@ -51,14 +51,23 @@ Join our community of developers creating universal apps.
 
 
 - Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
-- administrador-->inicio , perdil , viajes , unidades, usuarios 
-- chofer/usuario-->inicio , perdil , viajes, viaticos 
-- Levantar el servidors de base de datos
----->npx ts-node src/server.ts
-- reniciar  el servidor de base de datos 
----->npm run dev 
-- Aplicacion 
----->npx expo start 
+- administrador-->inicio , perfil , viajes , unidades, usuarios 
+- chofer/usuario-->inicio , perfil , viajes, viaticos 
+3. Levantar el servidors de base de datos
+
+     ```bash
+     npx ts-node src/server.ts
+     ```
+4. Reniciar  el servidor de base de datos 
+
+     ```bash
+     npm run dev 
+     ```
+5. Aplicacion 
+
+     ```bash
+     npx expo start 
+     ```
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
 - cambiar lo de viaticos
 - Solo por lo mientras funcionan local todavia no esta subia a hosting 

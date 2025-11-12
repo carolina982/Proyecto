@@ -23,7 +23,6 @@ interface Viatico {
   createdAt: string;
 }
 
-// Lista con Cantidad/Costo separados para los cuatro conceptos solicitados
 const conceptosList = [
   "Comidas Cantidad", "Comidas Costo",
   "Hospedaje Cantidad", "Hospedaje Costo",
@@ -53,14 +52,11 @@ export default function ViaticosPage() {
   const [loading, setLoading] = useState(false);
   const [showFactura, setShowFactura] = useState(false);
 
-  // filtros
   const [filter, setFilter] = useState<"day" | "week" | "month">("month");
   const [conductorFilter, setConductorFilter] = useState<string>("");
 
-  // Cargar viajes (y nombres de conductores si vienen)
   useEffect(() => { loadTrips(); }, [currentUser]);
 
-  // Cargar viáticos cuando cambian filtros/trips
   useEffect(() => { loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
 
   const loadTrips = async () => {
@@ -69,7 +65,6 @@ export default function ViaticosPage() {
       let tripsData = res.data.map((t: any) => ({
         ...t,
         id: t._id,
-        // intenta obtener nombre de conductor si viene del backend, si no dejar vacío o "Sin asignar"
         conductorNombre: t.conductorNombre || t.conductorNombre || t.conductor || "Sin asignar"
       }));
       if (currentUser?.rol === "Chofer") tripsData = tripsData.filter((t: any) => t.conductorId === currentUser.id);
@@ -88,20 +83,15 @@ export default function ViaticosPage() {
         facturaUrl: v.factura ? `${BASE_URL.replace("/api", "")}${v.factura} `: undefined
       }));
 
-      // Si el usuario es Chofer, limitar por sus viajes
       if (currentUser?.rol === "Chofer") {
         viaticosData = viaticosData.filter((v: any) => trips.find(t => t.id === v.tripId)?.conductorId === currentUser.id);
       }
-
-      // Filtro por conductor seleccionado
       if (conductorFilter) {
         viaticosData = viaticosData.filter((v: any) => {
           const trip = trips.find(t => t.id === v.tripId);
           return trip && trip.conductorId === conductorFilter;
         });
       }
-
-      // Aseguramos que conceptos existan como objeto de números (backend debe proporcionar, aquí solo fallback)
       viaticosData = viaticosData.map((v: any) => ({
         ...v,
         conceptos: v.conceptos || conceptosList.reduce((acc: any, c: string) => ({ ...acc, [c]: 0 }), {})
@@ -113,8 +103,6 @@ export default function ViaticosPage() {
       Alert.alert("Error", "No se pudieron cargar los viáticos");
     }
   };
-
-  // Exportar a Excel incluyendo nombre de conductor y columnas Cantidad/Costo
   const exportViaticosToExcel = async () => {
     try {
       const sortedViaticos = [...viaticos].sort(

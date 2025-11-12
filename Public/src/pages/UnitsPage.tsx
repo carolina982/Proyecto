@@ -69,10 +69,8 @@ export default function UnitsPage() {
       return;
     }
     const unitData = {
-      nombre, 
-      placas,
-      modelo,
-      capacidad,
+      nombre, placas,
+      modelo, capacidad,
       estado,
     };
 

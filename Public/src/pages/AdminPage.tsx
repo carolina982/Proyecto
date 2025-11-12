@@ -52,7 +52,6 @@ export default function AdminPage() {
       Alert.alert("Error", "Todos los campos obligatorios deben estar completos");
       return;
     }
-
     try {
       if (isAdding) {
         await api.post("/users", { nombre, apellido, email, password, rol, photoUrl });
@@ -72,7 +71,6 @@ export default function AdminPage() {
           Alert.alert("Éxito", "Usuario actualizado correctamente");
         }
       }
-
       await loadUsers();
       setModalVisible(false);
       setEditingUser(null);
@@ -170,7 +168,6 @@ const deleteUser =async (id:string)=>{
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },

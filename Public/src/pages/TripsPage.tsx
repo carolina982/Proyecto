@@ -98,8 +98,8 @@ const loadTrips = async () => {
     }
   };
   const generateReports =(tripsData:Trip[])=>{
-    const daily:{[key:string]:number}={};
-    const monthly:{[key:string]:number}={};
+     const daily:{[key:string]:number}={};
+     const monthly:{[key:string]:number}={};
     tripsData.forEach((trip)=>{
       const salida=new Date(trip.fechaSalida);
       const daykey =salida.toLocaleDateString("es-ES");
@@ -199,7 +199,6 @@ const loadTrips = async () => {
 
 const exportToExcel = async () => {
   try {
-    // Ordenar viajes por fecha de salida
     const sortedTrips = [...trips].sort(
       (a, b) => new Date(a.fechaSalida).getTime() - new Date(b.fechaSalida).getTime()
     );
@@ -216,19 +215,14 @@ const exportToExcel = async () => {
       const monthName = salida.toLocaleString("es-ES", { month: "long", year: "numeric" });
       const weekNumber = Math.ceil(salida.getDate() / 7);
       const dayNumber = salida.getDate();
-
-      // Nuevo mes
       if (monthName !== currentMonth) {
-        // Total del mes anterior
         if (monthTripCount > 0) {
           ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
           ws_data.push([]);
         }
 
-        // Fila del mes
         ws_data.push([` MES: ${monthName.toUpperCase()}`]);
 
-        // Fila de encabezados
         ws_data.push([
           "Semana",
           "Nombre",
