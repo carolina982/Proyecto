@@ -41,6 +41,7 @@ export default function TripsPage() {
   const [kilometraje, setKilometraje] = useState("");
   const [acompanate,setAcompanate]=useState("");
   const [def,setDef]=useState("");
+  const [exportType , setExportType]=useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -197,7 +198,7 @@ const loadTrips = async () => {
     }
   };
 
-const exportToExcel = async () => {
+const exportToExcel = async (exportType: string) => {
   try {
     const sortedTrips = [...trips].sort(
       (a, b) => new Date(a.fechaSalida).getTime() - new Date(b.fechaSalida).getTime()
@@ -317,7 +318,19 @@ const exportToExcel = async () => {
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
       {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
-      {isAdmin && (<Button mode="contained" buttonColor="#0d75bb" style={{marginTop:10}} onPress={ exportToExcel}>Exportar Excel</Button>)}
+      {isAdmin && (
+       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+       <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
+       <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 5, marginRight: 8 }}>
+       <Picker selectedValue={exportType} onValueChange={(value) => setExportType(value)}style={{ height: 20 }}>
+        <Picker.Item label="Día" value="dia" />
+        <Picker.Item label="Semana" value="semana" />
+        <Picker.Item label="Mes" value="mes" />
+        </Picker>
+       </View>
+       <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportToExcel(exportType)}>Exportar Excel  </Button>
+         </View>
+      )}
       <FlatList data={trips}keyExtractor={(item) => item.id} renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>

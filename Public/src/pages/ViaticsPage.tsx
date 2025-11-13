@@ -103,7 +103,7 @@ export default function ViaticosPage() {
       Alert.alert("Error", "No se pudieron cargar los viáticos");
     }
   };
-  const exportViaticosToExcel = async () => {
+  const exportViaticosToExcel = async (filter: string) => {
     try {
       const sortedViaticos = [...viaticos].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -229,9 +229,7 @@ export default function ViaticosPage() {
   const pickFactura = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: ["image/*", "application/pdf"] });
-      // expo-document-picker v14 returns { type, uri, name, size } directly in web/native; adjusted check
       if ((result as any).type === "cancel") return;
-      // result may include uri in different shapes depending on sdk
       const uri = (result as any).uri ?? (result as any).assets?.[0]?.uri;
       if (!uri) return Alert.alert("Error", "No se pudo seleccionar el archivo");
       setFactura(uri);
@@ -241,8 +239,6 @@ export default function ViaticosPage() {
       Alert.alert("Error", "Ocurrió un problema al seleccionar el archivo");
     }
   };
-
-  // total solo suma los costos (los campos terminados en "Costo" + conceptos sin cantidad)
   const calcularTotal = () => {
     let total = 0;
     conceptosList.forEach(c => {
@@ -261,7 +257,6 @@ export default function ViaticosPage() {
     try {
       const formData = new FormData();
       formData.append("tripId", tripId);
-      // enviamos conceptos como JSON (valores en strings desde el form)
       formData.append("conceptos", JSON.stringify(conceptos));
       formData.append("dieselCantidad", dieselCantidad);
       formData.append("dieselCosto", dieselCosto);
@@ -343,10 +338,19 @@ export default function ViaticosPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viático</Button>
-      <Button mode="contained" buttonColor="#0d75bb" style={{ marginTop: 10 }} onPress={exportViaticosToExcel}>Exportar Viáticos a Excel</Button>
+      <View style={{flexDirection:"row",alignItems:"center", marginTop:10, marginBottom:10,}}>
+        <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
+        <View style={{flex:1, backgroundColor:"#fff",borderRadius:8,marginRight:8}}>
+          <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{backgroundColor:"#fff"}}>
+            <Picker.Item label="Día" value="dia" />
+            <Picker.Item label="Semana" value="semana" />
+            <Picker.Item label="Mes" value="mes" />
+          </Picker>
+        </View>
+        <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportViaticosToExcel(filter)}>Exportar Excel  </Button>
 
+      </View>
       <FlatList data={viaticos} keyExtractor={item => item.id} renderItem={renderItem} style={{ marginTop: 15 }} />
-
       {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
@@ -382,7 +386,7 @@ export default function ViaticosPage() {
 
             <View style={{ flex: 1, paddingLeft: 5 }}>
               <Text style={styles.label}>Diésel - Cantidad:</Text>
-              <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
+               <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
               <Text style={styles.label}>Diésel - Costo:</Text>
               <TextInput value={dieselCosto} onChangeText={setDieselCosto} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
               <Text style={styles.label}>TAG:</Text>
@@ -397,7 +401,7 @@ export default function ViaticosPage() {
             <>
               {showFactura ? (
                 factura.toLowerCase().endsWith(".pdf") ? (
-                  <View style={{ marginBottom: 10 }}>
+                 <View style={{ marginBottom: 10 }}>
                     <Text>Factura en PDF</Text>
                     <Button mode="contained" onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
                   </View>

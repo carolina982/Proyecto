@@ -110,7 +110,6 @@ export default function HomePage({ currentUser }: HomePageProps) {
           ? prev.map((a) => (a.id === editingId ? updatedAnnouncement : a))
           : [updatedAnnouncement, ...prev]
       );
-
       setModalVisible(false);
       setTitulo("");
       setContenido("");

@@ -51,7 +51,6 @@ export default function Register({ navigation }: any) {
 
     try {
       let res;
-
       if (photoUrl) {
         const formData = new FormData();
         formData.append("nombre", nombre);
