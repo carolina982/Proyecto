@@ -1,10 +1,10 @@
 import express from "express";
-import { createUser, deleteUser, forgotPassword, getUser, getUserById, loginUser, registerUser, resetPassword, updateUser, } from "../controllers/userController";
+import { createUser, deleteUser, forgotPassword, getUser, getUserById, loginUser, registesrUser, resetPassword, updateUser, } from "../controllers/userController";
 import { upload } from "../middlewares/upload";
 
 const router = express.Router();
 router.post("/login", loginUser);
-router.post("/register",upload.single("imagenUrl"), registerUser);
+router.post("/register",upload.single("imagenUrl"), registesrUser);
 router.get("/", getUser);
 router.get("/:id", getUserById);
 router.post("/", createUser);

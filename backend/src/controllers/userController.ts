@@ -49,43 +49,34 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 // Registrar usuario
-export const registerUser = async (req: Request, res: Response) => {
+export const registesrUser =async (req:Request , res:Response)=>{
   try {
-    const { nombre, apellido, email, password, rol } = req.body;
-
-    if (!nombre || !apellido || !email || !password || !rol) {
-      return res.status(400).json({ message: "Faltan datos obligatorios" });
+    const {nombre,apellido,email,password,rol}=req.body;
+    if (!nombre||!apellido||!email||!password||!rol){
+      return res.status(400).json({message:"Faltan datos obligatorios"});
     }
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ message: "Usuario ya existe" });
+    const existingUser =await User.findOne({email:email.toLowerCase()});
+    if (existingUser){
+      return res.status(400).json({message:"Usiario ya existe"});
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      nombre,
-      apellido,
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      rol,
-      photoUrl: req.file ? `/uploads/${req.file.filename} `: null,
-    });
-    const token = jwt.sign(
-      { id: newUser._id, email: newUser.email, rol: newUser.rol },
+    const newUser = new User ({nombre, apellido,email:email.toLowerCase(),password,rol, photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
+    await newUser.save ();
+    const token =jwt.sign(
+      {id:newUser._id , email:newUser.email , rol:newUser.rol},
       JWT_SECRET,
-      { expiresIn: "1d" }
+      {expiresIn:"1d"}
     );
-    res.status(201).json({
-      id: newUser._id,
-      nombre: newUser.nombre,
-      apellido: newUser.apellido,
-      email: newUser.email,
-      rol: newUser.rol,
-      photoUrl: newUser.photoUrl || null,
-      token, 
+    res.status(201).json({id:newUser._id , 
+      nombre:newUser.nombre, 
+      apellido:newUser.apellido,
+      email:newUser.apellido,
+      rol:newUser.rol,
+      photoUrl:newUser.photoUrl || null ,
+      token,
     });
-  } catch (error) {
-    console.error("Error registrando usuario", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+  }catch (error){
+    console.error("Error  resgistrando usuario", error);
+    res.status(500).json({message:"Error interno del servidor"});
   }
 };
 // Login usuario

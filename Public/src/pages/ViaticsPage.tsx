@@ -338,18 +338,19 @@ export default function ViaticosPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viático</Button>
-      <View style={{flexDirection:"row",alignItems:"center", marginTop:10, marginBottom:10,}}>
-        <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
-        <View style={{flex:1, backgroundColor:"#fff",borderRadius:8,marginRight:8}}>
-          <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{backgroundColor:"#fff"}}>
-            <Picker.Item label="Día" value="dia" />
-            <Picker.Item label="Semana" value="semana" />
-            <Picker.Item label="Mes" value="mes" />
-          </Picker>
+      {currentUser?.rol !== "Chofer" && (
+       <View style={{flexDirection:"row",alignItems:"center", marginTop:10, marginBottom:10,}}>
+         <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
+           <View style={{flex:1, backgroundColor:"#fff",borderRadius:8,marginRight:8}}>
+             <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{backgroundColor:"#fff"}}>
+             <Picker.Item label="Día" value="dia" />
+             <Picker.Item label="Semana" value="semana" />
+             <Picker.Item label="Mes" value="mes" />
+            </Picker>
+          </View>
+         <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportViaticosToExcel(filter)}> Exportar Excel</Button>
         </View>
-        <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportViaticosToExcel(filter)}>Exportar Excel  </Button>
-
-      </View>
+      )}
       <FlatList data={viaticos} keyExtractor={item => item.id} renderItem={renderItem} style={{ marginTop: 15 }} />
       {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide">

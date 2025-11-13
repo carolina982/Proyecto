@@ -162,20 +162,14 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       <TextInput label="Email"value={email}onChangeText={setEmail}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
       <Text style={{ alignSelf: "flex-start", marginBottom: 5, color: "#0f0f0f" }}>Rol</Text>
       <Picker
-        selectedValue={rol}
-        onValueChange={(value: "Admin" | "Chofer") => setRol(value)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Admin" value="Admin" />
-        <Picker.Item label="Chofer" value="Chofer" />
-      </Picker>
-      <Button
-        mode="contained"
-        buttonColor="#0d75bb"
-        style={styles.button}
-        onPress={handleSave}
-        loading={isSaving}
-      >
+        selectedValue={rol} onValueChange={(value: "Admin" | "Chofer") => setRol(value)}
+       style={[styles.picker,currentUser?.rol === "Chofer" && { opacity: 0.6 } ]}
+       enabled={currentUser?.rol !== "Chofer"} 
+        >
+       <Picker.Item label="Admin" value="Admin" />
+       <Picker.Item label="Chofer" value="Chofer" />
+       </Picker>
+      <Button mode="contained"buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}>
         Guardar Cambios
       </Button>
     </ScrollView>

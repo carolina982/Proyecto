@@ -21,7 +21,6 @@ interface Announcement {
 interface HomePageProps {
   currentUser: User;
 }
-
 export default function HomePage({ currentUser }: HomePageProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [modalVisible, setModalVisible] = useState(false);

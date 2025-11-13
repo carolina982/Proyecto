@@ -69,7 +69,6 @@ const moveDirectories = async (userInput) => {
         console.log(`➡️ /${dir} does not exist, skipping.`);
       }
     }
-
     // Create new /app directory
     const newAppDirPath = path.join(root, newAppDir);
     await fs.promises.mkdir(newAppDirPath, { recursive: true });
