@@ -7,4 +7,5 @@ router.get("/",verifyToken,getTrip);
 router.get("/:id",verifyToken,getTripById);
 router.put("/:id" ,verifyToken, updateTrip);
 router.delete("/:id",verifyToken , deleteTrip);
+
 export default router ;

@@ -7,4 +7,5 @@ router.get("/",getAnnouncements);
 router.post("/",upload.single("image"),createAnnouncements);
 router.put("/:id",upload.single("image"),updateAnnouncement);
 router.delete("/:id" , deleteAnnouncement);
+
 export default router;

@@ -9,4 +9,5 @@ router.get("/trip/:tripId", getViaticByTrip);
 router.post("/", upload.single("factura"), createViatic);
 router.put("/:id", upload.single("factura"), updateViatic);
 router.delete("/:id", deleteViatic);
+
 export default router;

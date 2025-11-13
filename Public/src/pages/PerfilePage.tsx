@@ -154,7 +154,6 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
           style={styles.avatar}
         />
       )}
-
       <Button mode="outlined"style={styles.changePhotoButton}onPress={pickImage}labelStyle={{ color: "#0d75bb" }}>Cambiar Imagen</Button>
       <Text style={styles.title}>Perfil</Text>
       <TextInput label="Nombre"value={nombre}onChangeText={setNombre}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>

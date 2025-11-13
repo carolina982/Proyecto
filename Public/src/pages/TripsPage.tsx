@@ -365,12 +365,12 @@ const exportToExcel = async (exportType: string) => {
           ) : (
             <Text style={styles.label}>Estado:</Text>
           )}
-          <Picker selectedValue={estado} onValueChange={setEstado} style={styles.picker}>
+           <Picker selectedValue={estado} onValueChange={setEstado} style={styles.picker}>
             <Picker.Item label="Pendiente" value="pendiente" />
             <Picker.Item label="En progreso" value="en progreso" />
             <Picker.Item label="Completado" value="completado" />
-          </Picker>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+            </Picker>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
             <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar</Button>
           </View>

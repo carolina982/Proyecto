@@ -12,4 +12,5 @@ router.patch("/:id", upload.single("photo"), updateUser);
 router.delete("/:id", deleteUser);
 router.post ("/forgot-password",forgotPassword);
 router.post("/reset-password/:token",resetPassword);
+
 export default router;

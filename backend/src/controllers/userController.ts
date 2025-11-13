@@ -151,7 +151,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
-  console.log("📩 Petición recibida en forgotPassword:", req.body); // ← depuración
+  console.log("📩 Petición recibida en forgotPassword:", req.body); 
   const { email } = req.body;
 
   if (!email) {
@@ -159,11 +159,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase() }); // ← siempre minúsculas
+    const user = await User.findOne({ email: email.toLowerCase() }); 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
-
     const token = crypto.randomBytes(32).toString("hex");
     user.resetToken = token;
     user.resetTokenExp = new Date(Date.now() + 3600000);
@@ -180,7 +179,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
              <a href="${resetUrl}">${resetUrl}</a>
              <p>Este enlace expira en 1 hora</p>`,
     });
-
     res.json({ message: "Correo enviado correctamente" });
   } catch (error) {
     console.error(error);
