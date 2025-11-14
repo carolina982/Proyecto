@@ -390,5 +390,3 @@ const styles = StyleSheet.create({
   label: { fontWeight: "bold", marginBottom: 5 },
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
 });
-
-

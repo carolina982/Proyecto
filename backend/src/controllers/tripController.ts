@@ -74,7 +74,6 @@ export const createTrip = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateTrip = async (req: Request, res: Response) => {
   try {
     const trip = await Trip.findById(req.params.id);
@@ -94,7 +93,6 @@ export const updateTrip = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al actualizar viaje" });
   }
 };
-
 
 export const deleteTrip = async (req: Request, res: Response) => {
   try {

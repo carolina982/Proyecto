@@ -26,7 +26,6 @@ export const createAnnouncements = async (req: Request, res: Response) => {
       fecha: new Date(),
       image: imagePath,
     });
-
     await newAnnouncement.save();
     res.status(201).json(newAnnouncement);
   } catch (error) {
@@ -59,6 +58,7 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error actualizando anuncio" });
   }
 };
+
 export const deleteAnnouncement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

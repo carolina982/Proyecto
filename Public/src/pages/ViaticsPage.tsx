@@ -327,7 +327,7 @@ export default function ViaticosPage() {
         <Text>Conductor: {trip?.conductorNombre || "Desconocido"}</Text>
         <Text>Total: ${item.total}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
+        <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
           {currentUser?.rol === "Admin" && <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>}
         </View>
       </View>
@@ -387,7 +387,7 @@ export default function ViaticosPage() {
 
             <View style={{ flex: 1, paddingLeft: 5 }}>
               <Text style={styles.label}>Diésel - Cantidad:</Text>
-               <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
+              <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
               <Text style={styles.label}>Diésel - Costo:</Text>
               <TextInput value={dieselCosto} onChangeText={setDieselCosto} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
               <Text style={styles.label}>TAG:</Text>
@@ -396,7 +396,6 @@ export default function ViaticosPage() {
           </View>
 
           <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
-
           <Text style={styles.label}>Factura:</Text>
           {factura ? (
             <>
@@ -420,7 +419,6 @@ export default function ViaticosPage() {
           ) : (
             <Button mode="contained" buttonColor="#4caf50" onPress={pickFactura}>Subir factura</Button>
           )}
-
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
               <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
