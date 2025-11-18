@@ -19,7 +19,6 @@ export const getViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al obtener viáticos" });
   }
 };
-
 export const getViaticById = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);
@@ -98,7 +97,6 @@ export const updateViatic = async (req: Request, res: Response) => {
         return res.status(403).json({ message: "No tienes permisos para actualizar este viático" });
       }
     }
-
     if (req.file) viatic.factura = `/uploads/${req.file.filename}`;
     const { conceptos, dieselCantidad, dieselCosto, tag, total } = req.body;
     if (conceptos) viatic.conceptos = JSON.parse(conceptos);
@@ -106,7 +104,6 @@ export const updateViatic = async (req: Request, res: Response) => {
     if (dieselCosto !== undefined) viatic.dieselCosto = Number(dieselCosto);
     if (tag !== undefined) viatic.tag = Number(tag);
     if (total !== undefined) viatic.total = Number(total);
-
     await viatic.save();
     res.json({ message: "Viático actualizado", viatic });
   } catch (error) {
@@ -114,7 +111,6 @@ export const updateViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al actualizar viático" });
   }
 };
-
 export const deleteViatic = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);

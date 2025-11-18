@@ -7,10 +7,10 @@ import User from "../models/User";
     try {
         console.log("Conectando a MongoDB...");
         await mongoose.connect(MONGO_URI);
-        const newPassword ="juan789";
+        const newPassword ="admin123";
         const newHash =await bcrypt.hash(newPassword ,10);
         const result =await User.updateOne(
-            {email:"juan@gmail.com"},
+            {email:"admin1@volta.com"},
             {$set:{password:newHash}}
         );
         console.log("Resultados de actualizacin",result);

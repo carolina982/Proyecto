@@ -417,8 +417,8 @@ export default function ViaticosPage() {
               </View>
             </>
           ) : (
-            <Button mode="contained" buttonColor="#4caf50" onPress={pickFactura}>Subir factura</Button>
-          )}
+           <Button mode="contained" buttonColor="#4caf50" onPress={pickFactura}>Subir factura</Button>
+         )}
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
               <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>

@@ -17,7 +17,7 @@ interface Trip {
   unidadId: string; conductorId: string;
   fechaSalida: string; fechaLlegada: string;
   destino: string;  estado: string;
-  kilometraje?: number; acompanate:string;
+  kilometraje?: number; acompanante:string;
   def:string;
 }
 
@@ -39,7 +39,7 @@ export default function TripsPage() {
   const [destino, setDestino] = useState("");
   const [estado, setEstado] = useState("pendiente");
   const [kilometraje, setKilometraje] = useState("");
-  const [acompanate,setAcompanate]=useState("");
+  const [acompanante,setAcompanante]=useState("");
   const [def,setDef]=useState("");
   const [exportType , setExportType]=useState("");
 
@@ -129,7 +129,7 @@ const loadTrips = async () => {
       setDestino(trip.destino);
       setEstado(trip.estado);
       setKilometraje(trip.kilometraje?.toString() || "");
-      setAcompanate(trip.acompanate)
+      setAcompanante(trip.acompanante)
       setDef(trip.def || "");
     } else {
       setEditingTrip(null);
@@ -137,7 +137,7 @@ const loadTrips = async () => {
       setConductorId("");  setFechaSalida("");
       setFechaLlegada("");  setDestino(""); 
       setEstado("pendiente");   setKilometraje("");
-      setAcompanate("");
+      setAcompanante("");
       setDef("");
     }
     setModalVisible(true);
@@ -146,6 +146,20 @@ const loadTrips = async () => {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
+  const calcularEstado =(fecha:string)=>{
+    if(!fecha){
+      setEstado("pendiente");
+      return;
+    }
+    const hoy= new Date ();
+    const llegada=parseDate(fecha);
+    if (llegada>hoy){
+      setEstado("en proceso");
+    }else{
+      setEstado("completado");
+    }
+  };
+
   const saveTrip = async () => {
     const tripData = isAdmin
       ? {
@@ -153,11 +167,11 @@ const loadTrips = async () => {
           unidadId,
           conductorId,
           fechaSalida: parseDate(fechaSalida),
-          fechaLlegada: parseDate(fechaLlegada),
+          fechaLlegada: fechaLlegada? parseDate(fechaLlegada): null,
           destino,
           estado,
           kilometraje: Number(kilometraje),
-          acompanate,
+          acompanante,
           def,
         }
       : { estado }; 
@@ -253,7 +267,7 @@ const exportToExcel = async (exportType: string) => {
         llegada.toLocaleDateString("es-ES"),
         dayNumber,
         users.find((u) => u.id === t.conductorId)?.nombre || "N/A",
-        t.acompanate || "N/A",
+        t.acompanante || "N/A",
         t.kilometraje ?? 0,
         t.estado,
       ]);
@@ -297,7 +311,7 @@ const exportToExcel = async (exportType: string) => {
         <Text style={styles.title}>{item.nombre}</Text>
         <Text style={styles.textSmall}>Unidad: {unidadNombre}</Text>
         <Text style={styles.textSmall}>Conductor: {conductorNombre}</Text>
-        <Text style={styles.textSmall}>Acompañante: {item.acompanate}</Text>
+        <Text style={styles.textSmall}>Acompañante: {item.acompanante}</Text>
         <Text style={styles.textSmall}>Destino: {item.destino}</Text>
         <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
@@ -341,16 +355,20 @@ const exportToExcel = async (exportType: string) => {
               <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
               <Text style={styles.label}>Unidad:</Text>
               <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
-                <Picker.Item label="Selecciona una unidad" value="" />
+                <Picker.Item label="Selecciona unidad" value="" />
                 {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
               </Picker>
               <Text style={styles.label}>Conductor:</Text>
               <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
-                <Picker.Item label="Selecciona un conductor" value="" />
+
+                <Picker.Item label="Selecciona conductor" value="" />
                 {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
               </Picker>
               <Text style={styles.label}>Acompañante:</Text>
-              <TextInput value={acompanate} onChangeText={setAcompanate} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
+                <Picker.Item label="Selecciona acompañante" value="" />
+                {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
+              </Picker>
               <Text style={styles.label}>Def</Text>
               <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Destino:</Text>
@@ -360,16 +378,11 @@ const exportToExcel = async (exportType: string) => {
               <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
               <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-              <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <TextInput value={fechaLlegada}onChangeText={(value)=>{setFechaLlegada(value);calcularEstado(value);}} mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
             </>
           ) : (
             <Text style={styles.label}>Estado:</Text>
           )}
-           <Picker selectedValue={estado} onValueChange={setEstado} style={styles.picker}>
-            <Picker.Item label="Pendiente" value="pendiente" />
-            <Picker.Item label="En progreso" value="en progreso" />
-            <Picker.Item label="Completado" value="completado" />
-            </Picker>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
             <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar</Button>
