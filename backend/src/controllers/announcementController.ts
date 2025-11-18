@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import Announcement from "../models/Announcement";
+
+
 export const getAnnouncements = async (req: Request, res: Response) => {
   try {
     const announcements = await Announcement.find().sort({ fecha: -1 });

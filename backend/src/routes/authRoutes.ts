@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config";
 import User from "../models/User";
 
+
 const router = Router();
 console.log("authRoutes cargando correctamente");
 
