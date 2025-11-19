@@ -20,9 +20,9 @@ async function fixPasswords (){
             }
         }
         console.log(`Proceso completado.${updateCount} usuario(s) actualizados`);
-    }catch (error){
+        }catch (error){
         console.error("Error reparando contraseñas", error);
-    }finally{
+     }finally{
         await mongoose.disconnect();
         console.log("Desconectando de mongodb");
     }

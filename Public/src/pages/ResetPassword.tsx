@@ -39,7 +39,7 @@ export default function ResetPassword ({route,navigation}:any){
             <TextInput placeholder="Contraseña nueva " value={password} onChangeText={setPassword} secureTextEntry mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input}/>
             <TextInput placeholder="Confirmar contraseña" value={confirm} onChangeText={setConfirm} secureTextEntry mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input}/>
             <TouchableOpacity  style={[styles.button ,loading  && {opacity:0.7}]} onPress={handleReset} disabled={loading}>
-                <Text style ={styles.buttonText}>{loading ? "Guardando ...":"Guadar Contraseña"}</Text>
+            <Text style ={styles.buttonText}>{loading ? "Guardando ...":"Guadar Contraseña"}</Text>
             </TouchableOpacity>
         </KeyboardAvoidingView>
     );

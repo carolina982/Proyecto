@@ -13,11 +13,16 @@ interface Trip {
   Viaje: any;
   tripId: unknown;
   conductorNombre: any;
-  id: string; nombre: string;
-  unidadId: string; conductorId: string;
-  fechaSalida: string; fechaLlegada: string;
-  destino: string;  estado: string;
-  kilometraje?: number; acompanante:string;
+  id: string; 
+  nombre: string;
+  unidadId: string; 
+  conductorId: string;
+  fechaSalida: string; 
+  fechaLlegada: string;
+  destino: string;  
+  estado: string;
+  kilometraje?: number; 
+  acompanante:string;
   def:string;
 }
 
@@ -58,7 +63,7 @@ export default function TripsPage() {
     );
   }
   const isAdmin= currentUser.rol?.toLocaleLowerCase() ==="admin";
-const loadTrips = async () => {
+  const loadTrips = async () => {
   try {
     let token: string | null = null;
     if (Platform.OS === "web") {
@@ -125,18 +130,22 @@ const loadTrips = async () => {
       setUnidadId(trip.unidadId);
       setConductorId(trip.conductorId);
       setFechaSalida(new Date(trip.fechaSalida).toLocaleDateString("es-ES"));
-      setFechaLlegada(new Date(trip.fechaLlegada).toLocaleDateString("es-ES"));
+      setFechaLlegada(trip.fechaLlegada? new Date(trip.fechaLlegada).toLocaleDateString("es-ES"): "");
       setDestino(trip.destino);
       setEstado(trip.estado);
       setKilometraje(trip.kilometraje?.toString() || "");
       setAcompanante(trip.acompanante)
       setDef(trip.def || "");
-    } else {
+      } else {
       setEditingTrip(null);
-      setNombre("");  setUnidadId(""); 
-      setConductorId("");  setFechaSalida("");
-      setFechaLlegada("");  setDestino(""); 
-      setEstado("pendiente");   setKilometraje("");
+      setNombre("");  
+      setUnidadId(""); 
+      setConductorId("");  
+      setFechaSalida("");
+      setFechaLlegada("");  
+      setDestino(""); 
+      setEstado("pendiente");   
+      setKilometraje("");
       setAcompanante("");
       setDef("");
     }
@@ -146,46 +155,47 @@ const loadTrips = async () => {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
-  const calcularEstado =(fecha:string)=>{
-    if(!fecha){
-      setEstado("pendiente");
-      return;
+  const calcularEstado =(fechaSalidaStr:string, fechaLlegadaStr:string | null)=>{
+    if(!fechaLlegadaStr || fechaSalidaStr.trim() === ""){
+      return "pendiente";
     }
-    const hoy= new Date ();
-    const llegada=parseDate(fecha);
-    if (llegada>hoy){
-      setEstado("en proceso");
-    }else{
-      setEstado("completado");
-    }
+    return "completado";
   };
-
   const saveTrip = async () => {
-    const tripData = isAdmin
-      ? {
-          nombre,
-          unidadId,
-          conductorId,
-          fechaSalida: parseDate(fechaSalida),
-          fechaLlegada: fechaLlegada? parseDate(fechaLlegada): null,
-          destino,
-          estado,
-          kilometraje: Number(kilometraje),
-          acompanante,
-          def,
-        }
-      : { estado }; 
-    try {
-      if (editingTrip) await api.put(`/trips/${editingTrip.id}`, tripData);
-      else if (isAdmin) await api.post("/trips", tripData);
+  const estadoCalculado =
+    fechaLlegada && fechaLlegada.trim() !== ""
+      ? "completado"
+      : "pendiente";
 
-       await loadTrips();
-      setModalVisible(false);
-    } catch (error: any) {
-      console.error("Error guardando viaje:", error.response?.data || error);
-      Alert.alert("Error", "No se pudo guardar el viaje");
+  const tripData = isAdmin
+    ? {
+        nombre,
+        unidadId,
+        conductorId,
+        fechaSalida: parseDate(fechaSalida),
+        fechaLlegada: fechaLlegada ? parseDate(fechaLlegada) : null,
+        destino,
+        estado: calcularEstado,
+        kilometraje: Number(kilometraje),
+        acompanante: acompanante === null || acompanante === "" ? null : acompanante,
+        def,
+      }
+    : { estado:calcularEstado };
+  try {
+    if (editingTrip) {
+      await api.put(`/trips/${editingTrip.id}`);  
+     } else if (isAdmin) {
+      await api.post("/trips");
     }
-  };
+    await loadTrips();
+    setModalVisible(false);
+
+  } catch (error: any) {
+    console.error("Error guardando viaje:", error.response?.data || error);
+    Alert.alert("Error", "No se pudo guardar el viaje");
+  }
+};
+
   const deleteTrip = async (id: string) => {
     if (!isAdmin) return;
     let confirmed = false;
@@ -235,9 +245,7 @@ const exportToExcel = async (exportType: string) => {
           ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
           ws_data.push([]);
         }
-
         ws_data.push([` MES: ${monthName.toUpperCase()}`]);
-
         ws_data.push([
           "Semana",
           "Nombre",
@@ -275,7 +283,7 @@ const exportToExcel = async (exportType: string) => {
       monthTripCount++;
     }
     if (monthTripCount > 0) {
-      ws_data.push([` TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
+      ws_data.push([`TOTAL DE VIAJES DEL MES: ${monthTripCount}`]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -304,17 +312,18 @@ const exportToExcel = async (exportType: string) => {
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
+    const AcompananteNombre=users.find(u => u.id === item.acompanante)?.nombre || item.acompanante;
     const canEdit = isAdmin || currentUser.id === item.conductorId;
     const canDelete = isAdmin;
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{item.nombre}</Text>
-        <Text style={styles.textSmall}>Unidad: {unidadNombre}</Text>
-        <Text style={styles.textSmall}>Conductor: {conductorNombre}</Text>
-        <Text style={styles.textSmall}>Acompañante: {item.acompanante}</Text>
-        <Text style={styles.textSmall}>Destino: {item.destino}</Text>
-        <Text style={styles.textSmall}>Salida: {new Date(item.fechaSalida).toLocaleDateString()}</Text>
-        <Text style={styles.textSmall}>Llegada: {new Date(item.fechaLlegada).toLocaleDateString()}</Text>
+        <Text style={styles.textSmall}>Unidad:{unidadNombre}</Text>
+        <Text style={styles.textSmall}>Conductor:{conductorNombre}</Text>
+        <Text style={styles.textSmall}>Acompañante:{AcompananteNombre}</Text>
+        <Text style={styles.textSmall}>Destino:{item.destino}</Text>
+        <Text style={styles.textSmall}>Salida:{new Date(item.fechaSalida).toLocaleDateString()}</Text>
+        <Text style={styles.textSmall}>Llegada:{new Date(item.fechaLlegada).toLocaleDateString()}</Text>
         <Text style={styles.textSmall}>Estado: {item.estado}</Text>
         <Text style={styles.textSmall}>Def:{item.def}</Text>
         <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
@@ -360,13 +369,13 @@ const exportToExcel = async (exportType: string) => {
               </Picker>
               <Text style={styles.label}>Conductor:</Text>
               <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
-
                 <Picker.Item label="Selecciona conductor" value="" />
                 {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
               </Picker>
               <Text style={styles.label}>Acompañante:</Text>
               <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
                 <Picker.Item label="Selecciona acompañante" value="" />
+                <Picker.Item label="Sin acompañante" value={null}/>
                 {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
               </Picker>
               <Text style={styles.label}>Def</Text>
@@ -378,7 +387,7 @@ const exportToExcel = async (exportType: string) => {
               <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
               <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
               <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-              <TextInput value={fechaLlegada}onChangeText={(value)=>{setFechaLlegada(value);calcularEstado(value);}} mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+              <TextInput value={fechaLlegada}onChangeText={(value)=>{setFechaLlegada(value);(value);}} mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
             </>
           ) : (
             <Text style={styles.label}>Estado:</Text>

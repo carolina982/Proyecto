@@ -4,7 +4,7 @@ export const createTripValidator = [
     body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
     body("destino").notEmpty().withMessage("El destino es obligatorio"),
     body("fechaSalida").notEmpty().isISO8601().withMessage("Fecha de salida inválida"),
-    body("fechaLlegada").notEmpty().isISO8601().withMessage("Fecha de llegada inválida"),
+    body("fechaLlegada").optional({nullable:true}).isISO8601().withMessage("Fecha de llagada invalida"),
     body("conductorId").notEmpty().withMessage("El ID del conductor es obligatorio"),
     body("unidadId").notEmpty().withMessage("El Id de la unidad es obligatorio"),
     body("estado").optional().isIn(["pendiente", "en progreso", "completado"]).withMessage("Estado no válido"),

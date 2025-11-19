@@ -9,7 +9,7 @@ export interface ITrip extends Document {
   unidadId:string;      
   estado: string;   
   kilometraje?:number;     
-  acompanante:string;
+  acompanante:string|null|mongoose.Types.ObjectId;
   def:string;  
 }
 const tripSchema = new Schema<ITrip>(
@@ -17,12 +17,12 @@ const tripSchema = new Schema<ITrip>(
     nombre: { type: String, required: true },
     destino: { type: String, required: true },
     fechaSalida: { type: Date, required: true },
-    fechaLlegada: { type: Date, required: true },
+    fechaLlegada: { type: Date, required:false,default:null},
     conductorId:{type:String, required:true},
     unidadId:{type:String , required:true},
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
     kilometraje:{type:Number , default: 0},
-    acompanante:{type:String , required:true},
+    acompanante:{type:Schema.Types.ObjectId,ref:"User",required:false,default:null},
     def:{type:String , required:true},
 
 },

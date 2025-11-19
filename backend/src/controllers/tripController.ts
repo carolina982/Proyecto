@@ -14,13 +14,11 @@ export const getTrip = async (req: Request, res: Response) => {
   
     if (user.rol?.toLowerCase() === "chofer") {
       trips = await Trip.find({ conductorId: user.id });
-    } else {
-     
-      trips = await Trip.find();
-    }
-
+      } else {
+       trips = await Trip.find();
+       }
     return res.status(200).json(trips);
-  } catch (error) {
+    } catch (error) {
     console.error("Error al obtener los viajes:", error);
     return res.status(500).json({ message: "Error al obtener los viajes" });
   }
@@ -49,7 +47,7 @@ export const createTrip = async (req: Request, res: Response) => {
   try {
     const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado, kilometraje, acompanante, def } = req.body;
 
-    if (!nombre || !unidadId || !conductorId || !fechaSalida || !fechaLlegada || !destino || !estado) {
+    if (!nombre||!unidadId||!conductorId||!fechaSalida||!destino||!estado) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
     }
 
@@ -58,11 +56,11 @@ export const createTrip = async (req: Request, res: Response) => {
       unidadId,
       conductorId,
       fechaSalida: new Date(fechaSalida),
-      fechaLlegada: new Date(fechaLlegada),
+      fechaLlegada:fechaLlegada ? new Date(fechaLlegada):null,
       destino,
       estado,
       kilometraje: Number(kilometraje) || 0,
-      acompanante: acompanante || "",
+      acompanante: acompanante || null,
       def: def || "",
     });
 
@@ -106,7 +104,7 @@ export const deleteTrip = async (req: Request, res: Response) => {
 
     await trip.deleteOne();
     res.json({ message: "Viaje eliminado correctamente" });
-  } catch (error) {
+    } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al eliminar viaje" });
   }
