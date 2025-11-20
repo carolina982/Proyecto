@@ -53,7 +53,7 @@ Join our community of developers creating universal apps.
 - Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
 - administrador-->inicio , perfil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perfil , viajes, viaticos 
-3. Levantar el servidors de base de datos
+3. Levantar el servidor de base de datos
 
      ```bash
      npx ts-node src/server.ts
