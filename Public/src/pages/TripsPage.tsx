@@ -157,6 +157,7 @@ export default function TripsPage() {
   };
  const saveTrip = async () => {
   const estadoCalculado = fechaLlegada && fechaLlegada.trim() !== "" ? "completado" : "pendiente";
+
   if (isAdmin) {
     if (!nombre || !unidadId || !conductorId || !fechaSalida) {
       Alert.alert("Falta información", "Nombre, unidad, conductor y fecha de salida son obligatorios.");
@@ -179,7 +180,7 @@ export default function TripsPage() {
   if (kilometraje && kilometraje.trim() !== "") {
     payload.kilometraje = Number(kilometraje);
   }
-  payload.acompanante =acompanante && acompanante ! == "" ? acompanante :null;
+  payload.acompanante = acompanante === "none" || acompanante === ""? null:acompanante;
   if (def && def.trim() !== "") payload.def = def;
   try {
     if (editingTrip) {
@@ -311,7 +312,7 @@ const exportToExcel = async (exportType: string) => {
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
-    const AcompananteNombre=users.find(u => u.id === item.acompanante)?.nombre || item.acompanante;
+    const AcompananteNombre=item.acompanante === "none" ? "Sin acompañante" :(users.find(u=> u.id === item.acompanante)?.nombre ?? "Sin acompañante");
     const canEdit = isAdmin || currentUser.id === item.conductorId;
     const canDelete = isAdmin;
     return (
@@ -374,7 +375,7 @@ const exportToExcel = async (exportType: string) => {
               <Text style={styles.label}>Acompañante:</Text>
               <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
                 <Picker.Item label="Selecciona acompañante" value="" />
-                <Picker.Item label="Sin acompañante" value={null}/>
+                <Picker.Item label="Sin acompañante" value="none" />
                 {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
               </Picker>
               <Text style={styles.label}>Def</Text>
