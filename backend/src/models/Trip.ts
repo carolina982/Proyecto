@@ -22,7 +22,7 @@ const tripSchema = new Schema<ITrip>(
     unidadId:{type:String , required:true},
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
     kilometraje:{type:Number , default: 0},
-    acompanante:{type:Schema.Types.ObjectId,ref:"User",required:false,default:null},
+    acompanante:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:false,default:null},
     def:{type:String , required:true},
 
 },

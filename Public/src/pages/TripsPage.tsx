@@ -155,44 +155,43 @@ export default function TripsPage() {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
-  const calcularEstado =(fechaSalidaStr:string, fechaLlegadaStr:string | null)=>{
-    if(!fechaLlegadaStr || fechaSalidaStr.trim() === ""){
-      return "pendiente";
+ const saveTrip = async () => {
+  const estadoCalculado = fechaLlegada && fechaLlegada.trim() !== "" ? "completado" : "pendiente";
+  if (isAdmin) {
+    if (!nombre || !unidadId || !conductorId || !fechaSalida) {
+      Alert.alert("Falta información", "Nombre, unidad, conductor y fecha de salida son obligatorios.");
+      return;
     }
-    return "completado";
+  }
+  const payload: any = {
+    nombre,
+    unidadId,
+    conductorId,
+    destino,
+    estado: estadoCalculado,
   };
-  const saveTrip = async () => {
-  const estadoCalculado =
-    fechaLlegada && fechaLlegada.trim() !== ""
-      ? "completado"
-      : "pendiente";
-
-  const tripData = isAdmin
-    ? {
-        nombre,
-        unidadId,
-        conductorId,
-        fechaSalida: parseDate(fechaSalida),
-        fechaLlegada: fechaLlegada ? parseDate(fechaLlegada) : null,
-        destino,
-        estado: calcularEstado,
-        kilometraje: Number(kilometraje),
-        acompanante: acompanante === null || acompanante === "" ? null : acompanante,
-        def,
-      }
-    : { estado:calcularEstado };
+  if (fechaSalida && fechaSalida.trim() !== "") {
+    payload.fechaSalida = parseDate(fechaSalida);
+  }
+  if (fechaLlegada && fechaLlegada.trim() !== "") {
+    payload.fechaLlegada = parseDate(fechaLlegada);
+  }
+  if (kilometraje && kilometraje.trim() !== "") {
+    payload.kilometraje = Number(kilometraje);
+  }
+  payload.acompanante =acompanante && acompanante ! == "" ? acompanante :null;
+  if (def && def.trim() !== "") payload.def = def;
   try {
     if (editingTrip) {
-      await api.put(`/trips/${editingTrip.id}`);  
-     } else if (isAdmin) {
-      await api.post("/trips");
+      await api.put(`/trips/${editingTrip.id}`, payload);
+    } else if (isAdmin) {
+      await api.post("/trips", payload);
     }
     await loadTrips();
     setModalVisible(false);
-
   } catch (error: any) {
-    console.error("Error guardando viaje:", error.response?.data || error);
-    Alert.alert("Error", "No se pudo guardar el viaje");
+    console.error("Error guardando viaje", error.response?.data || error);
+    Alert.alert("Error", "No se pudo guardar el viaje. Revisa la consola para más detalles.");
   }
 };
 
@@ -298,7 +297,7 @@ const exportToExcel = async (exportType: string) => {
     } else {
       const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
       const cacheDir = (FileSystem as any).cacheDirectory ?? (FileSystem as any).documentDirectory ?? "";
-      const fileUri =` ${cacheDir}Reporte_Viajes.xlsx`;
+      const fileUri =`${cacheDir}Reporte_Viajes.xlsx`;
       await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: "base64" });
       await shareAsync(fileUri);
     }
