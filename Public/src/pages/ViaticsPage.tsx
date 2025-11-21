@@ -239,17 +239,32 @@ export default function ViaticosPage() {
       Alert.alert("Error", "Ocurrió un problema al seleccionar el archivo");
     }
   };
+
   const calcularTotal = () => {
-    let total = 0;
-    conceptosList.forEach(c => {
-      if (c.endsWith("Costo") || (!c.includes("Cantidad") && !c.endsWith("Costo"))) {
-        total += Number(conceptos[c] || 0);
-      }
-    });
-    total += Number(dieselCantidad || 0) * Number(dieselCosto || 0);
-    total += Number(tag || 0);
-    return total;
-  };
+  let total = 0;
+  conceptosList.forEach(c => {
+    if (c.endsWith("Cantidad")) {
+      const base = c.replace("Cantidad", "");
+      const cantidad = Number(conceptos[`${base}Cantidad`] || 0);
+      const costo = Number(conceptos[`${base}Costo`] || 0);
+      total += cantidad * costo;
+    }
+  });
+  const conceptosSimples = [
+    "Pensión", "Vulcanizadora", "Casetas efectivo",
+    "Limpieza Unidad", "Multa", "Comisiones",
+    "Fumigación", "DEF"
+  ];
+
+  conceptosSimples.forEach(c => {
+    total += Number(conceptos[c] || 0);
+  });
+
+  total += Number(dieselCantidad) * Number(dieselCosto);
+  total += Number(tag);
+
+  return total;
+};
 
   const saveViatico = async () => {
     if (!tripId) { Alert.alert("Error", "Selecciona un viaje"); return; }
@@ -281,6 +296,7 @@ export default function ViaticosPage() {
         formData.append("factura", "");
       }
 
+
       const url = editingViatico ? `${BASE_URL}/viatics/${editingViatico.id}` : `${BASE_URL}/viatics`;
       const method = editingViatico ? "PUT" : "POST";
       const res = await fetch(url, { method, body: formData });
@@ -294,6 +310,8 @@ export default function ViaticosPage() {
       setLoading(false);
     }
   };
+
+
 
   const deleteViatico = async (id: string) => {
     let confirmed = false;
@@ -441,4 +459,7 @@ const styles = StyleSheet.create({
   label: { fontWeight: "bold", marginTop: 10, marginBottom: 5 },
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   facturaPreview: { width: "100%", height: 180, borderRadius: 8, marginBottom: 10, resizeMode: "contain" },
+  rowGroup:{flexDirection:"row",alignItems:"center",gap:10},
+  smallInput:{flex:1,backgroundColor:"#fff",paddingHorizontal:8,paddingVertical:6,borderRadius:5},
+  labelConcepto:{fontWeight:"bold",marginBottom:3},
 });
