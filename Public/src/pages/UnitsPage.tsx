@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput, } from "react-native-paper";
@@ -10,6 +11,8 @@ interface Unit {
   modelo: string;
   capacidad: string;
   estado: "Disponible" | "Mantenimiento" | "Ocupado";
+  tipoRemolque?:"Lowboy" |"Caja Seca" |"";
+  placaRemolque?:string;
 }
 
 export default function UnitsPage() {
@@ -22,6 +25,8 @@ export default function UnitsPage() {
   const [modelo, setModelo] = useState("");
   const [capacidad, setCapacidad] = useState("");
   const [estado, setEstado] = useState<Unit["estado"]>("Disponible");
+  const [tipoRemolque,setTipoRemolque]=useState<"" | "Lowboy" |"Caja Seca">("");
+  const [placaRemolque,setPlacaRemolque]=useState("");
 
   useEffect(() => {
     loadUnits();
@@ -37,6 +42,8 @@ export default function UnitsPage() {
         modelo:u.modelo,
         capacidad:String (u.capacidad),
         estado:u.estado,
+        tipoRemolque:u.tipoRemolque || "",
+        placaRemolque:u.placaRemolque || "",
       }));
       setUnits(mappedUnits);
     } catch (error) {
@@ -52,6 +59,9 @@ export default function UnitsPage() {
       setModelo(unit.modelo);
       setCapacidad(unit.capacidad.toString());
       setEstado(unit.estado);
+      setTipoRemolque(unit.tipoRemolque || "");
+      setPlacaRemolque(unit.placaRemolque || "");
+
     } else {
       setEditingUnit(null);
       setNombre("");
@@ -59,6 +69,9 @@ export default function UnitsPage() {
       setModelo("");
       setCapacidad("");
       setEstado("Disponible");
+
+      setTipoRemolque("");
+      setPlacaRemolque("");
     }
     setModalVisible(true);
   };
@@ -69,14 +82,18 @@ export default function UnitsPage() {
       return;
     }
     const unitData = {
-      nombre, placas,
-      modelo, capacidad,
+      nombre, 
+      placas,
+      modelo, 
+      capacidad,
       estado,
+      tipoRemolque,
+      placaRemolque:tipoRemolque ? placaRemolque:"",
     };
 
     try {
       if (editingUnit) {
-        await api.put(`/units/${editingUnit.id}`, unitData);
+        await api.put(`/units/${editingUnit.id}`,unitData);
       } else {
         await api.post("/units", unitData);
       }
@@ -129,6 +146,13 @@ export default function UnitsPage() {
         <Text>Placas: {item.placas}</Text>
         <Text>Modelo: {item.modelo}</Text>
         <Text>Capacidad: {item.capacidad}</Text>
+        <Text>Placas: {item.placas}</Text>
+        {item.tipoRemolque ? (
+        <View style={{ marginTop: 5 }}>
+        <Text>Tipo de remolque: {item.tipoRemolque}</Text>
+        <Text>Placa remolque: {item.placaRemolque || "N/A"}</Text>
+        </View>
+         ) : null}
         <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
           <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
             Editar
@@ -155,7 +179,22 @@ export default function UnitsPage() {
           <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
           <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
           <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
-            activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
+          activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
+          <Text style={{ fontWeight: "bold", marginTop: 5 }}>Tipo de remolque</Text>
+          <View style={{backgroundColor: "#fff",borderRadius: 5,borderWidth: 1,borderColor: "#ccc", marginBottom: 10,}}>
+          <Picker selectedValue={tipoRemolque}onValueChange={(value) => setTipoRemolque(value)}>
+          <Picker.Item label="Ninguno" value="" />
+          <Picker.Item label="Lowboy" value="Lowboy" />
+          <Picker.Item label="Caja Seca" value="Caja Seca" />
+          </Picker>
+          </View>
+         {(tipoRemolque === "Lowboy" || tipoRemolque === "Caja Seca") && (
+         <TextInput placeholder="Placa del remolque"value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"
+          underlineColor="#0d75bb"
+          activeUnderlineColor="#0d75bb"
+          textColor="#000"
+          placeholderTextColor="#888" dense style={styles.input} />
+          )}
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
             <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
               Cancelar

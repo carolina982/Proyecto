@@ -295,8 +295,7 @@ export default function ViaticosPage() {
       } else if (facturaRemoved) {
         formData.append("factura", "");
       }
-
-
+      
       const url = editingViatico ? `${BASE_URL}/viatics/${editingViatico.id}` : `${BASE_URL}/viatics`;
       const method = editingViatico ? "PUT" : "POST";
       const res = await fetch(url, { method, body: formData });
@@ -310,8 +309,6 @@ export default function ViaticosPage() {
       setLoading(false);
     }
   };
-
-
 
   const deleteViatico = async (id: string) => {
     let confirmed = false;
@@ -374,36 +371,96 @@ export default function ViaticosPage() {
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingViatico ? "Editar Viático" : "Nuevo Viático"}</Text>
-
           <Text style={styles.label}>Viaje:</Text>
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
             <Picker.Item label="Selecciona un viaje" value="" />
             {trips.map(t => <Picker.Item key={t.id} label={`${t.nombre}(${t.conductorNombre || "Sin conductor"})`} value={t.id} />)}
           </Picker>
-
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1, paddingRight: 5 }}>
-              {conceptosList.map(c => (
-                <View key={c} style={{ marginBottom: 10 }}>
-                  <Text style={styles.label}>{c}:</Text>
-                  <TextInput
-                    value={conceptos[c]}
-                    onChangeText={text => setConceptos({ ...conceptos, [c]: text })}
-                    keyboardType="numeric"
-                    mode="flat"
-                    underlineColor="#0d75bb"
-                    activeUnderlineColor="#0d75bb"
-                    style={styles.input}
-                    placeholder={
-                      c.endsWith("Cantidad") ? "Cantidad" :
-                        c.endsWith("Costo") ? "Costo" : ""
-                    }
-                  />
-                </View>
-              ))}
+              {conceptosList.map((c) => {
+              const base = c.replace("Cantidad", "").replace("Costo", "").trim();
+              const isCantidadField = c.endsWith("Cantidad");
+              const isCostoField = c.endsWith("Costo");
+              const preciosFijos: Record<string, number> = {
+               "Comidas": 120,
+               "Hospedaje": 450,
+               "Taxi": 80,
+               "Regaderas": 30
+              };
+              const conceptosSimples = [
+              "Pensión", "Vulcanizadora", "Casetas efectivo",
+              "Limpieza Unidad", "Multa", "Comisiones",
+              "Fumigación", "DEF"
+              ];
+            if (conceptosSimples.includes(c)) {
+            return (
+             <View key={c} style={{ marginBottom: 10 }}>
+             <Text style={styles.label}>{c}:</Text>
+             <TextInput
+              value={conceptos[c]}
+              onChangeText={(text) => setConceptos({ ...conceptos, [c]: text })}
+              keyboardType="numeric"
+              mode="flat"
+              underlineColor="#0d75bb"
+              activeUnderlineColor="#0d75bb"
+              style={styles.input}
+              placeholder="Ingrese cantidad"
+              />
             </View>
-
-            <View style={{ flex: 1, paddingLeft: 5 }}>
+          );
+        }
+        const precioBase = preciosFijos[base];
+        return (
+          <View key={c} style={{ marginBottom: 10 }}>
+           <Text style={styles.label}>{c}:</Text>
+           <View style={{ flexDirection: "row", gap: 10 }}>
+           {/* CANTIDAD */}
+             {isCantidadField && (
+               <TextInput
+               value={conceptos[c]}
+               onChangeText={(text) => {
+               const cantidad = Number(text) || 0;
+               let updatedConceptos = { ...conceptos, [c]: text };
+               if (precioBase !== undefined) {
+                updatedConceptos[`${base} Costo`] = String(cantidad * precioBase);
+              }
+              setConceptos(updatedConceptos);
+             }}
+               keyboardType="numeric"
+               mode="flat"
+               underlineColor="#0d75bb"
+               activeUnderlineColor="#0d75bb"
+               style={[styles.input, { flex: 1 }]}
+               placeholder="Cantidad"
+               />
+              )}
+              {/* COSTO */}
+              {isCostoField && (
+              <TextInput value={conceptos[c]} onChangeText={(text) => {
+                if (precioBase === undefined) {
+                setConceptos({ ...conceptos, [c]: text });
+               }
+              }}
+               editable={precioBase === undefined}
+               keyboardType="numeric"
+               mode="flat"
+               underlineColor="#0d75bb"
+               activeUnderlineColor="#0d75bb"
+               style={[
+               styles.input,
+               { flex: 1, backgroundColor: precioBase ? "" : "" }
+               ]}
+               placeholder="Costo"
+                />
+               )}
+            </View>
+          </View>
+        );
+           })}
+            </View>
+             
+             <View style={{ flex: 1, paddingLeft: 5 }}>
               <Text style={styles.label}>Diésel - Cantidad:</Text>
               <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
               <Text style={styles.label}>Diésel - Costo:</Text>

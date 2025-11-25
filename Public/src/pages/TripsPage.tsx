@@ -47,6 +47,7 @@ export default function TripsPage() {
   const [acompanante,setAcompanante]=useState("");
   const [def,setDef]=useState("");
   const [exportType , setExportType]=useState("");
+  
 
   useEffect(() => {
     if (currentUser) {
@@ -155,7 +156,8 @@ export default function TripsPage() {
     const [day, month, year] = dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
- const saveTrip = async () => {
+  
+  const saveTrip = async () => {
   const estadoCalculado = fechaLlegada && fechaLlegada.trim() !== "" ? "completado" : "pendiente";
 
   if (isAdmin) {
@@ -390,7 +392,10 @@ const exportToExcel = async (exportType: string) => {
               <TextInput value={fechaLlegada}onChangeText={(value)=>{setFechaLlegada(value);(value);}} mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
             </>
           ) : (
-            <Text style={styles.label}>Estado:</Text>
+           <>
+           <Text style={styles.label}>Fecha de salida:</Text>
+           
+           </>
           )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>

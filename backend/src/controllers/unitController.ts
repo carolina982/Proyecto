@@ -2,14 +2,17 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Unit, { IUnit } from "../models/Unit";
 
-export const createUnit =async (req:Request , res:Response)=>{
-    try {
-        const unitData :IUnit= req.body as IUnit;
-        const unit: IUnit= await Unit.create(unitData);
+export const createUnit =async (req:Request, res:Response)=>{
+    try{
+        const data=req.body as IUnit;
+        if (!data.tipoRemolque){
+            data.placaRemolque="";
+        }
+        const unit:IUnit =await Unit.create(data);
         res.status(201).json(unit);
     }catch (error){
-        console.error("Error creando unidad:" ,error);
-        res.status(500).json({message:"Error creando unidad" , error});
+        console.error("Error creando unidad",error);
+        res.status(500).json({message:"Error creando unidad", error});
     }
 };
 
@@ -38,20 +41,24 @@ export const getUnitById= async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error al obtener unidad ", error})
     }
 };
-export const updateUnit = async(req:Request , res:Response)=>{
-    try{
+export const updateUnit=async (req:Request, res:Response)=>{
+    try {
         const {id}=req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(400).json({message:"ID invalido"});
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return res.status(400).json({message:"ID Invalido"});
         }
-        const unit = await Unit.findByIdAndUpdate(id, req.body , {new:true});
-        if (!unit){
-            return  res.status(404).json({message:"Unidad no econtrada"});
+        const data=req.body;
+        if(!data.tipoRemolque){
+            data.placaRemolque="";
         }
-        res.json({message:"Unidad actualizado correctamente", unit});
-    }catch (error) {
-        console.error("Error al actualizar unidad:" , error);
-        res.status(500).json({messga:"Error al actualizar unidad" , error});
+        const unit =await Unit.findByIdAndUpdate(id,data,{new:true});
+        if(!unit){
+            return res.status(404).json({message:"Unidad no econtrada"});
+        }
+        res.json({message:"Unidad actualizada correctamente",unit});
+    }catch (error){
+        console.error("Error al actualizar unidad",error);
+        res.status(500).json({message:"Error al actuzalizar unidad",error});
     }
 };
 export const deleteUnit = async (req: Request, res: Response) => {
