@@ -147,6 +147,7 @@ export default function UnitsPage() {
         <Text>Modelo: {item.modelo}</Text>
         <Text>Capacidad: {item.capacidad}</Text>
         <Text>Placas: {item.placas}</Text>
+      
         {item.tipoRemolque ? (
         <View style={{ marginTop: 5 }}>
         <Text>Tipo de remolque: {item.tipoRemolque}</Text>
@@ -166,40 +167,39 @@ export default function UnitsPage() {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Unidades Registradas</Text>
-      <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>
-        Nueva Unidad
-      </Button>
-      <FlatList data={units}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
-      <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
-          <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
-          <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
-          <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
-          <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
-          <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
-          activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
-          <Text style={{ fontWeight: "bold", marginTop: 5 }}>Tipo de remolque</Text>
-          <View style={{backgroundColor: "#fff",borderRadius: 5,borderWidth: 1,borderColor: "#ccc", marginBottom: 10,}}>
-          <Picker selectedValue={tipoRemolque}onValueChange={(value) => setTipoRemolque(value)}>
-          <Picker.Item label="Ninguno" value="" />
-          <Picker.Item label="Lowboy" value="Lowboy" />
-          <Picker.Item label="Caja Seca" value="Caja Seca" />
-          </Picker>
-          </View>
-         {(tipoRemolque === "Lowboy" || tipoRemolque === "Caja Seca") && (
-         <TextInput placeholder="Placa del remolque"value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"
-          underlineColor="#0d75bb"
-          activeUnderlineColor="#0d75bb"
-          textColor="#000"
-          placeholderTextColor="#888" dense style={styles.input} />
-          )}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-            <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
-              Cancelar
-            </Button>
-            <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>
+       <Text style={styles.title}>Unidades Registradas</Text>
+         <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nueva Unidad </Button>
+           <FlatList data={units}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
+             <Modal visible={modalVisible} animationType="slide">
+               <View style={styles.modalContent}>
+               <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
+               <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+               <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+               <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+               <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
+               <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
+               activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
+               <Text style={{ fontWeight: "bold", marginTop: 5 }}>Tipo de remolque</Text>
+               <View style={{backgroundColor: "#fff",borderRadius: 5,borderWidth: 1,borderColor: "#ccc", marginBottom: 10,}}>
+               <Picker selectedValue={tipoRemolque}onValueChange={(value) => setTipoRemolque(value)}>
+               <Picker.Item label="Ninguno" value="" />
+               <Picker.Item label="Lowboy" value="Lowboy" />
+               <Picker.Item label="Caja Seca" value="Caja Seca" />
+               </Picker>
+               </View>
+
+               {(tipoRemolque === "Lowboy" || tipoRemolque === "Caja Seca") && (
+               <TextInput placeholder="Placa del remolque"value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"
+               underlineColor="#0d75bb"
+               activeUnderlineColor="#0d75bb"
+               textColor="#000"
+               placeholderTextColor="#888" dense style={styles.input} />
+               )}
+               <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
+               <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
+                Cancelar
+               </Button>
+               <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>
               Guardar
             </Button>
           </View>

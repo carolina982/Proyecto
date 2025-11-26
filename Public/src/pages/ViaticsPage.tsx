@@ -315,9 +315,9 @@ export default function ViaticosPage() {
     if (Platform.OS === "web") {
       confirmed = window.confirm("¿Desea eliminar este Viatico?");
       if (!confirmed) return;
-    } else {
-      confirmed = await new Promise<boolean>((resolve) => {
-        Alert.alert("Confirmar", "¿Desea eliminar este viático?", [
+        } else {
+         confirmed = await new Promise<boolean>((resolve) => {
+         Alert.alert("Confirmar", "¿Desea eliminar este viático?", [
           { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
           { text: "Eliminar", style: "destructive", onPress: () => resolve(true) },
         ]);
@@ -367,7 +367,7 @@ export default function ViaticosPage() {
         </View>
       )}
       <FlatList data={viaticos} keyExtractor={item => item.id} renderItem={renderItem} style={{ marginTop: 15 }} />
-      {/* MODAL */}
+      
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>{editingViatico ? "Editar Viático" : "Nuevo Viático"}</Text>
@@ -383,6 +383,7 @@ export default function ViaticosPage() {
               const isCantidadField = c.endsWith("Cantidad");
               const isCostoField = c.endsWith("Costo");
               const preciosFijos: Record<string, number> = {
+                //precios fijos 
                "Comidas": 120,
                "Hospedaje": 450,
                "Taxi": 80,
@@ -415,11 +416,9 @@ export default function ViaticosPage() {
           <View key={c} style={{ marginBottom: 10 }}>
            <Text style={styles.label}>{c}:</Text>
            <View style={{ flexDirection: "row", gap: 10 }}>
-           {/* CANTIDAD */}
+           
              {isCantidadField && (
-               <TextInput
-               value={conceptos[c]}
-               onChangeText={(text) => {
+               <TextInput value={conceptos[c]}onChangeText={(text) => {
                const cantidad = Number(text) || 0;
                let updatedConceptos = { ...conceptos, [c]: text };
                if (precioBase !== undefined) {
@@ -435,7 +434,7 @@ export default function ViaticosPage() {
                placeholder="Cantidad"
                />
               )}
-              {/* COSTO */}
+             
               {isCostoField && (
               <TextInput value={conceptos[c]} onChangeText={(text) => {
                 if (precioBase === undefined) {

@@ -1,7 +1,6 @@
 import { body } from "express-validator";
 
 export const createTripValidator = [
-    
     body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
     body("destino").notEmpty().withMessage("El destino es obligatorio"),
     body("fechaSalida").notEmpty().isISO8601().withMessage("Fecha de salida inválida"),

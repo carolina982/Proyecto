@@ -172,14 +172,10 @@ export default function HomePage({ currentUser }: HomePageProps) {
       ))}
       {currentUser.rol?.toLowerCase() === "admin" && (
         <Button mode="contained"buttonColor="#0d75bb"style={styles.createButton}onPress={() => {
-            setTitulo("");
-            setContenido("");
-            setImageUri(null);
-            setImageFile(null);
-            setEditingId(null);
-            setModalVisible(true);
-          }}
-        >
+            setTitulo(""); setContenido("");
+            setImageUri(null); setImageFile(null);
+            setEditingId(null); setModalVisible(true);
+          }} >
           Crear Anuncio
         </Button>
       )}
@@ -197,23 +193,13 @@ export default function HomePage({ currentUser }: HomePageProps) {
               {imageUri || imageFile ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
             {(imageUri || imageFile) && (
-              <Image
-                source={{
-                  uri: Platform.OS === "web" ? URL.createObjectURL(imageFile!) : imageUri!,
-                }}
+              <Image source={{uri: Platform.OS === "web" ? URL.createObjectURL(imageFile!) : imageUri!,}}
                 style={styles.previewImage}
               />
             )}
             <View style={styles.buttonsRow}>
               <Button mode="contained"buttonColor="#888"
-                onPress={() => {
-                  setModalVisible(false);
-                  setEditingId(null);
-                  setImageUri(null);
-                  setImageFile(null);
-                }}
-              >
-                Cancelar
+                onPress={()=>{setModalVisible(false);setEditingId(null);setImageUri(null);setImageFile(null);}}>Cancelar
               </Button>
               <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>Guardar</Button>
             </View>

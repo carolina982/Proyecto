@@ -133,7 +133,7 @@ export default function Register({ navigation }: any) {
     </View>
   );
 };
-const styles = StyleSheet.create({
+ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
   title: { fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
   input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10 },
@@ -146,4 +146,4 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15, alignItems: "center" },
   registerText: { color: "#007bff", fontSize: 16 },
-});
+ });

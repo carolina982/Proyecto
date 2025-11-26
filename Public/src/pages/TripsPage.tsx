@@ -1,13 +1,15 @@
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from '@react-native-picker/picker';
 import * as FileSystem from "expo-file-system";
 import { shareAsync } from "expo-sharing";
 import { saveAs } from "file-saver";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api } from "../api/api";
 import { useStore } from '../context/Store';
+
 
 interface Trip {
   Viaje: any;
@@ -47,6 +49,7 @@ export default function TripsPage() {
   const [acompanante,setAcompanante]=useState("");
   const [def,setDef]=useState("");
   const [exportType , setExportType]=useState("");
+  const [showLlegadaPicker,setShowLlegadaPicker]=useState (false);
   
 
   useEffect(() => {
@@ -84,7 +87,7 @@ export default function TripsPage() {
         Authorization:`Bearer ${token}`,
       }
     });
-    let allTrips = res.data.map((t: any) => ({ ...t, id: t._id }));
+    let allTrips = res.data.map((t: any) => ({...t, id: t._id }));
     if (!isAdmin) {
       allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
     }
@@ -356,55 +359,73 @@ const exportToExcel = async (exportType: string) => {
        <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportToExcel(exportType)}>Exportar Excel  </Button>
          </View>
       )}
-      <FlatList data={trips}keyExtractor={(item) => item.id} renderItem={renderItem}style={{ marginTop: 15 }}/>
+      <FlatList data={trips}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
-        <ScrollView style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
-          {isAdmin ? (
-            <>
-              <Text style={styles.label}>Nombre:</Text>
-              <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-              <Text style={styles.label}>Unidad:</Text>
-              <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
-                <Picker.Item label="Selecciona unidad" value="" />
-                {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
-              </Picker>
-              <Text style={styles.label}>Conductor:</Text>
-              <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
-                <Picker.Item label="Selecciona conductor" value="" />
-                {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
-              </Picker>
-              <Text style={styles.label}>Acompañante:</Text>
-              <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
-                <Picker.Item label="Selecciona acompañante" value="" />
-                <Picker.Item label="Sin acompañante" value="none" />
-                {users.map(u => <Picker.Item key={u.id} label={`${u.nombre}`} value={u.id} />)}
-              </Picker>
-              <Text style={styles.label}>Def</Text>
-              <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input} />
-              <Text style={styles.label}>Destino:</Text>
-              <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
-              <Text style={styles.label}>Kilometraje (km):</Text>
-              <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
-              <Text style={styles.label}>Fecha de Salida (DD/MM/YYYY):</Text>
-              <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
-              <Text style={styles.label}>Fecha de Llegada (DD/MM/YYYY):</Text>
-              <TextInput value={fechaLlegada}onChangeText={(value)=>{setFechaLlegada(value);(value);}} mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
-            </>
-          ) : (
-           <>
-           <Text style={styles.label}>Fecha de salida:</Text>
-           
-           </>
-          )}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-            <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
-            <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar</Button>
-          </View>
-        </ScrollView>
-      </Modal>
+      <ScrollView style={styles.modalContent}>
+      <Text style={styles.modalTitle}> {editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
+      {isAdmin ? (
+        <>
+        <Text style={styles.label}>Nombre:</Text>
+        <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
+        <Text style={styles.label}>Unidad:</Text>
+        <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
+          <Picker.Item label="Selecciona unidad" value="" />
+          {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+        </Picker>
+        <Text style={styles.label}>Conductor:</Text>
+        <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
+          <Picker.Item label="Selecciona conductor" value="" />
+          {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+        </Picker>
+        <Text style={styles.label}>Acompañante:</Text>
+        <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
+          <Picker.Item label="Selecciona acompañante" value="" />
+          <Picker.Item label="Sin acompañante" value="none" />
+          {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+        </Picker>
+        <Text style={styles.label}>Def</Text>
+        <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+        <Text style={styles.label}>Destino:</Text>
+        <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+        <Text style={styles.label}>Kilometraje (km):</Text>
+        <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+        <Text style={styles.label}>Fecha de Salida:</Text>
+        <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+        <Text style={styles.label}>Fecha de Llegada:</Text>
+        <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+        </>
+        ) : (
+        <>
+        <Text style={styles.label}>Fecha de entrega</Text>
+        <TouchableOpacity onPress={()=>setShowLlegadaPicker(true)}>
+          <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input}/>
+        </TouchableOpacity>
+        {showLlegadaPicker && (
+          <DateTimePicker value={new Date ()} mode="date" display="default" onChange={(event,date)=>{
+            setShowLlegadaPicker(false);
+            if(date){
+              const f= ("0"+date.getDate()).slice(-2) + "/"+
+                       ("0"+(date.getMonth()+1)).slice(-2)+"/"+ 
+                       date.getFullYear();
+                       setFechaLlegada(f);
+            }
+          }}
+          />
+        )}
+        </>
+        )}  
+    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+      <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>
+        Cancelar
+      </Button>
+      <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>
+        Guardar
+      </Button>
     </View>
-  );
+  </ScrollView>
+</Modal>
+</View>
+  )
 }
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
