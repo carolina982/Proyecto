@@ -10,7 +10,7 @@ import User from "../models/User";
         const newPassword ="admin123";
         const newHash =await bcrypt.hash(newPassword ,10);
         const result =await User.updateOne(
-            {email:"admin1@volta.com"},
+            {email:"admin1@gmail.com"},
             {$set:{password:newHash}}
         );
         console.log("Resultados de actualizacin",result);

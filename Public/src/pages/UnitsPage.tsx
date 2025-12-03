@@ -27,6 +27,9 @@ export default function UnitsPage() {
   const [estado, setEstado] = useState<Unit["estado"]>("Disponible");
   const [tipoRemolque,setTipoRemolque]=useState<"" | "Lowboy" |"Caja Seca">("");
   const [placaRemolque,setPlacaRemolque]=useState("");
+  
+  const unidadesConRemolque=["002","007"];
+  const [mostrarRemolque,setMostrarRemolque]=useState(false);
 
   useEffect(() => {
     loadUnits();
@@ -73,6 +76,7 @@ export default function UnitsPage() {
       setTipoRemolque("");
       setPlacaRemolque("");
     }
+    setMostrarRemolque(unit? unidadesConRemolque.includes(unit.nombre):false);
     setModalVisible(true);
   };
 
@@ -143,17 +147,18 @@ export default function UnitsPage() {
             <Text style={styles.estadoText}>{item.estado}</Text>
           </View>
         </View>
-        <Text>Placas: {item.placas}</Text>
         <Text>Modelo: {item.modelo}</Text>
         <Text>Capacidad: {item.capacidad}</Text>
         <Text>Placas: {item.placas}</Text>
-      
-        {item.tipoRemolque ? (
-        <View style={{ marginTop: 5 }}>
-        <Text>Tipo de remolque: {item.tipoRemolque}</Text>
-        <Text>Placa remolque: {item.placaRemolque || "N/A"}</Text>
-        </View>
-         ) : null}
+        {unidadesConRemolque.includes(item.nombre)&&(
+          <>
+          <Text style={{fontWeight:"bold",marginTop:5}}>Tipo Remolque</Text>
+          <Text>{item.tipoRemolque || "Ninguno"}</Text>
+          {item.placaRemolque?(
+            <Text>Placa remolque:{item.placaRemolque}</Text>
+          ):null}
+          </>
+        )}
         <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
           <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
             Editar
@@ -179,22 +184,22 @@ export default function UnitsPage() {
                <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
                <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
                activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#888" dense style={styles.input}/>
+               
+               {mostrarRemolque && (
+               <>
                <Text style={{ fontWeight: "bold", marginTop: 5 }}>Tipo de remolque</Text>
-               <View style={{backgroundColor: "#fff",borderRadius: 5,borderWidth: 1,borderColor: "#ccc", marginBottom: 10,}}>
-               <Picker selectedValue={tipoRemolque}onValueChange={(value) => setTipoRemolque(value)}>
-               <Picker.Item label="Ninguno" value="" />
-               <Picker.Item label="Lowboy" value="Lowboy" />
-               <Picker.Item label="Caja Seca" value="Caja Seca" />
-               </Picker>
-               </View>
-
-               {(tipoRemolque === "Lowboy" || tipoRemolque === "Caja Seca") && (
-               <TextInput placeholder="Placa del remolque"value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"
-               underlineColor="#0d75bb"
-               activeUnderlineColor="#0d75bb"
-               textColor="#000"
-               placeholderTextColor="#888" dense style={styles.input} />
-               )}
+                 <View style={{ backgroundColor: "#fff", borderRadius: 5, borderWidth: 1, borderColor: "#ccc", marginBottom: 10 }}>
+                   <Picker selectedValue={tipoRemolque} onValueChange={setTipoRemolque}>
+                   <Picker.Item label="Lowboy" value="Lowboy"/>
+                   <Picker.Item label="Caja Seca" value="Caja Seca"/>
+                   <Picker.Item label="Ninguno" value=""/>
+                   </Picker>
+                </View>
+                  {(tipoRemolque === "Lowboy" || tipoRemolque === "Caja Seca") && (
+                    <TextInput placeholder="Placa del remolque"value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input}/>
+                  )}
+                 </>
+                )}
                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
                <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
                 Cancelar

@@ -28,7 +28,7 @@ interface Trip {
   def:string;
 }
 
-interface Unit { id: string; nombre: string; }
+interface Unit { id: string; nombre: string; placa:string }
 interface User { id: string; nombre: string; apellido?: string; }
 
 export default function TripsPage() {
@@ -50,7 +50,11 @@ export default function TripsPage() {
   const [def,setDef]=useState("");
   const [exportType , setExportType]=useState("");
   const [showLlegadaPicker,setShowLlegadaPicker]=useState (false);
-  
+  const [selectedUnit,setSelectedUnit]=useState<Unit | null>(null);
+  const [unitPlaca,setUnitPlaca]=useState("");
+  const [tipoRemolque,setTipoRemolque]=useState("");
+  const [mostrarRemolque,setMostrarRemolque]=useState(false);
+  const [placaRemolque,setPlacaRemolque]=useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -98,15 +102,19 @@ export default function TripsPage() {
     Alert.alert("Error", "No se pudieron cargar los viajes. Ver consola para más detalles.");
   }
 };
-
-  const loadUnits = async () => {
+  const loadUnits =async ()=>{
     try {
-      const res = await api.get("/units");
-      setUnits(res.data.map((u: any) => ({ ...u, id: u._id })));
-    } catch (error) {
-      console.error("Error cargando unidades:", error);
+      const res=await api.get("/units");
+      setUnits(res.data.map((u:any)=>({
+        id: u._id,
+        nombre: u.nombre,
+        placa:u.placas ?? "",
+      })));
+    }catch (error){
+      console.error("Error cargando unidades",error)
     }
-  };
+  }
+
   const generateReports =(tripsData:Trip[])=>{
      const daily:{[key:string]:number}={};
      const monthly:{[key:string]:number}={};
@@ -184,6 +192,11 @@ export default function TripsPage() {
   }
   if (kilometraje && kilometraje.trim() !== "") {
     payload.kilometraje = Number(kilometraje);
+  }
+  //se llama a atraer el tipo de remolque 
+  if(mostrarRemolque){
+    if(tipoRemolque)payload.tipoRemolque=tipoRemolque;
+    if(placaRemolque)payload.placaRemolque=placaRemolque;
   }
   payload.acompanante = acompanante === "none" || acompanante === ""? null:acompanante;
   if (def && def.trim() !== "") payload.def = def;
@@ -368,14 +381,42 @@ const exportToExcel = async (exportType: string) => {
         <Text style={styles.label}>Nombre:</Text>
         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
         <Text style={styles.label}>Unidad:</Text>
-        <Picker selectedValue={unidadId} onValueChange={setUnidadId} style={styles.picker}>
-          <Picker.Item label="Selecciona unidad" value="" />
-          {units.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+        <Picker selectedValue={unidadId} onValueChange={(value)=>{
+          setUnidadId(value);
+          const unidad =units.find((u)=>u.id === value) || null;
+          setSelectedUnit(unidad);
+          setUnitPlaca(unidad ?.placa ?? "");
+          if (unidad?.nombre === "002" || unidad?.nombre === "007"){
+            setMostrarRemolque(true);
+          }else{
+            setMostrarRemolque(false);
+            setTipoRemolque("");
+            setPlacaRemolque("");
+          }
+        }}
+        style={styles.picker}>
+          <Picker.Item label="Seleccionar unidad" value=""/>
+          {units.map((u)=>(
+            <Picker.Item key={u.id} label={`${u.nombre}  ${u.placa}`} value={u.id}/>
+          ))}
         </Picker>
+        {mostrarRemolque && (
+          <>
+          <Text style={styles.label}>Tipo remolque:</Text>
+          <Picker selectedValue={tipoRemolque} onValueChange={setTipoRemolque} style={styles.picker}>
+            <Picker.Item label="Seleccionar Tipo "value=""/>
+            <Picker.Item label="Lowboy"value="lowboy"/>
+            <Picker.Item label="Caja seca"value="caja seca"/>
+          </Picker>
+          <Text style={styles.label}>Placa del remolque</Text>
+          <TextInput value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} placeholder="Ingrese la placa"/>
+          </>
+        )}
+        
         <Text style={styles.label}>Conductor:</Text>
         <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
           <Picker.Item label="Selecciona conductor" value="" />
-          {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
+          {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id}  />)}
         </Picker>
         <Text style={styles.label}>Acompañante:</Text>
         <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
@@ -408,10 +449,9 @@ const exportToExcel = async (exportType: string) => {
                        ("0"+(date.getMonth()+1)).slice(-2)+"/"+ 
                        date.getFullYear();
                        setFechaLlegada(f);
-            }
-          }}
-          />
-        )}
+                      }}}
+                />
+              )}
         </>
         )}  
     <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>

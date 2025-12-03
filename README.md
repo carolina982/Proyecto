@@ -82,3 +82,4 @@ diesel 1 / costo  ya sea en la palabra diese a un lago aparezca un boto de +
 -unidades quitar lo de tipo remolque y que solo sea una sola unidad que utiliza que es 002  
 
 -en viajes en la parte de unidad muestre numero de unidad y placa 
+checar bien los  por que no muestra el numero de placa 

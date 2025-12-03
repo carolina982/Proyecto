@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
 import { useStore } from '../context/Store';
 
-interface Trip { id: string; nombre: string; conductorId: string; conductorNombre?: string; }
+interface Trip { id: string;nombre: string; conductorId: string; conductorNombre?: string;}
 interface Viatico {
   id: string;
   tripId: string;
@@ -23,17 +23,18 @@ interface Viatico {
   createdAt: string;
 }
 
-const conceptosList = [
-  "Comidas Cantidad", "Comidas Costo",
-  "Hospedaje Cantidad", "Hospedaje Costo",
-  "Taxi Cantidad", "Taxi Costo",
-  "Regaderas Cantidad", "Regaderas Costo",
-  "Pensión", "Vulcanizadora", "Casetas efectivo",
-  "Limpieza Unidad", "Multa", "Comisiones",
-  "Fumigación", "DEF"
+const conceptosBase = [ "Comidas","Hospedaje", "Taxi","Regaderas",
+  "Pensión","Vulcanizadora","Casetas efectivo","Limpieza Unidad",
+  "Multa","Comisiones","Fumigación","DEF"
 ];
 
+const conceptosList = conceptosBase.flatMap(c => [
+  `${c} Cantidad`,
+  `${c} Costo`
+]);
+
 export default function ViaticosPage() {
+
   const { currentUser } = useStore();
   const [viaticos, setViaticos] = useState<Viatico[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -44,9 +45,11 @@ export default function ViaticosPage() {
   const [conceptos, setConceptos] = useState<{ [key: string]: string }>(
     conceptosList.reduce((acc, c) => ({ ...acc, [c]: "0" }), {})
   );
+
   const [dieselCantidad, setDieselCantidad] = useState("0");
   const [dieselCosto, setDieselCosto] = useState("0");
   const [tag, setTag] = useState("0");
+
   const [factura, setFactura] = useState<string | null>(null);
   const [facturaRemoved, setFacturaRemoved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -55,8 +58,8 @@ export default function ViaticosPage() {
   const [filter, setFilter] = useState<"day" | "week" | "month">("month");
   const [conductorFilter, setConductorFilter] = useState<string>("");
 
-  useEffect(() => { loadTrips(); }, [currentUser]);
 
+  useEffect(() => { loadTrips(); }, [currentUser]);
   useEffect(() => { loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
 
   const loadTrips = async () => {
@@ -65,10 +68,14 @@ export default function ViaticosPage() {
       let tripsData = res.data.map((t: any) => ({
         ...t,
         id: t._id,
-        conductorNombre: t.conductorNombre || t.conductorNombre || t.conductor || "Sin asignar"
+        conductorNombre: t.conductorNombre || t.conductor || "Sin asignar"
       }));
-      if (currentUser?.rol === "Chofer") tripsData = tripsData.filter((t: any) => t.conductorId === currentUser.id);
+
+      if (currentUser?.rol === "Chofer")
+        tripsData = tripsData.filter((t: any) => t.conductorId === currentUser.id);
+
       setTrips(tripsData);
+
     } catch (e) {
       console.error(e);
     }
@@ -77,15 +84,19 @@ export default function ViaticosPage() {
   const loadViaticos = async () => {
     try {
       const res = await api.get(`/viatics?filter=${filter}`);
+
       let viaticosData = res.data.map((v: any) => ({
         ...v,
         id: v._id,
-        facturaUrl: v.factura ? `${BASE_URL.replace("/api", "")}${v.factura} `: undefined
+        facturaUrl: v.factura ? `${BASE_URL.replace("/api", "")}${v.factura}` : undefined
       }));
 
       if (currentUser?.rol === "Chofer") {
-        viaticosData = viaticosData.filter((v: any) => trips.find(t => t.id === v.tripId)?.conductorId === currentUser.id);
+        viaticosData = viaticosData.filter((v: any) =>
+          trips.find(t => t.id === v.tripId)?.conductorId === currentUser.id
+        );
       }
+
       if (conductorFilter) {
         viaticosData = viaticosData.filter((v: any) => {
           const trip = trips.find(t => t.id === v.tripId);
@@ -98,12 +109,28 @@ export default function ViaticosPage() {
       }));
 
       setViaticos(viaticosData);
+
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "No se pudieron cargar los viáticos");
     }
   };
-  const exportViaticosToExcel = async (filter: string) => {
+
+  const calcularTotal = () => {
+    let total = 0;
+
+    conceptosBase.forEach(base => {
+      const cant = Number(conceptos[`${base} Cantidad`] || 0);
+      const cost = Number(conceptos[`${base} Costo`] || 0);
+      total += cant * cost;
+    });
+
+    total += Number(dieselCantidad) * Number(dieselCosto);
+    total += Number(tag);
+
+    return total;
+  };
+ const exportViaticosToExcel = async (filter: string) => {
     try {
       const sortedViaticos = [...viaticos].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -204,29 +231,34 @@ export default function ViaticosPage() {
     if (viatico) {
       setEditingViatico(viatico);
       setTripId(viatico.tripId);
-      const conceptosString: { [key: string]: string } = {};
-      conceptosList.forEach(c => conceptosString[c] = (viatico.conceptos?.[c] ?? 0).toString());
+
+      const conceptosString: any = {};
+      conceptosList.forEach(c => {
+        conceptosString[c] = (viatico.conceptos?.[c] ?? 0).toString();
+      });
+
       setConceptos(conceptosString);
       setDieselCantidad((viatico.dieselCantidad ?? 0).toString());
       setDieselCosto((viatico.dieselCosto ?? 0).toString());
       setTag((viatico.tag ?? 0).toString());
       setFactura(viatico.facturaUrl || null);
-      setShowFactura(false);
+
     } else {
       setEditingViatico(null);
       setTripId("");
       setFactura(null);
-      setShowFactura(false);
       setConceptos(conceptosList.reduce((acc, c) => ({ ...acc, [c]: "0" }), {}));
       setDieselCantidad("0");
       setDieselCosto("0");
       setTag("0");
     }
+
     setFacturaRemoved(false);
+    setShowFactura(false);
     setModalVisible(true);
   };
 
-  const pickFactura = async () => {
+ const pickFactura = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: ["image/*", "application/pdf"] });
       if ((result as any).type === "cancel") return;
@@ -239,36 +271,11 @@ export default function ViaticosPage() {
       Alert.alert("Error", "Ocurrió un problema al seleccionar el archivo");
     }
   };
-
-  const calcularTotal = () => {
-  let total = 0;
-  conceptosList.forEach(c => {
-    if (c.endsWith("Cantidad")) {
-      const base = c.replace("Cantidad", "");
-      const cantidad = Number(conceptos[`${base}Cantidad`] || 0);
-      const costo = Number(conceptos[`${base}Costo`] || 0);
-      total += cantidad * costo;
-    }
-  });
-  const conceptosSimples = [
-    "Pensión", "Vulcanizadora", "Casetas efectivo",
-    "Limpieza Unidad", "Multa", "Comisiones",
-    "Fumigación", "DEF"
-  ];
-
-  conceptosSimples.forEach(c => {
-    total += Number(conceptos[c] || 0);
-  });
-
-  total += Number(dieselCantidad) * Number(dieselCosto);
-  total += Number(tag);
-
-  return total;
-};
-
   const saveViatico = async () => {
-    if (!tripId) { Alert.alert("Error", "Selecciona un viaje"); return; }
+    if (!tripId) return Alert.alert("Error", "Selecciona un viaje");
+
     setLoading(true);
+
     try {
       const formData = new FormData();
       formData.append("tripId", tripId);
@@ -282,26 +289,32 @@ export default function ViaticosPage() {
         if (Platform.OS === "web") {
           const response = await fetch(factura);
           const blob = await response.blob();
-          const file = new File([blob], `factura_${Date.now()}.jpg`, { type: blob.type });
+          const file = new File([blob], "factura.jpg", { type: blob.type });
           formData.append("factura", file);
         } else {
           const uri = factura.startsWith("file://") ? factura : "file://" + factura;
           const filename = uri.split("/").pop()!;
-          let type = "image/jpeg";
-          if (filename.toLowerCase().endsWith(".pdf")) type = "application/pdf";
-          else if (filename.toLowerCase().endsWith(".png")) type = "image/png";
+          let type = filename.endsWith(".pdf") ? "application/pdf" :
+                     filename.endsWith(".png") ? "image/png" : "image/jpeg";
+
           formData.append("factura", { uri, name: filename, type } as any);
         }
       } else if (facturaRemoved) {
         formData.append("factura", "");
       }
-      
-      const url = editingViatico ? `${BASE_URL}/viatics/${editingViatico.id}` : `${BASE_URL}/viatics`;
+
+      const url = editingViatico
+        ? `${BASE_URL}/viatics/${editingViatico.id}`
+        : `${BASE_URL}/viatics`;
+
       const method = editingViatico ? "PUT" : "POST";
+
       const res = await fetch(url, { method, body: formData });
       if (!res.ok) throw new Error(await res.text());
+
       await loadViaticos();
       setModalVisible(false);
+
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "No se pudo guardar el viático");
@@ -310,40 +323,44 @@ export default function ViaticosPage() {
     }
   };
 
+
   const deleteViatico = async (id: string) => {
     let confirmed = false;
+
     if (Platform.OS === "web") {
-      confirmed = window.confirm("¿Desea eliminar este Viatico?");
+      confirmed = window.confirm("¿Eliminar viático?");
       if (!confirmed) return;
-        } else {
-         confirmed = await new Promise<boolean>((resolve) => {
-         Alert.alert("Confirmar", "¿Desea eliminar este viático?", [
+    } else {
+      confirmed = await new Promise(resolve => {
+        Alert.alert("Confirmar", "¿Eliminar viático?", [
           { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
           { text: "Eliminar", style: "destructive", onPress: () => resolve(true) },
         ]);
       });
       if (!confirmed) return;
     }
+
     try {
       await api.delete(`/viatics/${id}`);
       setViaticos(prev => prev.filter(v => v.id !== id));
-      Alert.alert("Éxito", "Viático eliminado correctamente");
-    } catch (error) {
-      console.log("Error eliminando viático", error);
-      Alert.alert("Error", "No se pudo eliminar el viático");
+    } catch (e) {
+      Alert.alert("Error", "No se pudo eliminar");
     }
   };
 
   const renderItem = ({ item }: { item: Viatico }) => {
     const trip = trips.find(t => t.id === item.tripId);
+
     return (
       <View style={styles.card}>
         <Text style={styles.title}>Viaje: {trip?.nombre || "Desconocido"}</Text>
         <Text>Conductor: {trip?.conductorNombre || "Desconocido"}</Text>
         <Text>Total: ${item.total}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-        <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
-          {currentUser?.rol === "Admin" && <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>}
+          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
+          {currentUser?.rol === "Admin" && (
+            <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>
+          )}
         </View>
       </View>
     );
@@ -366,111 +383,49 @@ export default function ViaticosPage() {
          <Button mode="contained" buttonColor="#0d75bb" onPress={() => exportViaticosToExcel(filter)}> Exportar Excel</Button>
         </View>
       )}
-      <FlatList data={viaticos} keyExtractor={item => item.id} renderItem={renderItem} style={{ marginTop: 15 }} />
-      
+      <FlatList data={viaticos}keyExtractor={item => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
         <ScrollView style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{editingViatico ? "Editar Viático" : "Nuevo Viático"}</Text>
+          <Text style={styles.modalTitle}>
+            {editingViatico ? "Editar Viático" : "Nuevo Viático"}
+          </Text>
           <Text style={styles.label}>Viaje:</Text>
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
             <Picker.Item label="Selecciona un viaje" value="" />
-            {trips.map(t => <Picker.Item key={t.id} label={`${t.nombre}(${t.conductorNombre || "Sin conductor"})`} value={t.id} />)}
+            {trips.map(t => (
+              <Picker.Item key={t.id} label={`${t.nombre} (${t.conductorNombre})`}value={t.id}/>
+            ))}
           </Picker>
           <View style={{ flexDirection: "row" }}>
-            <View style={{ flex: 1, paddingRight: 5 }}>
-              {conceptosList.map((c) => {
-              const base = c.replace("Cantidad", "").replace("Costo", "").trim();
-              const isCantidadField = c.endsWith("Cantidad");
-              const isCostoField = c.endsWith("Costo");
-              const preciosFijos: Record<string, number> = {
-                //precios fijos 
-               "Comidas": 120,
-               "Hospedaje": 450,
-               "Taxi": 80,
-               "Regaderas": 30
-              };
-              const conceptosSimples = [
-              "Pensión", "Vulcanizadora", "Casetas efectivo",
-              "Limpieza Unidad", "Multa", "Comisiones",
-              "Fumigación", "DEF"
-              ];
-            if (conceptosSimples.includes(c)) {
-            return (
-             <View key={c} style={{ marginBottom: 10 }}>
-             <Text style={styles.label}>{c}:</Text>
-             <TextInput
-              value={conceptos[c]}
-              onChangeText={(text) => setConceptos({ ...conceptos, [c]: text })}
-              keyboardType="numeric"
-              mode="flat"
-              underlineColor="#0d75bb"
-              activeUnderlineColor="#0d75bb"
-              style={styles.input}
-              placeholder="Ingrese cantidad"
-              />
+       
+            <View style={{ flex: 1, paddingRight: 3 }}>
+              {conceptosBase.slice(0, Math.ceil(conceptosBase.length / 2)).map(base => (
+                <View key={base} style={{ marginBottom:10 }}>
+                  <Text style={styles.label}>{base}</Text>
+                  <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Cantidad`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
+                  <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+                </View>
+              ))}
             </View>
-          );
-        }
-        const precioBase = preciosFijos[base];
-        return (
-          <View key={c} style={{ marginBottom: 10 }}>
-           <Text style={styles.label}>{c}:</Text>
-           <View style={{ flexDirection: "row", gap: 10 }}>
-           
-             {isCantidadField && (
-               <TextInput value={conceptos[c]}onChangeText={(text) => {
-               const cantidad = Number(text) || 0;
-               let updatedConceptos = { ...conceptos, [c]: text };
-               if (precioBase !== undefined) {
-                updatedConceptos[`${base} Costo`] = String(cantidad * precioBase);
-              }
-              setConceptos(updatedConceptos);
-             }}
-               keyboardType="numeric"
-               mode="flat"
-               underlineColor="#0d75bb"
-               activeUnderlineColor="#0d75bb"
-               style={[styles.input, { flex: 1 }]}
-               placeholder="Cantidad"
-               />
-              )}
-             
-              {isCostoField && (
-              <TextInput value={conceptos[c]} onChangeText={(text) => {
-                if (precioBase === undefined) {
-                setConceptos({ ...conceptos, [c]: text });
-               }
-              }}
-               editable={precioBase === undefined}
-               keyboardType="numeric"
-               mode="flat"
-               underlineColor="#0d75bb"
-               activeUnderlineColor="#0d75bb"
-               style={[
-               styles.input,
-               { flex: 1, backgroundColor: precioBase ? "" : "" }
-               ]}
-               placeholder="Costo"
-                />
-               )}
+            <View style={{ flex: 1, paddingLeft: 3 }}>
+              {conceptosBase.slice(Math.ceil(conceptosBase.length / 2)).map(base => (
+                <View key={base} style={{ marginBottom: 10}}>
+                  <Text style={styles.label}>{base}</Text>
+                  <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Cantidad`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad" />
+                  <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+                </View>
+              ))}
             </View>
           </View>
-        );
-           })}
-            </View>
-             
-             <View style={{ flex: 1, paddingLeft: 5 }}>
-              <Text style={styles.label}>Diésel - Cantidad:</Text>
-              <TextInput value={dieselCantidad} onChangeText={setDieselCantidad} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
-              <Text style={styles.label}>Diésel - Costo:</Text>
-              <TextInput value={dieselCosto} onChangeText={setDieselCosto} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
-              <Text style={styles.label}>TAG:</Text>
-              <TextInput value={tag} onChangeText={setTag} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" style={styles.input} />
-            </View>
-          </View>
-
+          <Text style={styles.label}>Diésel - Carga:</Text>
+          <TextInput value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
+          <Text style={styles.label}>Diésel - Costo:</Text>
+          <TextInput value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
+          <Text style={styles.label}>TAG:</Text>
+          <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
           <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
           <Text style={styles.label}>Factura:</Text>
+          
           {factura ? (
             <>
               {showFactura ? (
@@ -483,15 +438,15 @@ export default function ViaticosPage() {
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
                 )
               ) : (
-                <Button mode="contained" onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
+                <Button mode="contained"buttonColor="#0d75bb" onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
               )}
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10, marginTop: 5 }}>
-                <Button mode="contained" buttonColor="#17d1f1ff" onPress={pickFactura}>Reemplazar factura</Button>
+                <Button mode="contained" buttonColor="#888" onPress={pickFactura}>Reemplazar factura</Button>
                 <Button mode="contained" buttonColor="#e27975ff" onPress={() => { setFactura(null); setFacturaRemoved(true); setShowFactura(false); }}>Eliminar</Button>
               </View>
             </>
           ) : (
-           <Button mode="contained" buttonColor="#4caf50" onPress={pickFactura}>Subir factura</Button>
+           <Button mode="contained" buttonColor="#094268" onPress={pickFactura}>Subir factura</Button>
          )}
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
@@ -511,11 +466,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
-  input: { backgroundColor: "#fff", marginBottom: 15 },
-  label: { fontWeight: "bold", marginTop: 10, marginBottom: 5 },
+  input: { backgroundColor: "#fff", marginBottom: 10 },
+  label: { fontWeight: "bold", marginTop: 10 },
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
-  facturaPreview: { width: "100%", height: 180, borderRadius: 8, marginBottom: 10, resizeMode: "contain" },
-  rowGroup:{flexDirection:"row",alignItems:"center",gap:10},
-  smallInput:{flex:1,backgroundColor:"#fff",paddingHorizontal:8,paddingVertical:6,borderRadius:5},
-  labelConcepto:{fontWeight:"bold",marginBottom:3},
+  facturaPreview: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 }
 });
