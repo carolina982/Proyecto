@@ -4,7 +4,7 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import saveAs from "file-saver";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
@@ -21,6 +21,8 @@ interface Viatico {
   facturaUrl?: string;
   total: number;
   createdAt: string;
+
+
 }
 
 const conceptosBase = [ "Comidas","Hospedaje", "Taxi","Regaderas",
@@ -45,27 +47,53 @@ export default function ViaticosPage() {
   const [conceptos, setConceptos] = useState<{ [key: string]: string }>(
     conceptosList.reduce((acc, c) => ({ ...acc, [c]: "0" }), {})
   );
-
-  const [dieselCantidad, setDieselCantidad] = useState("0");
-  const [dieselCosto, setDieselCosto] = useState("0");
   const [tag, setTag] = useState("0");
-
   const [factura, setFactura] = useState<string | null>(null);
   const [facturaRemoved, setFacturaRemoved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFactura, setShowFactura] = useState(false);
-
   const [filter, setFilter] = useState<"day" | "week" | "month">("month");
   const [conductorFilter, setConductorFilter] = useState<string>("");
 
+  const [dieselCantidad,setDieselCantidad]=useState("");
+  const [dieselCosto,setDieselCosto]=useState("");
+  
+  interface CargaDiesel{
+    cantidad:string;
+    costo:string;
+  }
 
+  const [dieselHistorial,setDieselHistorial]=useState<CargaDiesel[]>([]);
+
+  const agregarCargaDiesel= ()=>{
+    if(!dieselCantidad || !dieselCosto) return;
+    setDieselHistorial([
+      ...dieselHistorial,
+      {cantidad:dieselCantidad ,costo:dieselCosto}
+    ]);
+    setDieselCantidad("");
+    setDieselCosto("");
+  };
+  const editarCarga=(index:number)=>{
+    const item=dieselHistorial[index];
+    setDieselCantidad(item.cantidad);
+    setDieselCosto(item.costo);
+    const actualizado =[...dieselHistorial];
+    actualizado.splice(index,1);
+    setDieselHistorial(actualizado);
+  };
+
+  const eliminarCarga =(index:number)=>{
+    const actualizado =dieselHistorial.filter((_,i)=> i !== index);
+    setDieselHistorial(actualizado);
+  }
   useEffect(() => { loadTrips(); }, [currentUser]);
   useEffect(() => { loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
 
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
-      let tripsData = res.data.map((t: any) => ({
+      let tripsData = res.data.map((t: any) => ({ 
         ...t,
         id: t._id,
         conductorNombre: t.conductorNombre || t.conductor || "Sin asignar"
@@ -417,10 +445,35 @@ export default function ViaticosPage() {
               ))}
             </View>
           </View>
-          <Text style={styles.label}>Diésel - Carga:</Text>
-          <TextInput value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
-          <Text style={styles.label}>Diésel - Costo:</Text>
-          <TextInput value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
+
+          <View style={{marginTop:20}}>
+            <View style={{flexDirection:"row",justifyContent:"space-between"}}>
+              <Text style={{fontWeight:"bold",fontSize:18}}>Diesel</Text>
+              <TouchableOpacity onPress={agregarCargaDiesel}>
+                <Text style={{fontSize:28,fontWeight:"bold"}}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={{marginTop:5}}>Cantidad</Text>
+            <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"/>
+            <Text style={{marginTop:5}}>Costo</Text>
+            <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
+            <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
+              {dieselHistorial.map((c , index)=>(
+                <View key={index} style={{marginBottom:10}}>
+                  <Text>Cantidad: {c.cantidad} costo: {c.costo}</Text>
+                  <View style={{flexDirection:"row"}}>
+                    <TouchableOpacity onPress={()=>editarCarga(index)}>
+                      <Text style={{color:"blue",marginRight:10}}>Editar</Text>
+                    </TouchableOpacity>
+                     <TouchableOpacity onPress={()=>editarCarga(index)}>
+                      <Text style={{color:"blue",marginRight:10}}>Eliminar</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{marginTop:10,height:1, backgroundColor:"#ccc",}}/>
+                </View>
+              ))}
+            </View>
+          </View>
           <Text style={styles.label}>TAG:</Text>
           <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
           <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
@@ -471,3 +524,7 @@ const styles = StyleSheet.create({
   picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   facturaPreview: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 }
 });
+
+function setDieselHistorial(arg0: any[]) {
+  throw new Error("Function not implemented.");
+}

@@ -83,3 +83,4 @@ diesel 1 / costo  ya sea en la palabra diese a un lago aparezca un boto de +
 
 -en viajes en la parte de unidad muestre numero de unidad y placa 
 checar bien los  por que no muestra el numero de placa 
+-agregar el boton eliminar y editar para editar que aparezca en ambos pero el boton de eliminar solo en administrador suma el total de general de todos los conceptos 
