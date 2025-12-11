@@ -69,18 +69,14 @@ Join our community of developers creating universal apps.
      npx expo start 
      ```
 - Checar la compatibilidad de web y movil en algunas cosas estan fallando 
-- cambiar lo de viaticos
 - Solo por lo mientras funcionan local todavia no esta subia a hosting 
 - checar el api para restablecer la contraseña 
-- 
 
-checar que tenga una apartado de agregar mas  por ejemplo cuando se agregue si cargo Diesel pero si volvió  a cargar que tenga a un lado o un botón agregar mas
-y que valla apareciendo debajo de cada carga 
-ejemplo 
-diesel 1 / costo  ya sea en la palabra diese a un lago aparezca un boto de +  
+- en viaticos solo es checar la suma de todos los  campos
+- checar por que aparece 400 cunando no esta poniendo nada se supone que debe de estar en ceros tamben que sume el total de todos los campos 
 
 -unidades quitar lo de tipo remolque y que solo sea una sola unidad que utiliza que es 002  
 
--en viajes en la parte de unidad muestre numero de unidad y placa 
+- en viajes en la parte de unidad muestre numero de unidad y placa 
 checar bien los  por que no muestra el numero de placa 
 -agregar el boton eliminar y editar para editar que aparezca en ambos pero el boton de eliminar solo en administrador suma el total de general de todos los conceptos 

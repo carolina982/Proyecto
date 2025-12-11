@@ -144,9 +144,8 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       {photoUri ? (
         <Avatar.Image size={100} source={{ uri: photoUri }} style={styles.avatar} />
       ) : (
-        <Avatar.Text
-          size={100}
-          label={(nombre ?? "")
+        <Avatar.Text size={100} 
+            label={(nombre ?? "")
             .split(" ")
             .map((n: string) => n[0])
             .join("")

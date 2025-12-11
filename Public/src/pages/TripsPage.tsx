@@ -439,7 +439,7 @@ const exportToExcel = async (exportType: string) => {
         <>
         <Text style={styles.label}>Fecha de entrega</Text>
         <TouchableOpacity onPress={()=>setShowLlegadaPicker(true)}>
-          <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input}/>
+        <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input}/>
         </TouchableOpacity>
         {showLlegadaPicker && (
           <DateTimePicker value={new Date ()} mode="date" display="default" onChange={(event,date)=>{

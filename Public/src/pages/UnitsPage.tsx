@@ -86,12 +86,9 @@ export default function UnitsPage() {
       return;
     }
     const unitData = {
-      nombre, 
-      placas,
-      modelo, 
-      capacidad,
-      estado,
-      tipoRemolque,
+      nombre,placas,
+      modelo,capacidad,
+      estado,tipoRemolque,
       placaRemolque:tipoRemolque ? placaRemolque:"",
     };
 
@@ -213,6 +210,7 @@ export default function UnitsPage() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff",padding: 15,marginBottom: 12,borderRadius: 12,shadowColor: "#000",shadowOpacity: 0.05,shadowOffset: { width: 0, height: 2 },shadowRadius: 5,elevation: 2, },

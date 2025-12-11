@@ -9,6 +9,7 @@ export interface User {
     rol :"Admin" |"Chofer";
     photoUrl?:string |null;
 }
+
 //Unidad 
  export interface Unit {
     items: any;
@@ -17,6 +18,7 @@ export interface User {
     tipo:string;
     placa?:string;
  }
+
  //viatico 
 export interface Viatic {
     id:string;
@@ -25,6 +27,7 @@ export interface Viatic {
     monto:number;
     comprobante?:string;
 }
+
 //viaje 
 export interface Trip{
     id:string;

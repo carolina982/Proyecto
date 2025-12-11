@@ -21,14 +21,16 @@ interface Viatico {
   facturaUrl?: string;
   total: number;
   createdAt: string;
-
-
 }
 
 const conceptosBase = [ "Comidas","Hospedaje", "Taxi","Regaderas",
   "Pensión","Vulcanizadora","Casetas efectivo","Limpieza Unidad",
   "Multa","Comisiones","Fumigación","DEF"
 ];
+
+const preciosFijos:Record<string,number>={
+  comidas:400
+};
 
 const conceptosList = conceptosBase.flatMap(c => [
   `${c} Cantidad`,
@@ -153,7 +155,9 @@ export default function ViaticosPage() {
       total += cant * cost;
     });
 
-    total += Number(dieselCantidad) * Number(dieselCosto);
+    dieselHistorial.forEach(c=>{
+      total +=Number(c.cantidad) * Number (c.costo);
+    })
     total += Number(tag);
 
     return total;
@@ -299,6 +303,7 @@ export default function ViaticosPage() {
       Alert.alert("Error", "Ocurrió un problema al seleccionar el archivo");
     }
   };
+
   const saveViatico = async () => {
     if (!tripId) return Alert.alert("Error", "Selecciona un viaje");
 
@@ -312,6 +317,7 @@ export default function ViaticosPage() {
       formData.append("dieselCosto", dieselCosto);
       formData.append("tag", tag);
       formData.append("total", String(calcularTotal()));
+      formData.append("dieselHistorial",JSON.stringify(dieselHistorial));
 
       if (factura) {
         if (Platform.OS === "web") {
@@ -340,8 +346,10 @@ export default function ViaticosPage() {
       const res = await fetch(url, { method, body: formData });
       if (!res.ok) throw new Error(await res.text());
 
+
       await loadViaticos();
       setModalVisible(false);
+
 
     } catch (e) {
       console.error(e);
@@ -418,6 +426,7 @@ export default function ViaticosPage() {
             {editingViatico ? "Editar Viático" : "Nuevo Viático"}
           </Text>
           <Text style={styles.label}>Viaje:</Text>
+                                                                                                                                                                                             
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
             <Picker.Item label="Selecciona un viaje" value="" />
             {trips.map(t => (
@@ -425,59 +434,67 @@ export default function ViaticosPage() {
             ))}
           </Picker>
           <View style={{ flexDirection: "row" }}>
-       
-            <View style={{ flex: 1, paddingRight: 3 }}>
-              {conceptosBase.slice(0, Math.ceil(conceptosBase.length / 2)).map(base => (
-                <View key={base} style={{ marginBottom:10 }}>
-                  <Text style={styles.label}>{base}</Text>
-                  <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Cantidad`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
-                  <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
-                </View>
-              ))}
-            </View>
-            <View style={{ flex: 1, paddingLeft: 3 }}>
-              {conceptosBase.slice(Math.ceil(conceptosBase.length / 2)).map(base => (
-                <View key={base} style={{ marginBottom: 10}}>
-                  <Text style={styles.label}>{base}</Text>
-                  <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Cantidad`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad" />
-                  <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) => setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
-                </View>
+             <View style={{ flex: 1, paddingRight: 3 }}>
+              <View style={{ marginBottom: 10 }}>
+                <Text style={styles.label}>Comidas</Text>
+                <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({ ...conceptos, ["Comidas Cantidad"]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
+                  <TextInput value="400"editable={false}style={[styles.input, { backgroundColor: "" }]}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+              </View>
+              {conceptosBase
+              .filter((b) => b !== "Comidas")
+              .slice(0, Math.ceil((conceptosBase.length - 1) / 2))
+              .map((base) => (
+              <View key={base} style={{ marginBottom: 10 }}>
+                <Text style={styles.label}>{base}</Text>
+                <TextInput value={conceptos[`${base}Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
+                <TextInput value={conceptos[`${base}Costo`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Costo`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+              </View>
+           ))}
+          </View>
+          <View style={{ flex: 1, paddingLeft: 3 }}>
+             {conceptosBase
+             .filter((b) => b !== "Comidas")
+             .slice(Math.ceil((conceptosBase.length - 1) / 2))
+             .map((base) => (
+             <View key={base} style={{ marginBottom: 10 }}>
+              <Text style={styles.label}>{base}</Text>
+              <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
+              <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) =>setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+              </View>
               ))}
             </View>
           </View>
-
           <View style={{marginTop:20}}>
-            <View style={{flexDirection:"row",justifyContent:"space-between"}}>
+            <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
               <Text style={{fontWeight:"bold",fontSize:18}}>Diesel</Text>
               <TouchableOpacity onPress={agregarCargaDiesel}>
                 <Text style={{fontSize:28,fontWeight:"bold"}}>+</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={{marginTop:5}}>Cantidad</Text>
-            <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"/>
-            <Text style={{marginTop:5}}>Costo</Text>
-            <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
-            <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
-              {dieselHistorial.map((c , index)=>(
-                <View key={index} style={{marginBottom:10}}>
-                  <Text>Cantidad: {c.cantidad} costo: {c.costo}</Text>
-                  <View style={{flexDirection:"row"}}>
-                    <TouchableOpacity onPress={()=>editarCarga(index)}>
-                      <Text style={{color:"blue",marginRight:10}}>Editar</Text>
-                    </TouchableOpacity>
-                     <TouchableOpacity onPress={()=>editarCarga(index)}>
-                      <Text style={{color:"blue",marginRight:10}}>Eliminar</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{marginTop:10,height:1, backgroundColor:"#ccc",}}/>
+                </TouchableOpacity>
                 </View>
-              ))}
+                <Text style={{marginTop:5}}>Cargas</Text>
+                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"/>
+                <Text style={{marginTop:5}}>Costo</Text>
+                <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
+                <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
+                  {dieselHistorial.map((item,index)=>(
+                    <View key={index}style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",paddingVertical:6,borderBottomWidth:1,borderColor:"#ddd"}}>
+                      <Text style={{flex:1}}> Cantidad: {item.cantidad}   Costo: {item.costo}</Text>
+                      <View style={{flexDirection:"row"}}>
+                        <TouchableOpacity onPress={()=>editarCarga(index)}style={{backgroundColor:"#b5b5b5",paddingHorizontal:10,paddingVertical:4,borderRadius:5,marginRight:8}}>
+                          <Text style={{color:"#000"}}>Editar</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={()=>eliminarCarga(index)} style={{backgroundColor:"#cc0000",paddingHorizontal:10,paddingVertical:4,borderRadius:5}}>
+                            <Text style={{color:"#fff"}}>Eliminar</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
             </View>
-          </View>
-          <Text style={styles.label}>TAG:</Text>
-          <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
-          <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
-          <Text style={styles.label}>Factura:</Text>
+             <Text style={styles.label}>TAG:</Text>
+             <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
+             <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
+             <Text style={styles.label}>Factura:</Text>
           
           {factura ? (
             <>
@@ -525,6 +542,3 @@ const styles = StyleSheet.create({
   facturaPreview: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 }
 });
 
-function setDieselHistorial(arg0: any[]) {
-  throw new Error("Function not implemented.");
-}
