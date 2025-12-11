@@ -73,10 +73,11 @@ Join our community of developers creating universal apps.
 - checar el api para restablecer la contraseña 
 
 - en viaticos solo es checar la suma de todos los  campos
-- checar por que aparece 400 cunando no esta poniendo nada se supone que debe de estar en ceros tamben que sume el total de todos los campos 
+- solo falta por que no aparece automatico el precio fijo de comidas y de la suma total de todos los campos s
 
--unidades quitar lo de tipo remolque y que solo sea una sola unidad que utiliza que es 002  
+- unidades quitar lo de tipo remolque y que solo sea una sola unidad que utiliza que es 002  
 
 - en viajes en la parte de unidad muestre numero de unidad y placa 
-checar bien los  por que no muestra el numero de placa 
+checar bien los  por que no muestra el numero de placa y que tine que despluega si seleccionan la unidad 002 pisblemente 007
+
 -agregar el boton eliminar y editar para editar que aparezca en ambos pero el boton de eliminar solo en administrador suma el total de general de todos los conceptos 

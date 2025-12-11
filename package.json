@@ -84,6 +84,7 @@
     "@types/node": "^24.7.0",
     "@types/react": "~19.1.0",
     "@types/react-native": "^0.72.8",
+    "baseline-browser-mapping": "^2.9.6",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "ts-node": "^10.9.2",

@@ -380,7 +380,7 @@ const exportToExcel = async (exportType: string) => {
         <>
         <Text style={styles.label}>Nombre:</Text>
         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
-        <Text style={styles.label}>Unidad:</Text>
+         <Text style={styles.label}>Unidad:</Text>
         <Picker selectedValue={unidadId} onValueChange={(value)=>{
           setUnidadId(value);
           const unidad =units.find((u)=>u.id === value) || null;
@@ -397,7 +397,7 @@ const exportToExcel = async (exportType: string) => {
         style={styles.picker}>
           <Picker.Item label="Seleccionar unidad" value=""/>
           {units.map((u)=>(
-            <Picker.Item key={u.id} label={`${u.nombre}  ${u.placa}`} value={u.id}/>
+            <Picker.Item key={u.id} label={`${u.nombre} ${u.placa}`} value={u.id}/>
           ))}
         </Picker>
         {mostrarRemolque && (
@@ -412,7 +412,6 @@ const exportToExcel = async (exportType: string) => {
           <TextInput value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} placeholder="Ingrese la placa"/>
           </>
         )}
-        
         <Text style={styles.label}>Conductor:</Text>
         <Picker selectedValue={conductorId} onValueChange={setConductorId} style={styles.picker}>
           <Picker.Item label="Selecciona conductor" value="" />

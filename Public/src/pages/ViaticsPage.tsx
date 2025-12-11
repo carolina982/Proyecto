@@ -438,7 +438,7 @@ export default function ViaticosPage() {
               <View style={{ marginBottom: 10 }}>
                 <Text style={styles.label}>Comidas</Text>
                 <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({ ...conceptos, ["Comidas Cantidad"]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
-                  <TextInput value="400"editable={false}style={[styles.input, { backgroundColor: "" }]}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+                  <TextInput value={String((Number(conceptos["Comidas Cantidaf"])|| 0)*400)}editable={false}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
               </View>
               {conceptosBase
               .filter((b) => b !== "Comidas")
@@ -446,7 +446,7 @@ export default function ViaticosPage() {
               .map((base) => (
               <View key={base} style={{ marginBottom: 10 }}>
                 <Text style={styles.label}>{base}</Text>
-                <TextInput value={conceptos[`${base}Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
+                <TextInput value={conceptos[`${base}Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días "/>
                 <TextInput value={conceptos[`${base}Costo`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Costo`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
               </View>
            ))}
@@ -458,7 +458,7 @@ export default function ViaticosPage() {
              .map((base) => (
              <View key={base} style={{ marginBottom: 10 }}>
               <Text style={styles.label}>{base}</Text>
-              <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días / Cantidad"/>
+              <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
               <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) =>setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
               </View>
               ))}
@@ -467,10 +467,10 @@ export default function ViaticosPage() {
           <View style={{marginTop:20}}>
             <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
               <Text style={{fontWeight:"bold",fontSize:18}}>Diesel</Text>
-              <TouchableOpacity onPress={agregarCargaDiesel}>
-                <Text style={{fontSize:28,fontWeight:"bold"}}>+</Text>
-                </TouchableOpacity>
-                </View>
+                 <TouchableOpacity onPress={agregarCargaDiesel}>
+                     <Text style={{fontSize:28,fontWeight:"bold"}}>+</Text>
+                 </TouchableOpacity>
+                  </View>
                 <Text style={{marginTop:5}}>Cargas</Text>
                 <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"/>
                 <Text style={{marginTop:5}}>Costo</Text>
