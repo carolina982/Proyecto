@@ -75,9 +75,6 @@ Join our community of developers creating universal apps.
 - en viaticos solo es checar la suma de todos los  campos
 - solo falta por que no aparece automatico el precio fijo de comidas y de la suma total de todos los campos s
 
-- unidades quitar lo de tipo remolque y que solo sea una sola unidad que utiliza que es 002  
-
-- en viajes en la parte de unidad muestre numero de unidad y placa 
-checar bien los  por que no muestra el numero de placa y que tine que despluega si seleccionan la unidad 002 pisblemente 007
-
--agregar el boton eliminar y editar para editar que aparezca en ambos pero el boton de eliminar solo en administrador suma el total de general de todos los conceptos 
+* viáticos checar el precio fijo de comidas que de el total agregar bien el estilo de la líneas que no ocupe mucho espacio y que no este aun lado  no abajo una la izquierda y derecha que no ocupe mucho espacio de bajo del nombre
+* checar por que no muestres si se selecciona la unidad 002 por que nos despliega  la selección de tipo de remolque al momento de crear un nuevo viaje si seleccionar la unidad 0002 que despliegue que tipo de remolque y que seleccione que tipo de remolque va llevar en ese viaje 
+- con intalciones de nuevas actualizaciones 

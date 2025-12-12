@@ -150,9 +150,14 @@ export default function ViaticosPage() {
     let total = 0;
 
     conceptosBase.forEach(base => {
-      const cant = Number(conceptos[`${base} Cantidad`] || 0);
-      const cost = Number(conceptos[`${base} Costo`] || 0);
-      total += cant * cost;
+     const cant =Number (conceptos[`${base} Cantidad`]|| 0);
+     if(base === "Comidas"){
+      total+=cant*400;
+     }
+     else {
+      const cost=Number(conceptos[`${base} Cantidad`]|| 0);
+      total +=cant*cost;
+     }
     });
 
     dieselHistorial.forEach(c=>{
@@ -310,6 +315,7 @@ export default function ViaticosPage() {
     setLoading(true);
 
     try {
+      
       const formData = new FormData();
       formData.append("tripId", tripId);
       formData.append("conceptos", JSON.stringify(conceptos));
@@ -433,12 +439,13 @@ export default function ViaticosPage() {
               <Picker.Item key={t.id} label={`${t.nombre} (${t.conductorNombre})`}value={t.id}/>
             ))}
           </Picker>
-          <View style={{ flexDirection: "row" }}>
+            <View style={{ flexDirection: "row" }}>
              <View style={{ flex: 1, paddingRight: 3 }}>
-              <View style={{ marginBottom: 10 }}>
-                <Text style={styles.label}>Comidas</Text>
-                <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({ ...conceptos, ["Comidas Cantidad"]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
-                  <TextInput value={String((Number(conceptos["Comidas Cantidaf"])|| 0)*400)}editable={false}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+              <View style={{ marginBottom: 10 }}>  
+              <Text style={styles.label}>Comidas</Text>
+              <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({...conceptos,["Comidas Cantidad"]: t,})}
+              keyboardType="numeric" mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} placeholder="Días" />
+              <TextInput value={String((Number(conceptos["Comidas Cantidad"]) || 0) * 400)} editable={false} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} placeholder="Costo"/>
               </View>
               {conceptosBase
               .filter((b) => b !== "Comidas")
@@ -478,13 +485,13 @@ export default function ViaticosPage() {
                 <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
                   {dieselHistorial.map((item,index)=>(
                     <View key={index}style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",paddingVertical:6,borderBottomWidth:1,borderColor:"#ddd"}}>
-                      <Text style={{flex:1}}> Cantidad: {item.cantidad}   Costo: {item.costo}</Text>
+                      <Text style={{flex:1}}> Cantidad: {item.cantidad} Costo: {item.costo}</Text>
                       <View style={{flexDirection:"row"}}>
                         <TouchableOpacity onPress={()=>editarCarga(index)}style={{backgroundColor:"#b5b5b5",paddingHorizontal:10,paddingVertical:4,borderRadius:5,marginRight:8}}>
                           <Text style={{color:"#000"}}>Editar</Text>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={()=>eliminarCarga(index)} style={{backgroundColor:"#cc0000",paddingHorizontal:10,paddingVertical:4,borderRadius:5}}>
-                            <Text style={{color:"#fff"}}>Eliminar</Text>
+                          <Text style={{color:"#fff"}}>Eliminar</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
