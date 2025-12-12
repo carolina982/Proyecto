@@ -75,6 +75,6 @@ Join our community of developers creating universal apps.
 - en viaticos solo es checar la suma de todos los  campos
 - solo falta por que no aparece automatico el precio fijo de comidas y de la suma total de todos los campos s
 
-* viáticos checar el precio fijo de comidas que de el total agregar bien el estilo de la líneas que no ocupe mucho espacio y que no este aun lado  no abajo una la izquierda y derecha que no ocupe mucho espacio de bajo del nombre
-* checar por que no muestres si se selecciona la unidad 002 por que nos despliega  la selección de tipo de remolque al momento de crear un nuevo viaje si seleccionar la unidad 0002 que despliegue que tipo de remolque y que seleccione que tipo de remolque va llevar en ese viaje 
-- con intalciones de nuevas actualizaciones 
+* Viáticos checar el precio fijo de comidas que de el total agregar bien el estilo de la líneas que no ocupe mucho espacio y que no este aun lado  no abajo una la izquierda y derecha que no ocupe mucho espacio de bajo del nombre. 
+* Checar por que no muestres si se selecciona la unidad 002 por que nos despliega  la selección de tipo de remolque al momento de crear un nuevo viaje si seleccionar la unidad 0002 que despliegue que tipo de remolque y que seleccione que tipo de remolque va llevar en ese viaje 
+- Con intalciones de nuevas actualizaciones tambien checar la interfaz de movil 

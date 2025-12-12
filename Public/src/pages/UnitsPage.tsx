@@ -174,6 +174,7 @@ export default function UnitsPage() {
            <FlatList data={units}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
              <Modal visible={modalVisible} animationType="slide">
                <View style={styles.modalContent}>
+                
                <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
                <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>
                <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#888"dense style={styles.input}/>

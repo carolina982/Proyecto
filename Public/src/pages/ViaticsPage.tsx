@@ -160,6 +160,7 @@ export default function ViaticosPage() {
      }
     });
 
+
     dieselHistorial.forEach(c=>{
       total +=Number(c.cantidad) * Number (c.costo);
     })
