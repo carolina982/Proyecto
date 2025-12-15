@@ -199,12 +199,8 @@ export default function UnitsPage() {
                  </>
                 )}
                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-               <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>
-                Cancelar
-               </Button>
-               <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>
-              Guardar
-            </Button>
+               <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>Cancelar</Button>
+               <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>Guardar</Button>
           </View>
         </View>
       </Modal>

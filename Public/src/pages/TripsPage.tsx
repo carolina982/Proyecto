@@ -381,25 +381,27 @@ const exportToExcel = async (exportType: string) => {
         <Text style={styles.label}>Nombre:</Text>
         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
          <Text style={styles.label}>Unidad:</Text>
-        <Picker selectedValue={unidadId} onValueChange={(value)=>{
-          setUnidadId(value);
-          const unidad =units.find((u)=>u.id === value) || null;
-          setSelectedUnit(unidad);
-          setUnitPlaca(unidad ?.placa ?? "");
-          if (unidad?.nombre === "002" || unidad?.nombre === "007"){
-            setMostrarRemolque(true);
-          }else{
-            setMostrarRemolque(false);
-            setTipoRemolque("");
-            setPlacaRemolque("");
-          }
-        }}
+         <Picker selectedValue={unidadId} onValueChange={(value)=>{ setUnidadId(value);
+         const unidad = units.find((u)=>u.nombre === value) || null;
+         setSelectedUnit(unidad);
+         setUnitPlaca(unidad?.placa ?? "");
+         console.log("Unidad seleccionada:", unidad);
+         if (unidad && unidad.nombre === "002") {
+          setMostrarRemolque(true);
+         } else {
+          setMostrarRemolque(false);
+          setTipoRemolque("");
+          setPlacaRemolque("");
+        }
+       }}
         style={styles.picker}>
           <Picker.Item label="Seleccionar unidad" value=""/>
           {units.map((u)=>(
-            <Picker.Item key={u.id} label={`${u.nombre} ${u.placa}`} value={u.id}/>
-          ))}
-        </Picker>
+            <Picker.Item
+            key={u.id}label={`${u.nombre} ${u.placa}`}value={u.nombre}
+            />
+             ))}
+             </Picker>
         {mostrarRemolque && (
           <>
           <Text style={styles.label}>Tipo remolque:</Text>
@@ -453,12 +455,9 @@ const exportToExcel = async (exportType: string) => {
               )}
         </>
         )}  
-    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-      <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>
-        Cancelar
-      </Button>
-      <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>
-        Guardar
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+          <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
+          <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar
       </Button>
     </View>
   </ScrollView>

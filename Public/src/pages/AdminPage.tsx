@@ -149,16 +149,10 @@ const deleteUser =async (id:string)=>{
               </Picker>
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-              <Button
-                mode="contained"
-                buttonColor="#888"
-                textColor="#fff"
+              <Button mode="contained" buttonColor="#888"textColor="#fff"
                 style={{ borderRadius: 25, marginTop: 10 }}
                 onPress={() => {setModalVisible(false);setEditingUser(null);setIsAdding(false);}}>Cancelar</Button>
-              <Button
-                mode="contained"
-                buttonColor="#007bff"
-                textColor="#fff"
+              <Button mode="contained" buttonColor="#007bff"textColor="#fff"
                 style={{ borderRadius: 25, marginTop: 10 }}
                 onPress={saveChanges}>Guardar</Button>
             </View>

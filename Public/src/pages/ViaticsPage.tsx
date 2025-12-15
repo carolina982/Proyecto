@@ -148,24 +148,23 @@ export default function ViaticosPage() {
 
   const calcularTotal = () => {
     let total = 0;
+    conceptosBase.forEach(base =>{
+      const cantidad =Number(conceptos[`${base} Cantidad`] || 0);
 
-    conceptosBase.forEach(base => {
-     const cant =Number (conceptos[`${base} Cantidad`]|| 0);
-     if(base === "Comidas"){
-      total+=cant*400;
-     }
-     else {
-      const cost=Number(conceptos[`${base} Cantidad`]|| 0);
-      total +=cant*cost;
-     }
+      if (base === "Comidas"){
+        total +=cantidad *400;
+      }
+      else{
+        const costo=Number(conceptos[`${base} Costo`] || 0);
+        total +=cantidad * costo;
+      }
     });
 
 
     dieselHistorial.forEach(c=>{
-      total +=Number(c.cantidad) * Number (c.costo);
-    })
-    total += Number(tag);
-
+      total + Number(c.costo || 0);
+    });
+    total +=Number(tag || 0);
     return total;
   };
  const exportViaticosToExcel = async (filter: string) => {
