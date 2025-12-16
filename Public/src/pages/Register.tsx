@@ -107,11 +107,7 @@ export default function Register({ navigation }: any) {
       <TextInput placeholder="Confirmar contraseña"value={confirmPassword}onChangeText={setConfirmPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}secureTextEntry={!showConfirmPassword}
       right={<TextInput.Icon icon={showConfirmPassword ? "eye-off" : "eye"}color="#007bff"forceTextInputFocus={false}onPress={() => setShowConfirmPassword(!showConfirmPassword)} />}/>
       <Text style={{ marginBottom: 5 }}>Selecciona tu rol:</Text>
-      <Picker
-        selectedValue={rol}
-        onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")}
-        style={styles.picker}
-      >
+      <Picker selectedValue={rol}onValueChange={(value: string) => setRol(value as "Admin" | "Chofer")}style={styles.picker}>
         <Picker.Item label="Chofer" value="Chofer" />
         <Picker.Item label="Admin" value="Admin" />
       </Picker>

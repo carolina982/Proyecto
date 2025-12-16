@@ -336,7 +336,7 @@ const exportToExcel = async (exportType: string) => {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{item.nombre}</Text>
-        <Text style={styles.textSmall}>Unidad:{unidadNombre}</Text>
+        <Text style={styles.textSmall}>Unidad:{unidadNombre} {unitPlaca}</Text>
         <Text style={styles.textSmall}>Conductor:{conductorNombre}</Text>
         <Text style={styles.textSmall}>Acompañante:{AcompananteNombre}</Text>
         <Text style={styles.textSmall}>Destino:{item.destino}</Text>

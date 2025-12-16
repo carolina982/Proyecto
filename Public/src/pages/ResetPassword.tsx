@@ -7,32 +7,42 @@ export default function ResetPassword ({route,navigation}:any){
     const [password,setPassword]=useState("");
     const [confirm,setConfirm]=useState("");
     const [loading,setLoading]=useState(false);
-    const handleReset=async()=>{
-        if (!password || !confirm){
-            Alert.alert("Error" , "Completa ambos campos");
+
+    const handleReset =async()=>{
+        if (!token ){
+            Alert.alert("Error","Token invalido o no econtrado");
             return;
         }
-        if (password !== confirm){
-            Alert.alert("Error" , "Las contraseñas no coinciden");
+        if(!password ||!confirm){
+            Alert.alert("Error","Completa ambos campos");
             return;
+        }
+        if (password ! == confirm){
+            Alert.alert("Error","Las contraseñas no coinciden");
+            return ;
         }
         setLoading(true);
         try {
-            const response=await fetch("http://192.168.1.81:3000/api/users/reset-password",{
-                method:"POST",
-                headers:{"content-Type":"application/json"},
-                body:JSON.stringify({token,password}),
-            });
+            const response =await fetch(
+                "http://192.168.1.81:3000/api/auth/reset-password",{
+                    method:"POST",
+                    headers:{"Content-Type":"applicatiohn/json"},
+                    body:JSON.stringify({token,password}),
+                }
+            );
             const data=await response.json();
-            if (!response.ok) throw new  Error(data.message || "no se pudo restablecer la contraseña");
+            if(!response.ok) throw new Error(data.message);
             Alert.alert("Exito","Tu contraseña se ha restablecido correctamente");
-            navigation.navigate("Login");
-        } catch (error:any){
+            navigation.navigate("Login")
+        }catch (error:any){
             Alert.alert("Error",error.message);
         }finally{
             setLoading(false);
         }
     };
+   
+
+
     return (
         <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Text style ={styles.title}>Nueva contraseña</Text>

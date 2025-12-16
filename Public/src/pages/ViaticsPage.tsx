@@ -37,7 +37,7 @@ const conceptosList = conceptosBase.flatMap(c => [
   `${c} Costo`
 ]);
 
-export default function ViaticosPage() {
+export default function ViaticsPage() {
 
   const { currentUser } = useStore();
   const [viaticos, setViaticos] = useState<Viatico[]>([]);
@@ -538,14 +538,14 @@ export default function ViaticosPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  card: { backgroundColor: "#fff", padding: 12, marginBottom: 10, borderRadius: 8 },
-  title: { fontSize: 22, fontWeight: "bold" },
-  modalContent: { flex: 1, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
-  input: { backgroundColor: "#fff", marginBottom: 10 },
-  label: { fontWeight: "bold", marginTop: 10 },
-  picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
+  container:{flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
+  card:{backgroundColor: "#fff", padding: 12, marginBottom: 10, borderRadius: 8 },
+  title:{fontSize: 22, fontWeight: "bold" },
+  modalContent:{flex: 1, padding: 20 },
+  modalTitle:{fontSize: 20, fontWeight: "bold", marginBottom: 15 },
+  input:{backgroundColor: "#fff", marginBottom: 10 },
+  label:{fontWeight: "bold", marginTop: 10 },
+  picker:{backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   facturaPreview: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 }
 });
 

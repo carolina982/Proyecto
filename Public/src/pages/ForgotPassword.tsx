@@ -30,10 +30,8 @@ export default function ForgotPassword({ navigation }: any) {
 
   return (
     <PaperProvider
-      theme={{
-        ...DefaultTheme,
-        colors: {
-          ...DefaultTheme.colors,
+      theme={{...DefaultTheme,
+        colors: { ...DefaultTheme.colors,
           primary: "transparent", 
           onSurfaceVariant: "#007bff",
         },
@@ -41,13 +39,11 @@ export default function ForgotPassword({ navigation }: any) {
     >
       <View style={styles.container}>
         <Text style={styles.title}>Recuperar contraseña</Text>
-        <TextInput placeholder="Correo electrónico"value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#8bc1e6ff"style={styles.input}/>
+        <TextInput placeholder="Correo electrónico" value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat"style={styles.input}/>
         <Button mode="contained"onPress={handleSend}loading={loading}contentStyle={styles.buttonContent}labelStyle={styles.buttonLabel}style={styles.button}>
           Enviar correo de recuperación
         </Button>
-        <Text style={styles.backLink} onPress={() => navigation.navigate("Login")}>
-          ← Volver al inicio de sesión
-        </Text>
+        <Text style={styles.backLink} onPress={() => navigation.navigate("Login")}> ← Volver al inicio de sesión</Text>
       </View>
     </PaperProvider>
   );
