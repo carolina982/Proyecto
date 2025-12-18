@@ -486,12 +486,12 @@ export default function ViaticsPage() {
                   {dieselHistorial.map((item,index)=>(
                     <View key={index}style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",paddingVertical:6,borderBottomWidth:1,borderColor:"#ddd"}}>
                       <Text style={{flex:1}}> Cantidad: {item.cantidad} Costo: {item.costo}</Text>
-                      <View style={{flexDirection:"row"}}>
-                        <TouchableOpacity onPress={()=>editarCarga(index)}style={{backgroundColor:"#b5b5b5",paddingHorizontal:10,paddingVertical:4,borderRadius:5,marginRight:8}}>
-                          <Text style={{color:"#000"}}>Editar</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={()=>eliminarCarga(index)} style={{backgroundColor:"#cc0000",paddingHorizontal:10,paddingVertical:4,borderRadius:5}}>
-                          <Text style={{color:"#fff"}}>Eliminar</Text>
+                         <View style={{flexDirection:"row"}}>
+                            <TouchableOpacity onPress={()=>editarCarga(index)}style={{backgroundColor:"#b5b5b5",paddingHorizontal:10,paddingVertical:4,borderRadius:5,marginRight:8}}>
+                             <Text style={{color:"#000"}}>Editar</Text>
+                             </TouchableOpacity>
+                             <TouchableOpacity onPress={()=>eliminarCarga(index)} style={{backgroundColor:"#cc0000",paddingHorizontal:10,paddingVertical:4,borderRadius:5}}>
+                           <Text style={{color:"#fff"}}>Eliminar</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -501,17 +501,18 @@ export default function ViaticsPage() {
              <Text style={styles.label}>TAG:</Text>
              <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
+             
              <Text style={styles.label}>Factura:</Text>
           
           {factura ? (
             <>
               {showFactura ? (
                 factura.toLowerCase().endsWith(".pdf") ? (
-                 <View style={{ marginBottom: 10 }}>
+                  <View style={{ marginBottom: 10 }}>
                     <Text>Factura en PDF</Text>
                     <Button mode="contained" onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
                   </View>
-                ) : (
+                ):(
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
                 )
               ) : (
@@ -521,8 +522,8 @@ export default function ViaticsPage() {
                 <Button mode="contained" buttonColor="#888" onPress={pickFactura}>Reemplazar factura</Button>
                 <Button mode="contained" buttonColor="#e27975ff" onPress={() => { setFactura(null); setFacturaRemoved(true); setShowFactura(false); }}>Eliminar</Button>
               </View>
-            </>
-          ) : (
+              </>
+             ) : (
            <Button mode="contained" buttonColor="#094268" onPress={pickFactura}>Subir factura</Button>
          )}
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (

@@ -378,15 +378,15 @@ const exportToExcel = async (exportType: string) => {
       <Text style={styles.modalTitle}> {editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
       {isAdmin ? (
         <>
-        <Text style={styles.label}>Nombre:</Text>
-        <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
+         <Text style={styles.label}>Nombre:</Text>
+         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
          <Text style={styles.label}>Unidad:</Text>
          <Picker selectedValue={unidadId} onValueChange={(value)=>{ setUnidadId(value);
          const unidad = units.find((u)=>u.nombre === value) || null;
          setSelectedUnit(unidad);
          setUnitPlaca(unidad?.placa ?? "");
          console.log("Unidad seleccionada:", unidad);
-         if (unidad && unidad.nombre === "002") {
+         if (unidad && ( unidad.nombre === "002" || unidad.nombre === "007" )) {
           setMostrarRemolque(true);
          } else {
           setMostrarRemolque(false);
@@ -429,7 +429,7 @@ const exportToExcel = async (exportType: string) => {
          <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
         <Text style={styles.label}>Destino:</Text>
          <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
-        <Text style={styles.label}>Kilometraje (km):</Text>
+        <Text style={styles.label}>Kilometraje km:</Text>
          <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
         <Text style={styles.label}>Fecha de Salida:</Text>
          <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
@@ -450,8 +450,8 @@ const exportToExcel = async (exportType: string) => {
                        ("0"+(date.getMonth()+1)).slice(-2)+"/"+ 
                        date.getFullYear();
                        setFechaLlegada(f);
-                      }}}
-                />
+                     }}}
+                    />
               )}
         </>
         )}  

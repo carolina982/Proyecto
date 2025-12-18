@@ -144,10 +144,10 @@ export default function UnitsPage() {
             <Text style={styles.estadoText}>{item.estado}</Text>
           </View>
         </View>
-        <Text>Modelo: {item.modelo}</Text>
-        <Text>Capacidad: {item.capacidad}</Text>
-        <Text>Placas: {item.placas}</Text>
-        {unidadesConRemolque.includes(item.nombre)&&(
+          <Text>Modelo: {item.modelo}</Text>
+          <Text>Capacidad: {item.capacidad}</Text>
+          <Text>Placas: {item.placas}</Text>
+          {unidadesConRemolque.includes(item.nombre)&&(
           <>
           <Text style={{fontWeight:"bold",marginTop:5}}>Tipo Remolque</Text>
           <Text>{item.tipoRemolque || "Ninguno"}</Text>
@@ -157,12 +157,8 @@ export default function UnitsPage() {
           </>
         )}
         <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
-          <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}>
-            Editar
-          </Button>
-          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnit(item.id)}>
-            Eliminar
-          </Button>
+          <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}> Editar </Button>
+          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnit(item.id)}>Eliminar</Button>
         </View>
       </View>
     );

@@ -167,9 +167,7 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
        <Picker.Item label="Admin" value="Admin" />
        <Picker.Item label="Chofer" value="Chofer" />
        </Picker>
-      <Button mode="contained"buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}>
-        Guardar Cambios
-      </Button>
+      <Button mode="contained"buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}>Guardar Cambios </Button>
     </ScrollView>
   );
 }
