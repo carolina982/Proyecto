@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   title:{fontSize: 26,fontWeight: "bold",color: "#007bff",textAlign: "center",marginBottom: 25, },
   input:{backgroundColor: "",borderRadius: 10,paddingHorizontal: 10,height: 50,marginBottom: 15,},
   button:{backgroundColor: "#007bff", borderRadius: 10,elevation: 0,},
-  buttonContent:{height: 50,},
+  buttonContent:{height: 50},
   buttonLabel:{color: "#fff",fontSize: 16,fontWeight: "bold",},
   backLink:{marginTop: 20,textAlign: "center",color: "#007bff",},
 });

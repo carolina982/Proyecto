@@ -504,14 +504,14 @@ export default function ViaticsPage() {
              
              <Text style={styles.label}>Factura:</Text>
           
-          {factura ? (
-            <>
-              {showFactura ? (
-                factura.toLowerCase().endsWith(".pdf") ? (
-                  <View style={{ marginBottom: 10 }}>
-                    <Text>Factura en PDF</Text>
-                    <Button mode="contained" onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
-                  </View>
+              {factura ? (
+               <>
+                {showFactura ? (
+                  factura.toLowerCase().endsWith(".pdf") ? (
+                   <View style={{ marginBottom: 10 }}>
+                     <Text>Factura en PDF</Text>
+                     <Button mode="contained" onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
+                   </View>
                 ):(
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
                 )
@@ -547,6 +547,8 @@ const styles = StyleSheet.create({
   input:{backgroundColor: "#fff", marginBottom: 10 },
   label:{fontWeight: "bold", marginTop: 10 },
   picker:{backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
-  facturaPreview: { width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 }
+  facturaPreview: {width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 },
+  inputLeftContainer:{alignItems:"flex-start",},
+  inputLeft:{backgroundColor:"#fff", width:80, paddingHorizontal:0}
 });
 

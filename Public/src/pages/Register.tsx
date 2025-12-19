@@ -130,14 +130,14 @@ export default function Register({ navigation }: any) {
   );
 };
  const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
-  input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10 },
-  picker: { width: "100%", height: 50, marginBottom: 15, backgroundColor: "#fff", borderRadius: 10 },
-  photoButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  photoButton: { flex: 0.48, height: 45, backgroundColor: "#007bff", justifyContent: "center", alignItems: "center", borderRadius: 10 },
-  photoButtonText: { color: "#fff", fontSize: 14, fontWeight: "bold" },
-  avatarPreview: { width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginVertical: 10 },
+  container:{ flex: 1, justifyContent: "center", paddingHorizontal: 20, backgroundColor: "#f5f5f5" },
+  title:{ fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
+  input:{ width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10 },
+  picker:{ width: "100%", height: 50, marginBottom: 15, backgroundColor: "#fff", borderRadius: 10 },
+  photoButtons:{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  photoButton:{ flex: 0.48, height: 45, backgroundColor: "#007bff", justifyContent: "center", alignItems: "center", borderRadius: 10 },
+  photoButtonText:{ color: "#fff", fontSize: 14, fontWeight: "bold" },
+  avatarPreview:{ width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginVertical: 10 },
   button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15, alignItems: "center" },

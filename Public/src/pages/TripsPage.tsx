@@ -198,6 +198,7 @@ export default function TripsPage() {
     if(tipoRemolque)payload.tipoRemolque=tipoRemolque;
     if(placaRemolque)payload.placaRemolque=placaRemolque;
   }
+
   payload.acompanante = acompanante === "none" || acompanante === ""? null:acompanante;
   if (def && def.trim() !== "") payload.def = def;
   try {
@@ -265,14 +266,10 @@ const exportToExcel = async (exportType: string) => {
         }
         ws_data.push([` MES: ${monthName.toUpperCase()}`]);
         ws_data.push([
-          "Semana",
-          "Nombre",
-          "Destino",
-          "Fecha Salida",
-          "Fecha Llegada",
-          "Día",
-          "Conductor",
-          "Acompañante",
+          "Semana", "Nombre",
+          "Destino","Fecha Salida",
+          "Fecha Llegada","Día",
+          "Conductor", "Acompañante",
           "Kilometraje",
           "Estado",
         ]);
