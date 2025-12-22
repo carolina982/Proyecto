@@ -8,7 +8,7 @@ import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleShee
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
-import { useStore } from '../context/Store';
+import { getItem, useStore } from '../context/Store';
 
 interface Trip { id: string;nombre: string; conductorId: string; conductorNombre?: string;}
 interface Viatico {
@@ -60,6 +60,9 @@ export default function ViaticsPage() {
   const [dieselCantidad,setDieselCantidad]=useState("");
   const [dieselCosto,setDieselCosto]=useState("");
   
+  const [historialDiesel,setHistorialDiesel]=useState<any[]>([]);
+  const [totaldiesel,setTotalDiesel]=useState(0);
+
   interface CargaDiesel{
     cantidad:string;
     costo:string;
@@ -76,6 +79,11 @@ export default function ViaticsPage() {
     setDieselCantidad("");
     setDieselCosto("");
   };
+  const cargarHistorial =async()=>{
+    const data =await getItem("dieselHistorial");
+    const historial=data ? JSON.parse(data):[];
+    setHistorialDiesel(historial);
+  };
   const editarCarga=(index:number)=>{
     const item=dieselHistorial[index];
     setDieselCantidad(item.cantidad);
@@ -88,9 +96,14 @@ export default function ViaticsPage() {
   const eliminarCarga =(index:number)=>{
     const actualizado =dieselHistorial.filter((_,i)=> i !== index);
     setDieselHistorial(actualizado);
-  }
-  useEffect(() => { loadTrips(); }, [currentUser]);
-  useEffect(() => { loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
+  };
+
+
+  useEffect(()=>{loadTrips(); }, [currentUser]);
+  useEffect(()=>{loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
+  useEffect(()=>{const total=historialDiesel.reduce((acc,item)=>acc + Number(item.total),0);
+    setTotalDiesel(total);
+  },[historialDiesel]);
 
   const loadTrips = async () => {
     try {
@@ -120,7 +133,7 @@ export default function ViaticsPage() {
         id: v._id,
         facturaUrl: v.factura ? `${BASE_URL.replace("/api", "")}${v.factura}` : undefined
       }));
-
+                      
       if (currentUser?.rol === "Chofer") {
         viaticosData = viaticosData.filter((v: any) =>
           trips.find(t => t.id === v.tripId)?.conductorId === currentUser.id
@@ -159,7 +172,6 @@ export default function ViaticsPage() {
         total +=cantidad * costo;
       }
     });
-
 
     dieselHistorial.forEach(c=>{
       total + Number(c.costo || 0);
@@ -502,7 +514,7 @@ export default function ViaticsPage() {
              <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
              
-             <Text style={styles.label}>Factura:</Text>
+             <Text style={styles.label}>Subir Factura:</Text>
           
               {factura ? (
                <>

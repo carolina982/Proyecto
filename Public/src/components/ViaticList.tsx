@@ -25,16 +25,8 @@ export default function ViaticList({ viewOnly }: ViaticListProps) {
           <Text>Fecha: {item.fecha}</Text>
           {!viewOnly && currentUser?.rol === "Admin" && (
             <View className="flex-row items-center mt-2">
-              <TextInput
-                label="Nuevo monto"
-                value={monto.toString()}
-                onChangeText={text => setMonto(Number(text))}
-                keyboardType="numeric"
-                className="flex-1 mr-2"
-              />
-              <Button mode="contained" onPress={() => updateViatic({ ...item, monto })}>
-                Actualizar
-              </Button>
+              <TextInput label="Nuevo monto"value={monto.toString()}onChangeText={text => setMonto(Number(text))}keyboardType="numeric"className="flex-1 mr-2"/>
+              <Button mode="contained" onPress={() => updateViatic({ ...item, monto })}>Actualizar</Button>
             </View>
           )}
         </Card>

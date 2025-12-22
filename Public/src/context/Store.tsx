@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
-import { Trip, Unit, User, Viatic } from "../";
+import { Trip, Unit, User, Viatic } from "../types";
 
 // ================== Interfaz para Store ==================
 interface StoreContextProps {
@@ -144,5 +144,23 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     </StoreContext.Provider>
   );
 };
+
+export async function setItem(key: string, value: string) {
+  if (Platform.OS === "web") {
+    localStorage.setItem(key, value);
+  } else {
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    await AsyncStorage.setItem(key, value);
+  }
+}
+
+export async function getItem(key: string) {
+  if (Platform.OS === "web") {
+    return localStorage.getItem(key);
+  } else {
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    return AsyncStorage.getItem(key);
+  }
+}
 
 export const useStore = () => useContext(StoreContext);
