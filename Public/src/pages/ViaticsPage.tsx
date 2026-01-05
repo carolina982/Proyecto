@@ -8,7 +8,7 @@ import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleShee
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
-import { getItem, useStore } from '../context/Store';
+import { useStore } from '../context/Store';
 
 interface Trip { id: string;nombre: string; conductorId: string; conductorNombre?: string;}
 interface Viatico {
@@ -59,9 +59,7 @@ export default function ViaticsPage() {
 
   const [dieselCantidad,setDieselCantidad]=useState("");
   const [dieselCosto,setDieselCosto]=useState("");
-  
-  const [historialDiesel,setHistorialDiesel]=useState<any[]>([]);
-  const [totaldiesel,setTotalDiesel]=useState(0);
+  const [totalSDieselGlobal,setTotalDieselGlobal]=useState(0);
 
   interface CargaDiesel{
     cantidad:string;
@@ -79,11 +77,7 @@ export default function ViaticsPage() {
     setDieselCantidad("");
     setDieselCosto("");
   };
-  const cargarHistorial =async()=>{
-    const data =await getItem("dieselHistorial");
-    const historial=data ? JSON.parse(data):[];
-    setHistorialDiesel(historial);
-  };
+
   const editarCarga=(index:number)=>{
     const item=dieselHistorial[index];
     setDieselCantidad(item.cantidad);
@@ -99,11 +93,13 @@ export default function ViaticsPage() {
   };
 
 
+  useEffect(()=>{const total=dieselHistorial.reduce( (acc, item)=> acc + Number(item.costo || 0),0
+  );
+  setTotalDieselGlobal(total);
+  },[dieselHistorial]);
   useEffect(()=>{loadTrips(); }, [currentUser]);
   useEffect(()=>{loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
-  useEffect(()=>{const total=historialDiesel.reduce((acc,item)=>acc + Number(item.total),0);
-    setTotalDiesel(total);
-  },[historialDiesel]);
+  
 
   const loadTrips = async () => {
     try {
@@ -152,6 +148,7 @@ export default function ViaticsPage() {
       }));
 
       setViaticos(viaticosData);
+      calcularTotalDieselGlobal(viaticosData);
 
     } catch (e) {
       console.error(e);
@@ -172,9 +169,8 @@ export default function ViaticsPage() {
         total +=cantidad * costo;
       }
     });
-
     dieselHistorial.forEach(c=>{
-      total + Number(c.costo || 0);
+      total += Number(c.costo || 0);
     });
     total +=Number(tag || 0);
     return total;
@@ -377,6 +373,20 @@ export default function ViaticsPage() {
     }
   };
 
+  const calcularTotalDieselGlobal =(viaticosData:Viatico[])=>{
+    let total =0;
+    viaticosData.forEach(v=>{
+      if (Array.isArray((v as any).dieselHistorial)){
+        (v as any).dieselHistorial.forEach((c:any)=>{
+          total += Number(c.costo || 0);
+        });
+      }else{
+        total += Number(v.dieselCantidad || 0);
+      }
+    });
+    setTotalDieselGlobal(total);
+  };
+
 
   const deleteViatico = async (id: string) => {
     let confirmed = false;
@@ -452,7 +462,7 @@ export default function ViaticsPage() {
             ))}
           </Picker>
             <View style={{ flexDirection: "row" }}>
-             <View style={{ flex: 1, paddingRight: 3 }}>
+             <View style={{ flex:1, paddingRight:3 }}>
               <View style={{ marginBottom: 10 }}>  
               <Text style={styles.label}>Comidas</Text>
               <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({...conceptos,["Comidas Cantidad"]: t,})}
@@ -484,20 +494,20 @@ export default function ViaticsPage() {
             </View>
           </View>
           <View style={{marginTop:20}}>
-            <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
+            <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}> 
               <Text style={{fontWeight:"bold",fontSize:18}}>Diesel</Text>
                  <TouchableOpacity onPress={agregarCargaDiesel}>
-                     <Text style={{fontSize:28,fontWeight:"bold"}}>+</Text>
+                     <Text style={{fontSize:28,fontWeight:"bold"}}> + </Text>
                  </TouchableOpacity>
                   </View>
                 <Text style={{marginTop:5}}>Cargas</Text>
-                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"/>
+                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"  />
                 <Text style={{marginTop:5}}>Costo</Text>
                 <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
                 <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
                   {dieselHistorial.map((item,index)=>(
                     <View key={index}style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",paddingVertical:6,borderBottomWidth:1,borderColor:"#ddd"}}>
-                      <Text style={{flex:1}}> Cantidad: {item.cantidad} Costo: {item.costo}</Text>
+                      <Text style={{flex:1}}> Cargas: {item.cantidad} Costo: {item.costo}</Text>
                          <View style={{flexDirection:"row"}}>
                             <TouchableOpacity onPress={()=>editarCarga(index)}style={{backgroundColor:"#b5b5b5",paddingHorizontal:10,paddingVertical:4,borderRadius:5,marginRight:8}}>
                              <Text style={{color:"#000"}}>Editar</Text>
@@ -515,7 +525,6 @@ export default function ViaticsPage() {
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
              
              <Text style={styles.label}>Subir Factura:</Text>
-          
               {factura ? (
                <>
                 {showFactura ? (
@@ -528,7 +537,7 @@ export default function ViaticsPage() {
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
                 )
               ) : (
-                <Button mode="contained"buttonColor="#0d75bb" onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
+              <Button mode="contained"buttonColor="#0d75bb" onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
               )}
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10, marginTop: 5 }}>
                 <Button mode="contained" buttonColor="#888" onPress={pickFactura}>Reemplazar factura</Button>
@@ -539,7 +548,7 @@ export default function ViaticsPage() {
            <Button mode="contained" buttonColor="#094268" onPress={pickFactura}>Subir factura</Button>
          )}
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>                                                                                                                                                                                                            
               <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
               <Button mode="contained" buttonColor="#167abd" onPress={saveViatico}>Guardar</Button>
             </View>
@@ -549,6 +558,7 @@ export default function ViaticsPage() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container:{flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
@@ -561,6 +571,6 @@ const styles = StyleSheet.create({
   picker:{backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
   facturaPreview: {width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 },
   inputLeftContainer:{alignItems:"flex-start",},
-  inputLeft:{backgroundColor:"#fff", width:80, paddingHorizontal:0}
+  inputLeft:{backgroundColor:"#fff", width:80, paddingHorizontal:0},
 });
 
