@@ -2,23 +2,30 @@ import { Request, Response } from "express";
 import Trip from "../models/Trip";
 import Viatico from "../models/Viatic";
 
-export const getViatic = async (req: Request, res: Response) => {
+export const getViatic =async (req:Request,res:Response)=>{
   try {
-    const user = (req as any).user;
+    const user =(req as any).user;
     let viatics;
-    if (user?.rol === "Chofer") {
-      const trips = await Trip.find({ conductorId: user.id.toString() });
-      const tripsIds = trips.map(t => t.id);
-      viatics = await Viatico.find({ tripId: { $in: tripsIds } });
-    } else {
-      viatics = await Viatico.find();
+    if (user?.rol === "Chofer"){
+      const trips=await Trip.find({conductorId:user.id.toString ()});
+      const tripsIds=trips.map(t=>t.id);
+     const viatics=await Viatico.find()
+     .populate({
+      path:"tripId",
+      populate:{
+        path:"conductorId",
+        select:"name email"
+      }
+     });
     }
     res.json(viatics);
-  } catch (error) {
+  }catch (error){
     console.error(error);
-    res.status(500).json({ message: "Error al obtener viáticos" });
+    res.status(500).json({message:"Error al obtener viaticos"});
   }
 };
+
+
 export const getViaticById = async (req: Request, res: Response) => {
   try {
     const viatic = await Viatico.findById(req.params.id);
@@ -56,32 +63,41 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
   }
 };
 
-export const createViatic = async (req: Request, res: Response) => {
+export const createViatic = async (req:Request, res:Response)=>{
   try {
-    const { tripId, conceptos, dieselCantidad, dieselCosto, tag, total } = req.body;
-    const factura = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-    const user = (req as any).user;
-    if (user?.rol === "Chofer") {
-      const trip = await Trip.findById(tripId);
-      if (!trip || trip.conductorId.toString() !== user.id.toString()) {
-        return res.status(403).json({ message: "No puedes agregar viáticos a este viaje" });
+    const {tripId,conceptos,dieselCargas,dieselCosto,tag,total}=req.body;
+    const factura=req.file ? `/uploads/${req.file.filename}`:undefined;
+    
+    const user=(req as any).user;
+    if (user?.rol === "Chofer"){
+      const trip =await Trip.findById(tripId);
+      if(!trip || trip.conductorId.toString() !== user.id.toString()){
+        return res.status(403).json({message:"No puedes agregar viaticos a este viaje"});
       }
     }
-    const newViatic = await Viatico.create({
+    let conceptosFinal:any={};
+    if(conceptos && typeof conceptos === "object"){
+      Object.entries(conceptos).forEach (([Key , value])=>{
+        const [nombre,tipo]=Key.split("");
+        if (!conceptosFinal[nombre]){
+          conceptosFinal[nombre]={cantidad:0 ,costo:0};
+        }
+        conceptosFinal[nombre][tipo.toLocaleLowerCase()]=Number(value);
+      });
+    }
+    const newViatic =await Viatico.create({
       tripId,
-      conceptos: JSON.parse(conceptos),
-      dieselCantidad: Number(dieselCantidad),
-      dieselCosto: Number(dieselCosto),
-      tag: Number(tag),
-      total: Number(total),
+      conceptos:conceptosFinal,
+      dieselCargas:Number(dieselCargas),
+      dieselCosto:Number(dieselCosto),
+      tag:Number(tag),
+      total:Number(total),
       factura,
     });
-
-    res.json({ message: "Viático registrado exitosamente", viatic: newViatic });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al crear viático" });
+    res.json ({message:"Viatico registrado exitosamente", viatic:newViatic});
+  }catch (error){
+    console.error("Error createViatic",error);
+    res.status(500).json({message:"Error al crear viatico"});
   }
 };
 
@@ -111,21 +127,21 @@ export const updateViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al actualizar viático" });
   }
 };
-export const deleteViatic = async (req: Request, res: Response) => {
-  try {
-    const viatic = await Viatico.findById(req.params.id);
-    if (!viatic) return res.status(404).json({ message: "Viático no encontrado" });
+ export const deleteViatic = async (req: Request, res: Response) => {
+   try {
+     const viatic = await Viatico.findById(req.params.id);
+     if (!viatic) return res.status(404).json({ message: "Viático no encontrado" });
 
-    const user = (req as any).user;
-    if (user?.rol === "Chofer") {
-      const trip = await Trip.findById(viatic.tripId);
-      if (!trip || trip.conductorId.toString() !== user.id.toString()) {
+     const user = (req as any).user;
+        if (user?.rol === "Chofer") {
+        const trip = await Trip.findById(viatic.tripId);
+        if (!trip || trip.conductorId.toString() !== user.id.toString()) {
         return res.status(403).json({ message: "No tienes permisos para eliminar este viático" });
       }
     }
-    await viatic.deleteOne();
-    res.json({ message: "Viático eliminado" });
-  } catch (error) {
+     await viatic.deleteOne();
+     res.json({ message: "Viático eliminado" });
+   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al eliminar viático" });
   }

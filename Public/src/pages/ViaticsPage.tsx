@@ -15,7 +15,7 @@ interface Viatico {
   id: string;
   tripId: string;
   conceptos: { [key: string]: number };
-  dieselCantidad: number;
+  dieselCargas: number;
   dieselCosto: number;
   tag: number;
   facturaUrl?: string;
@@ -205,7 +205,7 @@ export default function ViaticsPage() {
             "Día",
             "Viaje",
             "Conductor",
-            "Diesel Cantidad",
+            "Diesel Cargas",
             "Diesel Costo",
             "TAG",
             ...conceptosList,
@@ -231,7 +231,7 @@ export default function ViaticsPage() {
           dayNumber,
           trip?.nombre || "Desconocido",
           conductorNombre,
-          v.dieselCantidad ?? 0,
+          v.dieselCargas ?? 0,
           v.dieselCosto ?? 0,
           v.tag ?? 0,
           ...conceptosList.map(c => v.conceptos?.[c] ?? 0),
@@ -283,7 +283,7 @@ export default function ViaticsPage() {
       });
 
       setConceptos(conceptosString);
-      setDieselCantidad((viatico.dieselCantidad ?? 0).toString());
+      setDieselCantidad((viatico.dieselCargas ?? 0).toString());
       setDieselCosto((viatico.dieselCosto ?? 0).toString());
       setTag((viatico.tag ?? 0).toString());
       setFactura(viatico.facturaUrl || null);
@@ -319,16 +319,19 @@ export default function ViaticsPage() {
 
   const saveViatico = async () => {
     if (!tripId) return Alert.alert("Error", "Selecciona un viaje");
-
     setLoading(true);
-
     try {
-      
+
       const formData = new FormData();
       formData.append("tripId", tripId);
-      formData.append("conceptos", JSON.stringify(conceptos));
-      formData.append("dieselCantidad", dieselCantidad);
-      formData.append("dieselCosto", dieselCosto);
+      formData.append("conceptos",JSON.stringify(conceptos));
+    
+      const dieselCantidadTotal=dieselHistorial.length;
+      const dieselCostoTotal=dieselHistorial.reduce(
+        (acc,d)=>acc +Number(d.costo || 0),0
+      );
+      formData.append("dieselCantidad",String(dieselCantidadTotal));
+      formData.append("dieselCosto",String(dieselCostoTotal));
       formData.append("tag", tag);
       formData.append("total", String(calcularTotal()));
       formData.append("dieselHistorial",JSON.stringify(dieselHistorial));
@@ -343,8 +346,7 @@ export default function ViaticsPage() {
           const uri = factura.startsWith("file://") ? factura : "file://" + factura;
           const filename = uri.split("/").pop()!;
           let type = filename.endsWith(".pdf") ? "application/pdf" :
-                     filename.endsWith(".png") ? "image/png" : "image/jpeg";
-
+                     filename.endsWith(".png") ? "image/png" : "image/jpeg";  
           formData.append("factura", { uri, name: filename, type } as any);
         }
       } else if (facturaRemoved) {
@@ -360,10 +362,8 @@ export default function ViaticsPage() {
       const res = await fetch(url, { method, body: formData });
       if (!res.ok) throw new Error(await res.text());
 
-
       await loadViaticos();
       setModalVisible(false);
-
 
     } catch (e) {
       console.error(e);
@@ -381,7 +381,7 @@ export default function ViaticsPage() {
           total += Number(c.costo || 0);
         });
       }else{
-        total += Number(v.dieselCantidad || 0);
+        total += Number(v.dieselCargas || 0);
       }
     });
     setTotalDieselGlobal(total);
@@ -475,8 +475,12 @@ export default function ViaticsPage() {
               .map((base) => (
               <View key={base} style={{ marginBottom: 10 }}>
                 <Text style={styles.label}>{base}</Text>
-                <TextInput value={conceptos[`${base}Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días "/>
-                <TextInput value={conceptos[`${base}Costo`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Costo`]:t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+                <TextInput value={conceptos[`${base} Cantidad`]} 
+                 onChangeText={(t)=>setConceptos
+                 ({ ...conceptos,[`${base} Cantidad`]: t })} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
+                <TextInput value={conceptos[`${base} Costo`]}
+                   onChangeText={(t)=>setConceptos
+                    ({...conceptos,[`${base} Costo`]: t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
               </View>
            ))}
           </View>
