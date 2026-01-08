@@ -577,4 +577,3 @@ const styles = StyleSheet.create({
   inputLeftContainer:{alignItems:"flex-start",},
   inputLeft:{backgroundColor:"#fff", width:80, paddingHorizontal:0},
 });
-
