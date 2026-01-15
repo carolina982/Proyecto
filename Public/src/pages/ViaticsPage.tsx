@@ -57,7 +57,7 @@ export default function ViaticsPage() {
   const [filter, setFilter] = useState<"day" | "week" | "month">("month");
   const [conductorFilter, setConductorFilter] = useState<string>("");
 
-  const [dieselCantidad,setDieselCantidad]=useState("");
+  const [dieselCargas,setDieselCargas]=useState("");
   const [dieselCosto,setDieselCosto]=useState("");
   const [totalSDieselGlobal,setTotalDieselGlobal]=useState(0);
 
@@ -69,18 +69,18 @@ export default function ViaticsPage() {
   const [dieselHistorial,setDieselHistorial]=useState<CargaDiesel[]>([]);
 
   const agregarCargaDiesel= ()=>{
-    if(!dieselCantidad || !dieselCosto) return;
+    if(!dieselCargas || !dieselCosto) return;
     setDieselHistorial([
       ...dieselHistorial,
-      {cantidad:dieselCantidad ,costo:dieselCosto}
+      {cantidad:dieselCargas ,costo:dieselCosto}
     ]);
-    setDieselCantidad("");
+    setDieselCargas("");
     setDieselCosto("");
   };
 
   const editarCarga=(index:number)=>{
     const item=dieselHistorial[index];
-    setDieselCantidad(item.cantidad);
+    setDieselCargas(item.cantidad);
     setDieselCosto(item.costo);
     const actualizado =[...dieselHistorial];
     actualizado.splice(index,1);
@@ -91,7 +91,6 @@ export default function ViaticsPage() {
     const actualizado =dieselHistorial.filter((_,i)=> i !== index);
     setDieselHistorial(actualizado);
   };
-
 
   useEffect(()=>{const total=dieselHistorial.reduce( (acc, item)=> acc + Number(item.costo || 0),0
   );
@@ -104,6 +103,7 @@ export default function ViaticsPage() {
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
+      //console.log("VIATICOS RAW DESDE BACKEND",JSON.stringify(res.data,null,2));
       let tripsData = res.data.map((t: any) => ({ 
         ...t,
         id: t._id,
@@ -142,10 +142,21 @@ export default function ViaticsPage() {
           return trip && trip.conductorId === conductorFilter;
         });
       }
-      viaticosData = viaticosData.map((v: any) => ({
-        ...v,
-        conceptos: v.conceptos || conceptosList.reduce((acc: any, c: string) => ({ ...acc, [c]: 0 }), {})
-      }));
+      viaticosData=viaticosData.map((v:any)=>{
+        const conceptosPlano:any={};
+        conceptosBase.forEach(base=>{
+          conceptosPlano[`${base} Cantidad`]= v.conceptos?.[base]?.cantidad ?? 0;
+          conceptosPlano[`${base} Costo`]=v.conceptos?.[base]?.costo ?? 0;
+        });
+        return {
+          ...v,
+          conceptos:conceptosPlano,
+          dieselCargas:v.dieselCargas ?? 0,
+          dieselCosto:v.dieselCosto ?? 0,
+          tag:v.tag ?? 0,
+          total: v.total?? 0,
+        };
+      });
 
       setViaticos(viaticosData);
       calcularTotalDieselGlobal(viaticosData);
@@ -175,6 +186,7 @@ export default function ViaticsPage() {
     total +=Number(tag || 0);
     return total;
   };
+
  const exportViaticosToExcel = async (filter: string) => {
     try {
       const sortedViaticos = [...viaticos].sort(
@@ -283,8 +295,18 @@ export default function ViaticsPage() {
       });
 
       setConceptos(conceptosString);
-      setDieselCantidad((viatico.dieselCargas ?? 0).toString());
-      setDieselCosto((viatico.dieselCosto ?? 0).toString());
+      setDieselHistorial((viatico as any).dieselHistorial || []);
+      setTag((viatico.tag ??0).toString())
+      if (Array.isArray((viatico as any).dieselHistorial)){
+        setDieselHistorial(
+          (viatico as any).dieselHistorial.map((d:any)=>({
+            cantidad:String(d.cargas ?? 0),
+            costo:String(d.costo ?? 0),
+          }))
+        );
+      }else{
+        setDieselHistorial([]);
+      }
       setTag((viatico.tag ?? 0).toString());
       setFactura(viatico.facturaUrl || null);
 
@@ -293,7 +315,7 @@ export default function ViaticsPage() {
       setTripId("");
       setFactura(null);
       setConceptos(conceptosList.reduce((acc, c) => ({ ...acc, [c]: "0" }), {}));
-      setDieselCantidad("0");
+      setDieselCargas("0");
       setDieselCosto("0");
       setTag("0");
     }
@@ -318,61 +340,66 @@ export default function ViaticsPage() {
   };
 
   const saveViatico = async () => {
-    if (!tripId) return Alert.alert("Error", "Selecciona un viaje");
-    setLoading(true);
-    try {
+  if (!tripId) {
+    Alert.alert("Error", "Selecciona un viaje");
+    return;
+  }
+  setLoading(true);
 
-      const formData = new FormData();
-      formData.append("tripId", tripId);
-      formData.append("conceptos",JSON.stringify(conceptos));
-    
-      const dieselCantidadTotal=dieselHistorial.length;
-      const dieselCostoTotal=dieselHistorial.reduce(
-        (acc,d)=>acc +Number(d.costo || 0),0
-      );
-      formData.append("dieselCantidad",String(dieselCantidadTotal));
-      formData.append("dieselCosto",String(dieselCostoTotal));
-      formData.append("tag", tag);
-      formData.append("total", String(calcularTotal()));
-      formData.append("dieselHistorial",JSON.stringify(dieselHistorial));
+  try {
+    const formData = new FormData();
+    formData.append("tripId", tripId);
+    Object.entries(conceptos).forEach(([key, value]) => {
+      formData.append(conceptos[`${key}`], String(Number(value || 0)));
+    });
+    const dieselCargasTotal = dieselHistorial.length;
+    const dieselCostoTotal = dieselHistorial.reduce(
+      (acc, d) => acc + Number(d.costo || 0),
+      0
+    );
+    formData.append("dieselCargas",String(dieselCargasTotal));
+    formData.append("dieselCosto", String(dieselCostoTotal));
+    formData.append("dieselHistorial", JSON.stringify(dieselHistorial));
+    formData.append("tag", String(Number(tag || 0)));
+    formData.append("total", String(calcularTotal()));
+    if (factura) {
+      if (Platform.OS === "web") {
+        const response = await fetch(factura);
+        const blob = await response.blob();
+        const file = new File([blob], "factura", { type: blob.type });
+        formData.append("factura", file);
+      } else {
+        const uri = factura.startsWith("file://") ? factura :` file://${factura}`;
+        const filename = uri.split("/").pop()!;
+        const type = filename.endsWith(".pdf")
+          ? "application/pdf"
+          : filename.endsWith(".png")
+          ? "image/png"
+          : "image/jpeg";
 
-      if (factura) {
-        if (Platform.OS === "web") {
-          const response = await fetch(factura);
-          const blob = await response.blob();
-          const file = new File([blob], "factura.jpg", { type: blob.type });
-          formData.append("factura", file);
-        } else {
-          const uri = factura.startsWith("file://") ? factura : "file://" + factura;
-          const filename = uri.split("/").pop()!;
-          let type = filename.endsWith(".pdf") ? "application/pdf" :
-                     filename.endsWith(".png") ? "image/png" : "image/jpeg";  
-          formData.append("factura", { uri, name: filename, type } as any);
-        }
-      } else if (facturaRemoved) {
-        formData.append("factura", "");
+        formData.append("factura", { uri, name: filename, type } as any);
       }
-
-      const url = editingViatico
-        ? `${BASE_URL}/viatics/${editingViatico.id}`
-        : `${BASE_URL}/viatics`;
-
-      const method = editingViatico ? "PUT" : "POST";
-
-      const res = await fetch(url, { method, body: formData });
-      if (!res.ok) throw new Error(await res.text());
-
-      await loadViaticos();
-      setModalVisible(false);
-
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Error", "No se pudo guardar el viático");
-    } finally {
-      setLoading(false);
+    } else if (facturaRemoved) {
+      formData.append("factura", "");
     }
-  };
+    const url = editingViatico
+      ? `${BASE_URL}/viatics/${editingViatico.id}`
+      : `${BASE_URL}/viatics`;
 
+    const method = editingViatico ? "PUT" : "POST";
+
+    const res = await fetch(url, { method, body: formData });
+    if (!res.ok) throw new Error(await res.text());
+
+    await loadViaticos();
+    setModalVisible(false);
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Error", "No se pudo guardar el viático");
+  } finally {
+    setLoading(false);
+  }
+};
   const calcularTotalDieselGlobal =(viaticosData:Viatico[])=>{
     let total =0;
     viaticosData.forEach(v=>{
@@ -417,11 +444,11 @@ export default function ViaticsPage() {
 
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Viaje: {trip?.nombre || "Desconocido"}</Text>
+        <Text style={styles.title}>Viaje: {trip?.nombre || "Desconocido"} </Text>
         <Text>Conductor: {trip?.conductorNombre || "Desconocido"}</Text>
         <Text>Total: ${item.total}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>
+          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Ver detalles </Button>
           {currentUser?.rol === "Admin" && (
             <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>
           )}
@@ -487,7 +514,7 @@ export default function ViaticsPage() {
           <View style={{ flex: 1, paddingLeft: 3 }}>
              {conceptosBase
              .filter((b) => b !== "Comidas")
-             .slice(Math.ceil((conceptosBase.length - 1) / 2))
+             .slice(Math.ceil((conceptosBase.length - 0) / 2))
              .map((base) => (
              <View key={base} style={{ marginBottom: 10 }}>
               <Text style={styles.label}>{base}</Text>
@@ -505,7 +532,7 @@ export default function ViaticsPage() {
                  </TouchableOpacity>
                   </View>
                 <Text style={{marginTop:5}}>Cargas</Text>
-                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCantidad}onChangeText={setDieselCantidad}keyboardType="numeric"  />
+                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCargas}onChangeText={setDieselCargas}keyboardType="numeric"  />
                 <Text style={{marginTop:5}}>Costo</Text>
                 <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
                 <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>

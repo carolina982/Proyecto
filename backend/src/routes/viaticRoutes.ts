@@ -6,8 +6,8 @@ import { createViaticValidator, updateViaticValidator } from "../validators/viat
 
 const router = Router();
 router.get("/", getViatic);
-router.get("/:id", getViaticById);
 router.get("/trip/:tripId", getViaticByTrip);
+router.get("/:id", getViaticById);
 router.post("/", upload.single("factura"), createViaticValidator,validate,createViatic);
 router.put("/:id", upload.single("factura"), updateViaticValidator,validate,updateViatic);
 router.delete("/:id", deleteViatic);
