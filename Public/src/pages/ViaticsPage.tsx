@@ -421,6 +421,7 @@ export default function ViaticsPage() {
     if (Platform.OS === "web") {
       confirmed = window.confirm("¿Eliminar viático?");
       if (!confirmed) return;
+      
     } else {
       confirmed = await new Promise(resolve => {
         Alert.alert("Confirmar", "¿Eliminar viático?", [
@@ -444,7 +445,7 @@ export default function ViaticsPage() {
 
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Viaje: {trip?.nombre || "Desconocido"} </Text>
+        <Text style={styles.title}>Viatico {trip?.nombre || "Desconocido"} </Text>
         <Text>Conductor: {trip?.conductorNombre || "Desconocido"}</Text>
         <Text>Total: ${item.total}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
@@ -515,7 +516,7 @@ export default function ViaticsPage() {
              {conceptosBase
              .filter((b) => b !== "Comidas")
              .slice(Math.ceil((conceptosBase.length - 0) / 2))
-             .map((base) => (
+             .map((base) =>(
              <View key={base} style={{ marginBottom: 10 }}>
               <Text style={styles.label}>{base}</Text>
               <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>

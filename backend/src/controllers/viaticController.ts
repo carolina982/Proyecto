@@ -2,35 +2,22 @@ import { Request, Response } from "express";
 import Trip from "../models/Trip";
 import Viatico from "../models/Viatic";
 
-const toNumber=(value:any,defaultValue=0)=>{
-  const n=Number(value);
-  return isNaN(n) ? defaultValue:n;
-};
-
-export const getViatic =async(req:Request,res:Response)=>{
+export const getViatic= async (req:Request, res:Response)=>{
   try {
     const user=(req as any).user;
     let viatics;
+    if (user?.rol === "Chofer"){
+      const trips=await Trip.find({conductorId:user.id});
+      const tripsIds=trips.map(t=>t._id);
 
-    if(user?.rol === "Chofer"){
-      const trips =await Trip.find({conductorId :user.id.toString ()});
-      const tripsIds=trips.map(t => t._id);
-      viatics=await Viatico.find({
-        tripId:{$in:tripsIds},
-      }).populate({
-        path:"tripId",
-        populate:{
-          path:"conductorId",
-          select:"name email",
-        },
+      viatics=await Viatico.find({tripId:{$in:tripsIds}})
+      .populate({ path:"tripId",populate:{path:"conductorId",select:"name email"},
       });
     }else{
-      viatics =await Viatico.find().populate({
+      viatics=await Viatico.find().populate({
         path:"tripId",
-        populate:{
-          path:"conductorId",
-          select:"name emal",
-        },
+        populate:{path:"conductorId",select:"name email"
+        }
       });
     }
     res.json(viatics);
@@ -40,44 +27,30 @@ export const getViatic =async(req:Request,res:Response)=>{
   }
 };
 
-export const getViaticById = async (req:Request, res:Response)=>{
+export const getViaticById = async (req:Request , res:Response)=>{
   try {
-    const viatico:any =await Viatico.findById(req.params.id);
-    if (!viatico){
+    const viatic=await Viatico.findById(req.params.id)
+    .populate({
+      path:"tripId",
+      populate:{
+        path:"conductorId",
+        select:"namw email"
+      }
+    });
+    if (!viatic){
       return res.status(404).json({message:"Viatico no econtrado"});
     }
-    const user =(req as any).user ;
-    if (user?.rol === "chofer"){
-      const trip =await Trip.findById(viatico.tripId);
-        if (!trip || trip.conductorId.toString() !==user.id.toString()){
-          return res.status(403).json({message:"No tiene permisos para ver este viatico"});
-      } 
+    const user =(req as any).user;
+    if (user?.rol === "Chofer"){
+      const trip: any =viatic.tripId;
+      if(trip.conductorId._id.toString() !== user.id.toString()){
+        return res.status(403).json({message:"No tienes permisos"});
+      }
     }
-    const conceptosPlano:any={};
-    const conceptosBase=[
-      "Comidas" , "Hospedaje" ,
-      "Pension" , "Vulcanizadora",
-      "Taxi" , "Casetas efectivo",
-      "Limpieza Unidad" , "Multa",
-      "Comisiones" , "Fumigacion",
-      "DEF" , "Regaderas",
-    ];
-    conceptosBase.forEach(base =>{
-      conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.cantidad ?? 0;
-      conceptosPlano[`${base} Costo`]=viatico.conceptos?.[base]?.costo ?? 0;
-    });
-    res.json({
-      ...viatico.toObject(),
-      conceptos:conceptosPlano,
-      dieselCargas:viatico.dieselCargas ?? 0,
-      dieselCosto:viatico.dieselCosto ?? 0,
-      dieselHistorial:viatico.dieselHistorial ?? [],
-      tag:viatico.tag ?? 0,
-      total:viatico.total ?? 0,
-    });
-  }catch (error){
+    res.json(viatic);
+  }catch(error){
     console.error(error);
-    res.status(500).json({message:"Error al obtener viatico"});
+    res.status(500).json
   }
 };
 
@@ -101,10 +74,7 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
 
 export const createViatic = async (req:Request, res:Response)=>{
   try {
-    const {
-      tripId, conceptos,dieselHistorial,dieselCargas,dieselCosto,tag,total
-    }=req.body;
-
+    const {tripId, conceptos,dieselHistorial,dieselCargas,dieselCosto,tag,total}=req.body;
     let conceptosFinal:any ={};
     if (conceptos && typeof conceptos === "object"){
       Object.entries(conceptos).forEach(([Key , value])=>{
@@ -168,6 +138,7 @@ export const updateViatic = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al actualizar viático" });
   }
 };
+
  export const deleteViatic = async (req: Request, res: Response) => {
    try {
      const viatic = await Viatico.findById(req.params.id);
