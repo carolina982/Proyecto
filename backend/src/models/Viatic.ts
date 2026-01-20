@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
 
+const DieselSchema = new mongoose.Schema(
+  {
+    cargas:{type:Number, default:0},
+    costo:{type:Number , default:0},
+  },
+  {_id:false}
+);
+
+const ConceptosSchema = new mongoose.Schema(
+  {
+    cantidad:{type:Number,default:0},
+    costo:{type:Number,default:0},
+  },
+  {_id:false}
+);
+
 const ViaticoSchema = new mongoose.Schema({
   tripId:{
     type:mongoose.Schema.Types.ObjectId,
@@ -7,15 +23,22 @@ const ViaticoSchema = new mongoose.Schema({
     required:true,
   },
   conceptos:{
-    type:mongoose.Schema.Types.Mixed,
+    type:Map,
+    of:ConceptosSchema,
     default:{},
   },
-  dieselCargas:{type:Number,default:0},
-  dieselCosto:{type:Number,default:0},
-  tag:{type:Number, default:0},
-  total:{type:Number,default:0},
-  factura:{type:String},
-  createAt:{type:Date , default:Date.now},
+  dieselHistorial:{
+    type:[DieselSchema],
+    default:[],
+  },
+  dieselCargas:{type:Number, default:0},
+  diselCosto:{type:Number,default:0},
+
+  tag:{type:Number,default:0},
+  total:{type:Number , default:0},
+
+  factura:String,
+  createAT:{type:Date ,default:Date.now},
 });
 
 export default mongoose.model("Viatico",ViaticoSchema);

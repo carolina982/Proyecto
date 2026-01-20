@@ -60,6 +60,8 @@ export default function ViaticsPage() {
   const [dieselCargas,setDieselCargas]=useState("");
   const [dieselCosto,setDieselCosto]=useState("");
   const [totalSDieselGlobal,setTotalDieselGlobal]=useState(0);
+  const [viaticoSeleccionado,setViaticoSeleccionado]=useState<any>(null);
+
 
   interface CargaDiesel{
     cantidad:string;
@@ -103,7 +105,6 @@ export default function ViaticsPage() {
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
-      //console.log("VIATICOS RAW DESDE BACKEND",JSON.stringify(res.data,null,2));
       let tripsData = res.data.map((t: any) => ({ 
         ...t,
         id: t._id,
@@ -283,20 +284,17 @@ export default function ViaticsPage() {
       Alert.alert("Error", "No se pudo generar el Excel");
     }
   };
-
-  const openModal = (viatico?: Viatico) => {
-    if (viatico) {
+  const openModal =(viatico?:Viatico)=>{
+    if (viatico){
       setEditingViatico(viatico);
       setTripId(viatico.tripId);
 
-      const conceptosString: any = {};
-      conceptosList.forEach(c => {
-        conceptosString[c] = (viatico.conceptos?.[c] ?? 0).toString();
+      const conceptosPlano:any={};
+      conceptosBase.forEach(base =>{
+        conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.toString() ?? "0";
+        conceptosPlano[`${base} Costo`]=viatico.conceptos?.[base]?.toString()?? "0";
       });
-
-      setConceptos(conceptosString);
-      setDieselHistorial((viatico as any).dieselHistorial || []);
-      setTag((viatico.tag ??0).toString())
+      setConceptos(conceptosPlano);
       if (Array.isArray((viatico as any).dieselHistorial)){
         setDieselHistorial(
           (viatico as any).dieselHistorial.map((d:any)=>({
@@ -304,22 +302,21 @@ export default function ViaticsPage() {
             costo:String(d.costo ?? 0),
           }))
         );
-      }else{
+      }else {
         setDieselHistorial([]);
       }
-      setTag((viatico.tag ?? 0).toString());
+      setTag(String(viatico.tag ?? 0));
       setFactura(viatico.facturaUrl || null);
-
-    } else {
+    }else{
       setEditingViatico(null);
       setTripId("");
       setFactura(null);
-      setConceptos(conceptosList.reduce((acc, c) => ({ ...acc, [c]: "0" }), {}));
-      setDieselCargas("0");
-      setDieselCosto("0");
+      setConceptos(
+        conceptosList.reduce((acc,c)=>({ ...acc,[c]:"0"}),{})
+      );
+      setDieselHistorial([]);
       setTag("0");
     }
-
     setFacturaRemoved(false);
     setShowFactura(false);
     setModalVisible(true);
@@ -339,6 +336,23 @@ export default function ViaticsPage() {
     }
   };
 
+  const normalizarViaticoParaEditar =(viatico:any,conceptosBase:string [])=>{
+    const conceptosPlano:any={};
+    conceptosBase.forEach(base =>{
+      conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.cantidad?.toString()  ?? "";
+      conceptosPlano[`${base} Costo`]=viatico.conceptos?.[base]?.costo?.toString () ?? "";
+    });
+    return{
+      ...viatico,
+      conceptos:conceptosPlano,
+      dieselHistorial:Array.isArray(viatico.dieselHistorial)
+       ? viatico.dieselHistorial.map((d:any)=>({
+        cantidad:d.cargas?.toString () ?? "",
+        costo:d.costo?.toString () ?? "",
+       })) :[],
+       tag:viatico.tag?.toString() ?? "",
+    };
+  };
   const saveViatico = async () => {
   if (!tripId) {
     Alert.alert("Error", "Selecciona un viaje");
@@ -359,7 +373,8 @@ export default function ViaticsPage() {
     );
     formData.append("dieselCargas",String(dieselCargasTotal));
     formData.append("dieselCosto", String(dieselCostoTotal));
-    formData.append("dieselHistorial", JSON.stringify(dieselHistorial));
+    formData.append("dieselHistorial",JSON.stringify(dieselHistorial.map(d=>({cargas:Number(d.cantidad || 0),costo:Number(d.costo|| 0),}))
+  ));
     formData.append("tag", String(Number(tag || 0)));
     formData.append("total", String(calcularTotal()));
     if (factura) {
@@ -477,6 +492,7 @@ export default function ViaticsPage() {
       )}
       <FlatList data={viaticos}keyExtractor={item => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
+
         <ScrollView style={styles.modalContent}>
           <Text style={styles.modalTitle}>
             {editingViatico ? "Editar Viático" : "Nuevo Viático"}
