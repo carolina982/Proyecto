@@ -143,19 +143,20 @@ export default function ViaticsPage() {
           return trip && trip.conductorId === conductorFilter;
         });
       }
-      viaticosData=viaticosData.map((v:any)=>{
-        const conceptosPlano:any={};
+
+      viaticosData =viaticosData.map((v:any)=>{
+        const conceptosPlano:any ={};
         conceptosBase.forEach(base=>{
-          conceptosPlano[`${base} Cantidad`]= v.conceptos?.[base]?.cantidad ?? 0;
+          conceptosPlano[`${base} Cantidad`]=v.conceptos?.[base]?.cantidad ?? 0;
           conceptosPlano[`${base} Costo`]=v.conceptos?.[base]?.costo ?? 0;
         });
-        return {
+        return{
           ...v,
           conceptos:conceptosPlano,
           dieselCargas:v.dieselCargas ?? 0,
           dieselCosto:v.dieselCosto ?? 0,
           tag:v.tag ?? 0,
-          total: v.total?? 0,
+          total:v.total ?? 0,
         };
       });
 
@@ -284,44 +285,40 @@ export default function ViaticsPage() {
       Alert.alert("Error", "No se pudo generar el Excel");
     }
   };
-  const openModal =(viatico?:Viatico)=>{
-    if (viatico){
-      setEditingViatico(viatico);
-      setTripId(viatico.tripId);
-
-      const conceptosPlano:any={};
-      conceptosBase.forEach(base =>{
-        conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.toString() ?? "0";
-        conceptosPlano[`${base} Costo`]=viatico.conceptos?.[base]?.toString()?? "0";
-      });
-      setConceptos(conceptosPlano);
-      if (Array.isArray((viatico as any).dieselHistorial)){
-        setDieselHistorial(
-          (viatico as any).dieselHistorial.map((d:any)=>({
-            cantidad:String(d.cargas ?? 0),
-            costo:String(d.costo ?? 0),
-          }))
-        );
-      }else {
-        setDieselHistorial([]);
-      }
-      setTag(String(viatico.tag ?? 0));
-      setFactura(viatico.facturaUrl || null);
-    }else{
-      setEditingViatico(null);
-      setTripId("");
-      setFactura(null);
-      setConceptos(
-        conceptosList.reduce((acc,c)=>({ ...acc,[c]:"0"}),{})
+const openModal =(viatico?:Viatico)=>{
+  if (viatico) {
+    setEditingViatico(viatico);
+    setTripId(viatico.tripId);
+    const conceptosPlano:any={};
+    conceptosBase.forEach(base=>{
+      conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.toString() ?? "0";
+      conceptosPlano[`${base} Costo`] =viatico.conceptos?.[base]?.toString() ?? "0";
+    });
+    setConceptos(conceptosPlano);
+    if (Array.isArray((viatico as any).dieselHistorial)){
+      setDieselHistorial(
+        (viatico as any).dieselHistorial.map((d:any)=>({
+          cantidad:String(d.cantidad ?? 0),
+          costo:String(d.costo ?? 0),
+        }))
       );
+    }else{
       setDieselHistorial([]);
-      setTag("0");
     }
-    setFacturaRemoved(false);
-    setShowFactura(false);
-    setModalVisible(true);
-  };
-
+    setTag(String(viatico.tag ?? 0));
+    setFactura(viatico.facturaUrl || null);
+  }else{
+    setEditingViatico(null);
+    setTripId("");
+    setFactura(null);
+    setConceptos(conceptosList.reduce((acc,c)=>({...acc,[c]:"0"}),{}));
+    setDieselHistorial([]);
+    setTag("0");
+  }
+  setFacturaRemoved(false);
+  setShowFactura(false);
+  setModalVisible(true);
+};
  const pickFactura = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: ["image/*", "application/pdf"] });
