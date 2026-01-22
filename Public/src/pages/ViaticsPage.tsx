@@ -288,16 +288,16 @@ export default function ViaticsPage() {
 const openModal =(viatico?:Viatico)=>{
   if (viatico) {
     setEditingViatico(viatico);
-    setTripId(viatico.tripId);
-    
+    setTripId((viatico.tripId as any)?._id || viatico.tripId);
+
     if (Array.isArray((viatico as any).dieselHistorial)){
       setDieselHistorial(
-        (viatico as any).dieselHistorial.map((d:any)=>({
-          cantidad:String(d.cantidad ?? 0),
+        (viatico as any).dieselHistorial.map((d: any)=>({
+          cantidad:String(d.cargas ?? 0),
           costo:String(d.costo ?? 0),
         }))
       );
-    }else{
+    }else {
       setDieselHistorial([]);
     }
     setTag(String(viatico.tag ?? 0));
@@ -355,9 +355,14 @@ const openModal =(viatico?:Viatico)=>{
   try {
     const formData = new FormData();
     formData.append("tripId", tripId);
-    Object.entries(conceptos).forEach(([key, value]) => {
-      formData.append(conceptos[`${key}`], String(Number(value || 0)));
+    const conceptosFinal :any={};
+    conceptosBase.forEach(base=>{
+      conceptosFinal[base]={
+        cantidad:Number(conceptos[`${base} Cantidad`] || 0),
+        costo:Number(conceptos[`${base} Costo`] || 0),
+      };
     });
+    formData.append("conceptos",JSON.stringify(conceptosFinal));
     const dieselCargasTotal = dieselHistorial.length;
     const dieselCostoTotal = dieselHistorial.reduce(
       (acc, d) => acc + Number(d.costo || 0),
@@ -376,7 +381,7 @@ const openModal =(viatico?:Viatico)=>{
         const file = new File([blob], "factura", { type: blob.type });
         formData.append("factura", file);
       } else {
-        const uri = factura.startsWith("file://") ? factura :` file://${factura}`;
+        const uri = factura.startsWith("file://") ? factura :`file://${factura}`;
         const filename = uri.split("/").pop()!;
         const type = filename.endsWith(".pdf")
           ? "application/pdf"
@@ -452,8 +457,8 @@ const openModal =(viatico?:Viatico)=>{
 
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Viatico {trip?.nombre || "Desconocido"} </Text>
-        <Text>Conductor: {trip?.conductorNombre || "Desconocido"}</Text>
+        <Text style={styles.title}>Viatico: {(item.tripId as any)?.nombre ?? "Sin asignar"} </Text>
+        <Text>Conductor: {(item.tripId as any)?.conductorId?.name ?? "Sin asignar"}</Text>
         <Text>Total: ${item.total}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
           <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Ver detalles </Button>
@@ -489,8 +494,7 @@ const openModal =(viatico?:Viatico)=>{
           <Text style={styles.modalTitle}>
             {editingViatico ? "Editar Viático" : "Nuevo Viático"}
           </Text>
-          <Text style={styles.label}>Viaje:</Text>
-                                                                                                                                                                                             
+          <Text style={styles.label}>Viaje:</Text>                                                                                                                                                                                
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
             <Picker.Item label="Selecciona un viaje" value="" />
             {trips.map(t => (

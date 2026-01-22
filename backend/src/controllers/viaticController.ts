@@ -75,19 +75,17 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
 export const createViatic = async (req:Request, res:Response)=>{
   try {
     const {tripId, conceptos,dieselHistorial,dieselCargas,dieselCosto,tag,total}=req.body;
-    let conceptosFinal:any ={};
-    if (conceptos && typeof conceptos === "object"){
-      Object.entries(conceptos).forEach(([Key , value])=>{
-        const [nombre,tipo]=Key.split(" ");
-        if (!conceptosFinal [nombre]){
-          conceptosFinal[nombre]={cantidad:0 , costo:0};
-        }
-        if (tipo === "Cantidad"){
-          conceptosFinal[nombre].cantidad=Number(value) || 0 ;
-        }
-        if (tipo === "Costo"){
-          conceptosFinal[nombre].costo=Number(value) || 0;
-        }
+    let conceptosFinal:any={};
+    if(conceptos){
+      const conceptosObj= 
+      typeof conceptos === "string"
+      ? JSON.parse(conceptos)
+      :conceptos;
+      Object.entries(conceptosObj).forEach(([nombre,data]:any)=>{
+        conceptosFinal[nombre]={
+          cantidad:Number(data.cantidad || 0),
+          costo:Number(data.costo ||0),
+        };
       });
     }
      let factura="";
@@ -104,6 +102,7 @@ export const createViatic = async (req:Request, res:Response)=>{
       total:Number(total) || 0 ,
       factura,
      });
+     const viaje=await Trip.findById(tripId);
      return res.status(201).json(newViatic);
   }catch (error){
     console.error("Error al crear viatico",error);
