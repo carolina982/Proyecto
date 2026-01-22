@@ -289,12 +289,7 @@ const openModal =(viatico?:Viatico)=>{
   if (viatico) {
     setEditingViatico(viatico);
     setTripId(viatico.tripId);
-    const conceptosPlano:any={};
-    conceptosBase.forEach(base=>{
-      conceptosPlano[`${base} Cantidad`]=viatico.conceptos?.[base]?.toString() ?? "0";
-      conceptosPlano[`${base} Costo`] =viatico.conceptos?.[base]?.toString() ?? "0";
-    });
-    setConceptos(conceptosPlano);
+    
     if (Array.isArray((viatico as any).dieselHistorial)){
       setDieselHistorial(
         (viatico as any).dieselHistorial.map((d:any)=>({
@@ -318,7 +313,7 @@ const openModal =(viatico?:Viatico)=>{
   setFacturaRemoved(false);
   setShowFactura(false);
   setModalVisible(true);
-};
+}
  const pickFactura = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: ["image/*", "application/pdf"] });
