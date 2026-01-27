@@ -12,4 +12,5 @@ router.post("/", upload.single("factura"), createViaticValidator,validate,create
 router.put("/:id", upload.single("factura"), updateViaticValidator,validate,updateViatic);
 router.delete("/:id", deleteViatic);
 
+
 export default router;

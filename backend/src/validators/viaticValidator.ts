@@ -13,4 +13,5 @@ export const  createViaticValidator =[
     body("total").optional().isNumeric().withMessage("Debe ser numero"),
 ];
 
+
 export const updateViaticValidator=createViaticValidator;

@@ -26,8 +26,8 @@ const ViaticoSchema = new mongoose.Schema({
   total:{type:Number , default:0},
   factura:String,
   createAT:{type:Date ,default:Date.now},
-  tripNombre:{type:String,required:true},
-  conductorNombre:{type:String,required:true},
+  tripNombre:{type:String,default:"Sin asignar"},
+  conductorNombre:{type:String,default:"Sin asignar"},
 });
 
 export default mongoose.model("Viatico",ViaticoSchema);

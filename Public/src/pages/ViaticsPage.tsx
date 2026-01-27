@@ -202,11 +202,10 @@ export default function ViaticsPage() {
       let monthTotal = 0;
 
       sortedViaticos.forEach(v => {
-        const created = new Date(v.createdAt);
-        const monthName = created.toLocaleString("es-ES", { month: "long", year: "numeric" });
-        const weekNumber = Math.ceil(created.getDate() / 7);
-        const dayNumber = created.getDate();
-
+        const created = v.createdAt ? new Date(v.createdAt) :new Date ();
+        const monthName=isNaN(created.getTime())?"sin fecha" :created.toLocaleString("es_Es",{month:"long",year:"numeric"});
+        const weekNumber=isNaN(created.getTime()) ?0 :Math.ceil(created.getDate()/7);
+        const dayNumber=isNaN(created.getTime())?0 :created.getDate();
         if (monthName !== currentMonth) {
           if (monthViaticoCount > 0) {
             ws_data.push([`TOTAL DEL MES: ${monthTotal.toFixed(2)}`]);
@@ -216,14 +215,14 @@ export default function ViaticsPage() {
           ws_data.push([`MES: ${monthName.toUpperCase()}`]);
           ws_data.push([
             "Semana",
-            "Día",
+            "Dia",
             "Viaje",
             "Conductor",
             "Diesel Cargas",
             "Diesel Costo",
             "TAG",
-            ...conceptosList,
-            "Total",
+            ...conceptosList.flatMap(c=>[`${c} Cantidad`,`${c} Costo`]),
+            "Total"
           ]);
 
           currentMonth = monthName;
@@ -237,7 +236,7 @@ export default function ViaticsPage() {
           currentWeek = weekNumber;
         }
 
-        const trip = trips.find(t => t.id === v.tripId);
+        const trip =trips.find(t => t.id === v.tripId);
         const conductorNombre = trip?.conductorNombre || "Desconocido";
 
         const row = [

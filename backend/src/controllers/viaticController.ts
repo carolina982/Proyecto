@@ -92,8 +92,14 @@ export const createViatic = async (req:Request, res:Response)=>{
      if (req.file){
       factura=`/uploads/${req.file.filename}`;
      }
+     const viaje =await Trip.findById(tripId).populate("conductorId","Nombre");
+     if(!viaje){
+      return res.status(400).json({message:"Viaje no econtrado"});
+     }
      const newViatic=await Viatico.create({
       tripId,
+      tripNombre:viaje.nombre,
+      conductorNombre:(viaje as any).conductorId.nombre || "Sin asignar",
       conceptos:conceptosFinal,
       dieselHistorial:Array.isArray(dieselHistorial) ?  dieselHistorial:[],
       dieselCargas:Number(dieselCargas) || 0,
@@ -102,7 +108,7 @@ export const createViatic = async (req:Request, res:Response)=>{
       total:Number(total) || 0 ,
       factura,
      });
-     const viaje=await Trip.findById(tripId);
+     
      return res.status(201).json(newViatic);
   }catch (error){
     console.error("Error al crear viatico",error);
