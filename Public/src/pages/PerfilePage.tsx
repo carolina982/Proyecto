@@ -144,14 +144,7 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       {photoUri ? (
         <Avatar.Image size={100} source={{ uri: photoUri }} style={styles.avatar} />
       ) : (
-        <Avatar.Text size={100} 
-            label={(nombre ?? "")
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .toUpperCase()}
-          style={styles.avatar}
-        />
+        <Avatar.Text size={100}  label={(nombre ?? "").split(" ").map((n: string) => n[0]).join("").toUpperCase()}style={styles.avatar} />
       )}
       <Button mode="outlined"style={styles.changePhotoButton}onPress={pickImage}labelStyle={{ color: "#0d75bb" }}>Cambiar Imagen</Button>
       <Text style={styles.title}>Perfil</Text>

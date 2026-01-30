@@ -189,101 +189,97 @@ export default function ViaticsPage() {
     return total;
   };
 
- const exportViaticosToExcel = async (filter: string) => {
-    try {
-      const sortedViaticos = [...viaticos].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+const exportViaticosToExcel = async (filter:string)=>{
+  try {
+    const  sortedViaticos=[...viaticos].sort( (a , b)=>{
+      const da=new Date(a.createdAt).getTime();
+      const db=new Date(b.createdAt).getTime();
+      return(isNaN(da) ?0 :da)-(isNaN(db) ? 0:db);
+    });
+    const ws_data:any [][]=[];
+    let currentMonth="";
+    let currentWeek=0;
+    let monthTotal=0;
+    sortedViaticos.forEach(v=>{
+      const created =new Date (v.createdAt);
+      const isValidDate =!isNaN (created.getTime());
+      const monthName=isValidDate
+      ? created.toLocaleString("es-ES",{month:"long",year:"numeric"})
+      :"sin fecha";
+      const weekNumber =isValidDate ?Math.ceil(created.getDate()/7):0;
+      const dayNumber =isValidDate? created.getDate():0;
 
-      const ws_data: any[][] = [];
-      let currentMonth = "";
-      let currentWeek = 0;
-      let monthViaticoCount = 0;
-      let monthTotal = 0;
-
-      sortedViaticos.forEach(v => {
-        const created = v.createdAt ? new Date(v.createdAt) :new Date ();
-        const monthName=isNaN(created.getTime())?"sin fecha" :created.toLocaleString("es_Es",{month:"long",year:"numeric"});
-        const weekNumber=isNaN(created.getTime()) ?0 :Math.ceil(created.getDate()/7);
-        const dayNumber=isNaN(created.getTime())?0 :created.getDate();
-        if (monthName !== currentMonth) {
-          if (monthViaticoCount > 0) {
-            ws_data.push([`TOTAL DEL MES: ${monthTotal.toFixed(2)}`]);
-            ws_data.push([]);
-          }
-
-          ws_data.push([`MES: ${monthName.toUpperCase()}`]);
-          ws_data.push([
-            "Semana",
-            "Dia",
-            "Viaje",
-            "Conductor",
-            "Diesel Cargas",
-            "Diesel Costo",
-            "TAG",
-            ...conceptosList.flatMap(c=>[`${c} Cantidad`,`${c} Costo`]),
-            "Total"
-          ]);
-
-          currentMonth = monthName;
-          currentWeek = 0;
-          monthViaticoCount = 0;
-          monthTotal = 0;
+      if (monthName !== currentMonth){
+        if (currentMonth){
+          ws_data.push([`TOTAL DEL MES:$${monthTotal.toFixed(2)}`]);
+          ws_data.push([]);
         }
-
-        if (weekNumber !== currentWeek) {
-          ws_data.push([`Semana ${weekNumber}`]);
-          currentWeek = weekNumber;
-        }
-
-        const trip =trips.find(t => t.id === v.tripId);
-        const conductorNombre = trip?.conductorNombre || "Desconocido";
-
-        const row = [
-          weekNumber,
-          dayNumber,
-          trip?.nombre || "Desconocido",
-          conductorNombre,
-          v.dieselCargas ?? 0,
-          v.dieselCosto ?? 0,
-          v.tag ?? 0,
-          ...conceptosList.map(c => v.conceptos?.[c] ?? 0),
-          v.total ?? 0
-        ];
-
-        ws_data.push(row);
-        monthViaticoCount++;
-        monthTotal += Number(v.total ?? 0);
-      });
-
-      if (monthViaticoCount > 0) {
-        ws_data.push([`TOTAL DEL MES: ${monthTotal.toFixed(2)}`]);
+        ws_data.push([`MES:${monthName.toUpperCase()}`]);
+        ws_data.push([
+          "Semana",
+          "Dia",
+          "Viaje",
+          "Conductor",
+          "Diesel Cargas",
+          "DieseL Costo",
+          "TAG",
+          ...conceptosList,
+          "Total"
+        ]);
+        currentMonth=monthName;
+        currentWeek=0;
+        monthTotal=0;
       }
-
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Viaticos");
-
-      if (Platform.OS === "web") {
-        const blob = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        saveAs(
-          new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-          "Viaticos.xlsx"
-        );
-      } else {
-        const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
-        const cacheDir = (FileSystem as any).cacheDirectory ?? (FileSystem as any).documentDirectory ?? "";
-        const fileUri = `${cacheDir}Viaticos.xlsx`;
-        await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: "base64" });
-        await Sharing.shareAsync(fileUri);
+      if (weekNumber !== currentWeek){
+        ws_data.push([`Semana ${weekNumber}`]);
+        currentWeek =weekNumber;
       }
-
-      Alert.alert("Éxito", "Reporte de viáticos generado correctamente");
-    } catch (error) {
-      console.error("Error exportando viáticos:", error);
-      Alert.alert("Error", "No se pudo generar el Excel");
+      const trip =trips.find(t=>t.id === v.tripId);
+      const row =[
+        weekNumber,
+        dayNumber,
+        trip?.nombre ,
+        trip?.conductorNombre,
+        v.dieselCargas ?? 0,
+        v.dieselCosto ?? 0,
+        v.tag ?? 0,
+        ...conceptosList.map(c => v.conceptos?.[c] ?? 0),
+        v.total ?? 0,
+      ];
+      ws_data.push (row);
+      monthTotal += Number(v.total ?? 0);
+    });
+    if (currentMonth){
+      ws_data.push([`TOTAL DEL MES:$${monthTotal.toFixed(2)}`]);
     }
-  };
+    const ws =XLSX.utils.aoa_to_sheet(ws_data);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws ,"Viaticos");
+    if (Platform.OS === "web"){
+      const blob =XLSX.write(wb,{bookType:"xlsx" ,type:"array"});
+      saveAs(
+        new Blob([blob],{
+          type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }),
+        "Viaticos.xlsx"
+      );
+    }else{
+      const wbout=XLSX.write(wb ,{type :"base64",bookType:"xlsx"});
+      const fileUri=
+      ((FileSystem as any).cacheDirectory ||
+       (FileSystem as any).documentDirectory)+ "Viaticosd.xlsx";
+       await FileSystem.writeAsStringAsync(fileUri,wbout ,{
+        encoding:"base64"
+       });
+       await Sharing.shareAsync(fileUri);
+    }
+    Alert.alert("Exito","Reporte de viaticos generado correctame");
+  }catch (error){
+    console.error("Error exportando viaticos",error);
+    Alert.alert("Error","No se pudo generar el Excel");
+  }
+};
+
 const openModal =(viatico?:Viatico)=>{
   if (viatico) {
     setEditingViatico(viatico);

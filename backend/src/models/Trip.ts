@@ -24,8 +24,9 @@ const tripSchema = new Schema<ITrip>(
     kilometraje:{type:Number , default: 0},
     acompanante:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:false,default:null},
     def:{type:String , required:true},
-
+    
 },
   {timestamps:true}
 );
+
 export default mongoose.model<ITrip>("Trip",tripSchema);
