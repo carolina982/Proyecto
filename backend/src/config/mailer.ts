@@ -7,3 +7,5 @@ export const transporter =nodemailer.createTransport ({
         pass:"contraseña"
     },
 });
+
+//checar la api 

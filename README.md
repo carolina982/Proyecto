@@ -75,6 +75,7 @@ Join our community of developers creating universal apps.
 - en viaticos solo es checar la suma de todos los  campos
 - solo falta por que no aparece automatico el precio fijo de comidas y de la suma total de todos los campos s
 
-* Viáticos checar el precio fijo de comidas que de el total agregar bien el estilo de la líneas que no ocupe mucho espacio y que no este aun lado  no abajo una la izquierda y derecha que no ocupe mucho espacio de bajo del nombre. 
+- checar las fallas de excel en viaticos 
+- probrar las pruebas unitarias ya se tanto para web y movil
 
 - Con intalciones de nuevas actualizaciones tambien checar la interfaz de movil 
