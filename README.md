@@ -73,10 +73,6 @@ que son adminstrador , chofer que arroga la lista de usarios en el apartado de u
 
 * Solo por lo mientras funcionan local todavia no esta subia a hosting 
 
-* Checar la compatibilidad de web y movil en algunas cosas estan fallando 
+* Checar la compatibilidad de web y movil  para ios y android en algunas cosas estan fallando 
 
 * checar el api para restablecer la contraseña 
-* checar las fallas de excel en viaticos 
-
-* probrar las pruebas unitarias ya se tanto para web y movil
-* Con intalciones de nuevas actualizaciones tambien checar la interfaz de movil 
