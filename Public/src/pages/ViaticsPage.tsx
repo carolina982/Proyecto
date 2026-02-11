@@ -250,7 +250,7 @@ const exportViaticosToExcel = async (filter:string)=>{
       monthTotal += Number(v.total ?? 0);
     });
     if (currentMonth){
-      ws_data.push([`TOTAL DEL MES:$${monthTotal.toFixed(2)}`]);
+      ws_data.push([`TOTAL DEL MES:${monthTotal.toFixed(2)}`]);
     }
     const ws =XLSX.utils.aoa_to_sheet(ws_data);
     const wb=XLSX.utils.book_new();
@@ -400,7 +400,7 @@ const openModal =(viatico?:Viatico)=>{
 
     await loadViaticos();
     setModalVisible(false);
-  } catch (error) {
+  } catch (error) {                                        
     console.error(error);
     Alert.alert("Error", "No se pudo guardar el viático");
   } finally {
@@ -421,7 +421,7 @@ const openModal =(viatico?:Viatico)=>{
     setTotalDieselGlobal(total);
   };
 
-
+  
   const deleteViatico = async (id: string) => {
     let confirmed = false;
 

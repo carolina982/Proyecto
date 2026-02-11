@@ -50,8 +50,9 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 
-- Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
-- administrador-->inicio , perfil , viajes , unidades, usuarios 
+- Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles
+que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
+- administrador -->inicio , perfil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perfil , viajes, viaticos 
 3. Levantar el servidor de base de datos
 
@@ -68,14 +69,14 @@ Join our community of developers creating universal apps.
      ```bash
      npx expo start 
      ```
-- Checar la compatibilidad de web y movil en algunas cosas estan fallando 
-- Solo por lo mientras funcionan local todavia no esta subia a hosting 
-- checar el api para restablecer la contraseña 
 
-- en viaticos solo es checar la suma de todos los  campos
-- solo falta por que no aparece automatico el precio fijo de comidas y de la suma total de todos los campos s
 
-- checar las fallas de excel en viaticos 
-- probrar las pruebas unitarias ya se tanto para web y movil
+* Solo por lo mientras funcionan local todavia no esta subia a hosting 
 
-- Con intalciones de nuevas actualizaciones tambien checar la interfaz de movil 
+* Checar la compatibilidad de web y movil en algunas cosas estan fallando 
+
+* checar el api para restablecer la contraseña 
+* checar las fallas de excel en viaticos 
+
+* probrar las pruebas unitarias ya se tanto para web y movil
+* Con intalciones de nuevas actualizaciones tambien checar la interfaz de movil 

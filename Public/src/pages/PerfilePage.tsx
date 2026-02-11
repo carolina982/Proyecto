@@ -163,7 +163,7 @@ export default function PerfilPage({ currentUser, setCurrentUser }: PerfilPagePr
       <Button mode="contained"buttonColor="#0d75bb"style={styles.button}onPress={handleSave}loading={isSaving}>Guardar Cambios </Button>
     </ScrollView>
   );
-}
+};
 const styles = StyleSheet.create({
   container: { padding: 20, flexGrow: 1, alignItems: "center" },
   avatar: { backgroundColor: "#0d75bb", marginBottom: 10 },

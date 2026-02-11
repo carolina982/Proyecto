@@ -461,7 +461,7 @@ const exportToExcel = async (exportType: string) => {
 </Modal>
 </View>
   )
-}
+};
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
   card: { backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 },

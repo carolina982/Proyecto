@@ -8,4 +8,4 @@ export const transporter =nodemailer.createTransport ({
     },
 });
 
-//checar la api 
+//checar la api  para la recuperacion de contraseña 
