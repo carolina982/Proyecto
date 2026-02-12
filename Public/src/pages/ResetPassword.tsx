@@ -40,7 +40,7 @@ export default function ResetPassword ({route,navigation}:any){
             setLoading(false);
         }
     };
-   
+    
     return (
         <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Text style ={styles.title}>Nueva contraseña</Text>

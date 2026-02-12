@@ -101,7 +101,8 @@ const deleteUser =async (id:string)=>{
     setUsers((prevUsers)=>prevUsers.filter((u)=>u._id !== id));
     Alert.alert("Exito","Usuario eliminando correctamente");
   }catch (error:any){
-    console.error("Error eliminado usuario",)
+    console.error("Error  eliminando usuario",error);
+    Alert.alert("Error","No se pudo eliminar el usuario");
   }
 };
   const renderItem = ({ item }: { item: User }) => (
@@ -126,7 +127,7 @@ const deleteUser =async (id:string)=>{
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Registrados</Text>
       <Button mode="contained"buttonColor="#0d75bb"textColor="#fff"style={{ borderRadius: 25, marginTop: 10 }}onPress={() => handleEdit()}> Agregar Usuario </Button>
-      <FlatList data={users} keyExtractor={(item) => item._id}renderItem={renderItem} contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }}/>
+      <FlatList data={users} keyExtractor={(item) => item._id}renderItem={renderItem} contentContainerStyle={{ paddingBottom: 20, marginTop: 10 }} keyboardShouldPersistTaps="handled"/>
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -139,6 +140,7 @@ const deleteUser =async (id:string)=>{
             )}
             <View style={styles.pickerContainer}>
               <Picker
+                style={{height:50}}
                 selectedValue={editingUser?.rol}
                 onValueChange={(itemValue) =>
                   editingUser && setEditingUser({ ...editingUser, rol: itemValue as "Admin" | "Chofer" })
@@ -177,6 +179,6 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContent: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
-  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
+  input: { width: "100%", height: 50, backgroundColor: "transparent", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
+  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 ,overflow:"hidden"},
 });

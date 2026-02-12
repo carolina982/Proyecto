@@ -76,3 +76,5 @@ que son adminstrador , chofer que arroga la lista de usarios en el apartado de u
 * Checar la compatibilidad de web y movil  para ios y android en algunas cosas estan fallando 
 
 * checar el api para restablecer la contraseña 
+
+* checar el simulador android estudio 
