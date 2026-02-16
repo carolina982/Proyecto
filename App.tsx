@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
+import { Platform } from 'react-native';
 import { StoreProvider, useStore } from "./Public/src/context/Store";
 
 import AdminPage from "./Public/src/pages/AdminPage";
@@ -14,8 +15,18 @@ import TripsPage from "./Public/src/pages/TripsPage";
 import UnitsPage from "./Public/src/pages/UnitsPage";
 import ViaticsPage from "./Public/src/pages/ViaticsPage";
 
+// --- INICIO DEL PARCHE DE PORTABILIDAD ---
+// Esto engaña a la app para que no busque elementos de web en el celular
+if (Platform.OS !== 'web') {
+  if (typeof global.HTMLAnchorElement === 'undefined') {
+    // @ts-ignore
+    global.HTMLAnchorElement = class {};
+  }
+}
+
 
 const Stack = createNativeStackNavigator();
+
 function AppNavigator() {
   const { currentUser } = useStore();
 

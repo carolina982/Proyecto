@@ -77,7 +77,7 @@ const handleLogin = async ()=>{
     container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "" },
     icon: { marginBottom: 20 },
     title: { fontSize: 28, marginBottom: 30, fontWeight: "bold" },
-    input: { width: "100%", height: 50, backgroundColor: "", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
+    input: { width: "100%", height: 50, backgroundColor: "transparent", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
     button: { width: "100%", height: 50, backgroundColor: "#007bff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
     buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
     registerButton: { marginTop: 15 },

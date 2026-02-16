@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   avatar: { backgroundColor: "#0d75bb", marginBottom: 10 },
   changePhotoButton: { marginBottom: 20, borderColor: "#0d75bb" },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#0a0a0aff" },
-  input: { width: "100%", marginBottom: 15, backgroundColor: "" },
+  input: { width: "100%", marginBottom: 15, backgroundColor: "transparent" },
   picker: { width: "100%", marginBottom: 15, color: "#0d75bb" },
   button: { width: "100%", marginTop: 10 },
 });

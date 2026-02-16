@@ -222,7 +222,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   modalBackground: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContainer: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  input: { marginBottom: 15, backgroundColor: "#fff" },
+  input: { marginBottom: 15, backgroundColor: "#fff" ,},
   announcementImage: {width: "100%",height: 180,aspectRatio: 1.6, borderRadius: 10,resizeMode: "contain",marginTop: 10,backgroundColor: "",},
   previewImage: {width: "100%",height:150, aspectRatio: 1.6,borderRadius: 10,resizeMode: "contain",marginBottom:10 , backgroundColor:"",}
 });

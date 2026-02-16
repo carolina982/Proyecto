@@ -6,7 +6,8 @@ export default  function EditUnitsPage (){
      const {units , updateUnit, currentUser} = useStore () ;
      const [selectedUnit , setSelectedUnit ] = useState<string |null > (null) ;
      const [newItem ,setNewItem] =useState ("") ;
-     if (!currentUser || currentUser.rol !== "Admin") {
+     if (!currentUser || currentUser.rol?.toLocaleLowerCase()! == "admin")
+     {
         return <Text style ={{padding :20 }}>Solo administradores pueden editar unidades</Text>
      }
      const handleAddItem =() =>{
@@ -30,6 +31,7 @@ export default  function EditUnitsPage (){
             <FlatList 
             data={units}
             keyExtractor={(u)=>u.id}
+            keyboardShouldPersistTaps="handled"
             renderItem={({item}) =>(
                 <View style ={styles.unitCard}>
                     <Text style ={styles.unitName}>{item.nombre}</Text>
