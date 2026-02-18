@@ -3,12 +3,9 @@ import { Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, View } fro
 import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
 import { api, BASE_URL } from "../api/api";
+import { User } from "../types";
 
-interface User {
-  id: string;
-  nombre: string;
-  rol: string;
-}
+
 
 interface Announcement {
   id: string;

@@ -266,7 +266,7 @@ const exportToExcel = async (exportType: string) => {
         }
         ws_data.push([` MES: ${monthName.toUpperCase()}`]);
         ws_data.push([
-          "Semana", "Nombre",
+          "Semana","Nombre",
           "Destino","Fecha Salida",
           "Fecha Llegada","Día",
           "Conductor", "Acompañante",
@@ -418,6 +418,7 @@ const exportToExcel = async (exportType: string) => {
         </Picker>
         <Text style={styles.label}>Acompañante:</Text>
         <Picker selectedValue={acompanante} onValueChange={setAcompanante} style={styles.picker}>
+
           <Picker.Item label="Selecciona acompañante" value="" />
           <Picker.Item label="Sin acompañante" value="none" />
           {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}

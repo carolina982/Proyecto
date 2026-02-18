@@ -16,7 +16,7 @@ import UnitsPage from "./Public/src/pages/UnitsPage";
 import ViaticsPage from "./Public/src/pages/ViaticsPage";
 
 // --- INICIO DEL PARCHE DE PORTABILIDAD ---
-// Esto engaña a la app para que no busque elementos de web en el celular
+
 if (Platform.OS !== 'web') {
   if (typeof global.HTMLAnchorElement === 'undefined') {
     // @ts-ignore

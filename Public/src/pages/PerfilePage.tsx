@@ -3,15 +3,7 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Avatar, Button, TextInput } from "react-native-paper";
-
-interface User {
-  id: string;
-  nombre: string;
-  apellido: string;
-  rol: "Admin" | "Chofer";
-  email: string;
-  photoUrl: string | null;
-}
+import { User } from "../types";
 
 interface PerfilPageProps {
   currentUser: User | null;

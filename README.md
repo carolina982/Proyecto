@@ -50,7 +50,7 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 
-- Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios en el cual ya tiene dos roles
+- Este proyecto es tanto como web y movil  es para control de viaticos , viajes , unididades , usuarios EN el cual ya tiene dos roles
 que son adminstrador , chofer que arroga la lista de usarios en el apartado de usuarios 
 - administrador -->inicio , perfil , viajes , unidades, usuarios 
 - chofer/usuario-->inicio , perfil , viajes, viaticos 
@@ -60,6 +60,7 @@ que son adminstrador , chofer que arroga la lista de usarios en el apartado de u
      npx ts-node src/server.ts
      ```
 4. Reniciar  el servidor de base de datos 
+
 
      ```bash
      npm run dev 
