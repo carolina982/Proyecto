@@ -39,7 +39,7 @@ export default  function EditUnitsPage (){
                         <View key={idx} style ={styles.itemRow}>
                             <Text>-{i}</Text>
                             <Button title ="x"
-                            onPress={()=>handleRemoveItem (item.id,i )} />
+                            onPress={()=>handleRemoveItem (item.id, i )} />
                              </View>))}
                             {selectedUnit === item.id ? (
                             <View style={styles.addRow}>

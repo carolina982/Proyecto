@@ -464,13 +464,13 @@ const exportToExcel = async (exportType: string) => {
   )
 };
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  card: { backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
-  textSmall: { fontSize: 13, marginBottom: 2 },
-  modalContent: { flex: 1, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  input: { borderRadius: 5, padding: 8, marginBottom: 10, backgroundColor: "#fff" },
-  label: { fontWeight: "bold", marginBottom: 5 },
-  picker: { backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
+  container:{flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
+  card:{backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 },
+  title:{fontSize: 22, fontWeight: "bold", marginBottom: 5 },
+  textSmall:{fontSize: 13, marginBottom: 2 },
+  modalContent:{flex: 1, padding: 20 },
+  modalTitle:{fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  input:{borderRadius: 5, padding: 8, marginBottom: 10, backgroundColor: "#fff" },
+  label:{fontWeight: "bold", marginBottom: 5 },
+  picker:{backgroundColor: "#fff", borderRadius: 5, marginBottom: 10 },
 });

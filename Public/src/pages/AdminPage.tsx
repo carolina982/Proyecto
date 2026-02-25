@@ -108,8 +108,8 @@ const deleteUser =async (id:string)=>{
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
-        <Text style={styles.name}>{item.nombre} {item.apellido}</Text>
-        <Text style={styles.email}>{item.email}</Text>
+        <Text style={styles.name} numberOfLines={2}>{item.nombre} {item.apellido}</Text>
+        <Text style={styles.email} numberOfLines={2}>{item.email}</Text>
         <Text style={styles.role}>Rol: {item.rol}</Text>
       </View>
       <View style={styles.actions}>
@@ -132,7 +132,7 @@ const deleteUser =async (id:string)=>{
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{isAdding ? "Agregar Usuario" : "Editar Usuario"}</Text>
-            <TextInput placeholder="Nombre"style={styles.input}value={editingUser?.nombre}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+            <TextInput placeholder="Nombre"style={styles.input}value={editingUser?.nombre}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
             <TextInput placeholder="Apellido"style={styles.input}value={editingUser?.apellido}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, apellido: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
             <TextInput placeholder="Correo"style={styles.input}value={editingUser?.email}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
             {isAdding && (
@@ -165,20 +165,20 @@ const deleteUser =async (id:string)=>{
   );
 }
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#f5f5f5" },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 5 },
-  userCard: { flexDirection:Platform.OS === "web" ? "row":"column", backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10, alignItems: "center" },
-  userInfo: { flex: 1 },
-  name: { fontSize: 16, fontWeight: "bold" },
-  email: { fontSize: 14, color: "#555" },
-  role: { fontSize: 14, color: "#007bff", marginTop: 2 },
-  actions:{flexDirection:Platform.OS === "web" ? "column" :"row", marginLeft:Platform.OS ==="web" ? 10:0, marginTop:Platform.OS === "web" ? 0:10},
-  editButton:{backgroundColor:"#13881f7ff",padding:5 ,borderRadius:5 , marginBottom:Platform.OS ==="web" ? 5: 0,marginRight:Platform.OS === "web"? 0:10, ...(Platform.OS === "web" && {cursor:"pointer"}),},
-  deleteButton: { backgroundColor: "#ec514cff", padding: 5, borderRadius: 5 },
-  actionText: { color: "#fff", fontWeight: "bold" },
-  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
-  modalContent: { width:Platform.OS === "web" ? 400 :"90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  input: { width: "100%", height: 50, backgroundColor: "transparent", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
-  pickerContainer: { borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 ,overflow:"hidden"},
+  container: {flex: 1, padding: 15, backgroundColor: "#f5f5f5",paddingHorizontal:20 },
+  actions:{flexDirection:"row",marginTop:10},
+  title: {fontSize: 22, fontWeight: "bold", marginBottom: 5 },
+  userCard:{flexDirection: "column",backgroundColor: "#fff",padding: 12,marginBottom: 10,borderRadius: 10,alignItems: "stretch",width: "100%",},
+  userInfo:{flex:1, width:"100%",minWidth:0},
+  name:{fontSize: 16, fontWeight: "bold", flexShrink:1},
+  email:{fontSize: 14, color: "#555" , flexShrink:1},
+  role:{fontSize: 14, color: "#007bff", marginTop: 2 , flexShrink:1},
+  editButton:{backgroundColor:"#007bff",padding:5 ,borderRadius:5 , marginBottom:Platform.OS ==="web" ? 5: 0,marginRight:Platform.OS === "web"? 0:10, ...(Platform.OS === "web" && {cursor:"pointer"}),},
+  deleteButton:{backgroundColor: "#ec514cff", padding: 5, borderRadius: 5,marginBottom:Platform.OS ==="web" ? 5: 0,marginRight:Platform.OS === "web"? 0:10, ...(Platform.OS === "web" && {cursor:"pointer"}), },
+  actionText:{color: "#fff", fontWeight: "bold" },
+  modalContainer:{flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
+  modalContent:{width:Platform.OS === "web" ? 400 :"90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
+  modalTitle:{fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  input:{width: "100%", height: 50, backgroundColor: "transparent", paddingHorizontal: 15, marginBottom: 15, borderRadius: 10,  },
+  pickerContainer:{borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 ,overflow:"hidden"},
 });

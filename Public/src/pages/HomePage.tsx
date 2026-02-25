@@ -6,7 +6,6 @@ import { api, BASE_URL } from "../api/api";
 import { User } from "../types";
 
 
-
 interface Announcement {
   id: string;
   titulo: string;

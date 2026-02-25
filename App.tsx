@@ -2,6 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { Platform } from 'react-native';
+import { Provider as PaperProvider } from "react-native-paper";
 import { StoreProvider, useStore } from "./Public/src/context/Store";
 
 import AdminPage from "./Public/src/pages/AdminPage";
@@ -14,6 +15,8 @@ import ResetPassword from "./Public/src/pages/ResetPassword";
 import TripsPage from "./Public/src/pages/TripsPage";
 import UnitsPage from "./Public/src/pages/UnitsPage";
 import ViaticsPage from "./Public/src/pages/ViaticsPage";
+
+
 
 // --- INICIO DEL PARCHE DE PORTABILIDAD ---
 
@@ -58,7 +61,9 @@ function AppNavigator() {
 export default function App() {
   return (
     <StoreProvider>
-      <AppNavigator />
+      <PaperProvider>
+        <AppNavigator />
+      </PaperProvider>
     </StoreProvider>
   );
 }
