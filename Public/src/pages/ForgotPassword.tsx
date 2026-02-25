@@ -39,7 +39,7 @@ export default function ForgotPassword({ navigation }: any) {
     >
       <View style={styles.container}>
         <Text style={styles.title}>Recuperar contraseña</Text>
-        <TextInput placeholder="Correo electrónico" value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat"style={styles.input}/>
+        <TextInput placeholder="Correo electrónico"contentStyle={{ color: "#000", fontWeight: "600" }} value={email}onChangeText={setEmail}keyboardType="email-address"autoCapitalize="none"mode="flat"style={styles.input}/>
         <Button mode="contained"onPress={handleSend}loading={loading}contentStyle={styles.buttonContent}labelStyle={styles.buttonLabel}style={styles.button}>
           Enviar correo de recuperación
         </Button>

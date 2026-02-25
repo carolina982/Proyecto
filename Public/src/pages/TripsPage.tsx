@@ -376,7 +376,7 @@ const exportToExcel = async (exportType: string) => {
       {isAdmin ? (
         <>
          <Text style={styles.label}>Nombre:</Text>
-         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense style={styles.input} />
+         <TextInput value={nombre} onChangeText={setNombre} mode="flat" underlineColor="#8bc1e6ff" activeUnderlineColor="#8bc1e6ff" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input} />
          <Text style={styles.label}>Unidad:</Text>
          <Picker selectedValue={unidadId} onValueChange={(value)=>{ setUnidadId(value);
          const unidad = units.find((u)=>u.nombre === value) || null;
@@ -408,7 +408,7 @@ const exportToExcel = async (exportType: string) => {
             <Picker.Item label="Caja seca"value="caja seca"/>
           </Picker>
           <Text style={styles.label}>Placa del remolque</Text>
-          <TextInput value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense style={styles.input} placeholder="Ingrese la placa"/>
+          <TextInput value={placaRemolque}onChangeText={setPlacaRemolque}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} placeholder="Ingrese la placa"/>
           </>
         )}
         <Text style={styles.label}>Conductor:</Text>
@@ -424,21 +424,21 @@ const exportToExcel = async (exportType: string) => {
           {users.map(u => <Picker.Item key={u.id} label={u.nombre} value={u.id} />)}
         </Picker>
         <Text style={styles.label}>Def</Text>
-         <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+         <TextInput value={def} onChangeText={setDef} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input} />
         <Text style={styles.label}>Destino:</Text>
-         <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+         <TextInput value={destino} onChangeText={setDestino} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense  textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} />
         <Text style={styles.label}>Kilometraje km:</Text>
          <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
         <Text style={styles.label}>Fecha de Salida:</Text>
-         <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+         <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input} />
         <Text style={styles.label}>Fecha de Llegada:</Text>
-         <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense style={styles.input} />
+         <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} />
         </>
         ) : (
         <>
         <Text style={styles.label}>Fecha de entrega</Text>
         <TouchableOpacity onPress={()=>setShowLlegadaPicker(true)}>
-        <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense style={styles.input}/>
+        <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense  textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
         </TouchableOpacity>
         {showLlegadaPicker && (
           <DateTimePicker value={new Date ()} mode="date" display="default" onChange={(event,date)=>{

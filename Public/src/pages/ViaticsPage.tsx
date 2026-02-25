@@ -526,8 +526,8 @@ const openModal =(viatico?:Viatico)=>{
              .map((base) =>(
              <View key={base} style={{ marginBottom: 10 }}>
               <Text style={styles.label}>{base}</Text>
-              <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
-              <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) =>setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+              <TextInput value={conceptos[`${base} Cantidad`]}onChangeText={(t)=>setConceptos({ ...conceptos, [`${base} Cantidad`]: t})} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}placeholder="Días"/>
+              <TextInput value={conceptos[`${base} Costo`]}onChangeText={(t) =>setConceptos({ ...conceptos, [`${base} Costo`]: t })}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}placeholder="Costo"/>
               </View>
               ))}
             </View>
@@ -540,9 +540,9 @@ const openModal =(viatico?:Viatico)=>{
                  </TouchableOpacity>
                   </View>
                 <Text style={{marginTop:5}}>Cargas</Text>
-                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCargas}onChangeText={setDieselCargas}keyboardType="numeric"  />
+                <TextInput  style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}value={dieselCargas}onChangeText={setDieselCargas}keyboardType="numeric"  />
                 <Text style={{marginTop:5}}>Costo</Text>
-                <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
+                <TextInput style={styles.input}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}value={dieselCosto}onChangeText={setDieselCosto}keyboardType="numeric"/>
                 <View style={{marginTop:15,padding:10,backgroundColor:"#f1f1f1",borderRadius:5}}>
                   {dieselHistorial.map((item,index)=>(
                     <View key={index}style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",paddingVertical:6,borderBottomWidth:1,borderColor:"#ddd"}}>
@@ -560,7 +560,7 @@ const openModal =(viatico?:Viatico)=>{
                   </View>
             </View>
              <Text style={styles.label}>TAG:</Text>
-             <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"style={styles.input}/>
+             <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
              
              <Text style={styles.label}>Subir Factura:</Text>

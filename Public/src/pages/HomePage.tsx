@@ -179,8 +179,8 @@ export default function HomePage({ currentUser }: HomePageProps) {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>{editingId ? "Editar Anuncio" : "Nuevo Anuncio"}</Text>
-            <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}/>
-            <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline style={styles.input}/>
+            <TextInput label="Titulo"value={titulo}onChangeText={setTitulo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
+            <TextInput label="Contenido"value={contenido}onChangeText={setContenido}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"multiline textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
             <Button mode="contained"
               buttonColor={imageUri || imageFile ? "#28a745" : "#007bff"}
               style={{ marginBottom: 10 }}

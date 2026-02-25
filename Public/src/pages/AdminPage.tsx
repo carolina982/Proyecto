@@ -132,11 +132,11 @@ const deleteUser =async (id:string)=>{
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{isAdding ? "Agregar Usuario" : "Editar Usuario"}</Text>
-            <TextInput placeholder="Nombre"style={styles.input}value={editingUser?.nombre}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
-            <TextInput placeholder="Apellido"style={styles.input}value={editingUser?.apellido}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, apellido: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
-            <TextInput placeholder="Correo"style={styles.input}value={editingUser?.email}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+            <TextInput placeholder="Nombre"placeholderTextColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}value={editingUser?.nombre}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, nombre: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
+            <TextInput placeholder="Apellido"placeholderTextColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}value={editingUser?.apellido}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, apellido: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
+            <TextInput placeholder="Correo"placeholderTextColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}value={editingUser?.email}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, email: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"/>
             {isAdding && (
-            <TextInput placeholder="Contraseña"style={styles.input}secureTextEntry value={editingUser?.password}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
+            <TextInput placeholder="Contraseña"placeholderTextColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}secureTextEntry value={editingUser?.password}onChangeText={(text) => editingUser && setEditingUser({ ...editingUser, password: text })}mode="flat" underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" />
             )}
             <View style={styles.pickerContainer}>
               <Picker
