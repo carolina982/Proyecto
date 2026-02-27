@@ -501,8 +501,8 @@ const openModal =(viatico?:Viatico)=>{
               <View style={{ marginBottom: 10 }}>  
               <Text style={styles.label}>Comidas</Text>
               <TextInput value={conceptos["Comidas Cantidad"]}onChangeText={(t) =>setConceptos({...conceptos,["Comidas Cantidad"]: t,})}
-              keyboardType="numeric" mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} placeholder="Días" />
-              <TextInput value={String((Number(conceptos["Comidas Cantidad"]) || 0) * 400)} editable={false} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input} placeholder="Costo"/>
+              keyboardType="numeric" mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} placeholder="Días" />
+              <TextInput value={String((Number(conceptos["Comidas Cantidad"]) || 0) * 400)} editable={false} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} placeholder="Costo"/>
               </View>
               {conceptosBase
               .filter((b) => b !== "Comidas")
@@ -512,10 +512,10 @@ const openModal =(viatico?:Viatico)=>{
                 <Text style={styles.label}>{base}</Text>
                 <TextInput value={conceptos[`${base} Cantidad`]} 
                  onChangeText={(t)=>setConceptos
-                 ({ ...conceptos,[`${base} Cantidad`]: t })} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Días"/>
+                 ({ ...conceptos,[`${base} Cantidad`]: t })} keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}placeholder="Días"/>
                 <TextInput value={conceptos[`${base} Costo`]}
                    onChangeText={(t)=>setConceptos
-                    ({...conceptos,[`${base} Costo`]: t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"style={styles.input}placeholder="Costo"/>
+                    ({...conceptos,[`${base} Costo`]: t})}keyboardType="numeric"mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}placeholder="Costo"/>
               </View>
            ))}
           </View>

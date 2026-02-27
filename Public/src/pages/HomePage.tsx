@@ -214,7 +214,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
   date: { fontSize: 12, color: "#666", marginTop: 5 },
   buttonsRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   actionButton: { flex: 1, marginHorizontal: 5 },
-  createButton: { marginTop: 20 },
+  createButton: { marginTop: 20 , },
   modalBackground: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalContainer: { width: "90%", backgroundColor: "#fff", padding: 20, borderRadius: 10 },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
