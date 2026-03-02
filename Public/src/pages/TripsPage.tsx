@@ -4,7 +4,7 @@ import * as FileSystem from "expo-file-system";
 import { shareAsync } from "expo-sharing";
 import { saveAs } from "file-saver";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api } from "../api/api";
@@ -371,6 +371,7 @@ const exportToExcel = async (exportType: string) => {
       )}
       <FlatList data={trips}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
+        <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ?"padding":"height"}>
       <ScrollView style={styles.modalContent}>
       <Text style={styles.modalTitle}> {editingTrip ? "Editar Viaje" : "Nuevo Viaje"}</Text>
       {isAdmin ? (
@@ -459,6 +460,7 @@ const exportToExcel = async (exportType: string) => {
       </Button>
     </View>
   </ScrollView>
+  </KeyboardAvoidingView>
 </Modal>
 </View>
   )

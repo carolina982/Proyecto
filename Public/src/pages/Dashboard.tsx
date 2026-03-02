@@ -42,23 +42,15 @@ export default function Dashboard() {
       case "Viáticos":
         return <ViaticsPage />;
       case "Unidades":
-        return currentUser.rol?.toLowerCase() === "admin"
-          ? <UnitsPage />
-          : null;
+        return currentUser.rol?.toLowerCase() === "admin" ? <UnitsPage /> : null;
       case "Usuarios":
-        return currentUser.rol?.toLowerCase() === "admin"
-          ? <AdminPage />
-          : null;
+        return currentUser.rol?.toLowerCase() === "admin"? <AdminPage />: null;
       default:
         return null;
     }
   };
 
-  const menuItems: TabType[] = [
-    "Inicio",
-    "Perfil",
-    "Viajes",
-    "Viáticos",
+  const menuItems: TabType[] = ["Inicio","Perfil","Viajes","Viáticos",
     ...(currentUser.rol?.toLowerCase() === "admin"
       ? (["Unidades", "Usuarios"] as TabType[])
       : []),
@@ -66,11 +58,7 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView
-      style={[
-        styles.container,
-        isLargeScreen && { flexDirection: "row" },
-      ]}
-    >
+      style={[styles.container, isLargeScreen && { flexDirection: "row" }, ]} >
       {isLargeScreen ? (
         <>
           {/* ================= SIDEBAR WEB ================= */}

@@ -10,59 +10,43 @@ export default function Login({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor completa todos los campos");
+ 
+  const handledLogin = async ()=>{
+    if (!email || !password){
+      Alert.alert("Error","Por favor acompleta todos los campos");
       return;
     }
     setLoading(true);
-
     try {
-      const response = await fetch(
-        "http://192.168.1.81:3000/api/users/login",
+      const response=await fetch ("http://192.168.1.81:3000/api/users/login",
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            password,
-          }),
-        }
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email:email.trim().toLowerCase(),password,}),
+      }
+    );
+    const data =await response.json();
+    if (!response.ok){
+      Alert.alert(
+        "Error", data.message || "Ocurrio un problema al iniciar sesion"
       );
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert(
-          "Error",
-          data.message || "Ocurrió un problema al iniciar sesión"
-        );
-        return;
-      }
-
-      if (Platform.OS === "web") {
-        localStorage.setItem("token", data.token);
-      } else {
-        const AsyncStorage = (
-          await import("@react-native-async-storage/async-storage")
-        ).default;
-        await AsyncStorage.setItem("token", data.token);
-      }
-
-      login(data);
-
-      if (data.rol?.toLowerCase() === "admin") {
-        navigation.navigate("AdminPage");
-      } else {
-        navigation.navigate("Dashboard");
-      }
-    } catch (error) {
-      console.error("Login error", error);
-      Alert.alert("Error", "No se pudo iniciar sesión. Intenta más tarde");
-    } finally {
+      return;
+    }
+    if (Platform.OS === "web"){
+      localStorage.setItem("token",data.token);
+    }else{
+      const AsyncStorage=(
+        await import("@react-native-async-storage/async-storage")).default;
+        await AsyncStorage.setItem("token",data.token);
+    }
+    login(data);
+    }catch (error){
+      console.error("Login error",error);
+      Alert.alert("Error","No se pudo iniciar sesion .Intenta mas tarder");
+    }finally{
       setLoading(false);
     }
   };
-
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
@@ -73,7 +57,7 @@ export default function Login({ navigation }: any) {
           <TextInput placeholder="Contraseña"value={password}onChangeText={setPassword}secureTextEntry={!showPassword}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"dense contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} right={
           <TextInput.Icon icon={showPassword ? "eye-off" : "eye"} color="#007bff" onPress={() => setShowPassword(!showPassword)} /> }/>
 
-          <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleLogin} disabled={loading}>
+          <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handledLogin} disabled={loading}>
             <Text style={styles.buttonText}>
               {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Text>

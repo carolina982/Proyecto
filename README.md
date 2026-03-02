@@ -72,11 +72,11 @@ Join our community of developers creating universal apps.
      npx expo start 
      ```
 
+- Pendientes en realizar en la aplicacion 
 
-* Solo por lo mientras funcionan local todavia no esta subia a hosting 
-
-* Checar la compatibilidad de web y movil  para ios y android en algunas cosas estan fallando 
-
-* checar el api para restablecer la contraseña 
-
-* checar el simulador android estudio 
+* Solo por lo mientras funcionan local todavia no esta subia  a hosting 
+* Verificar(hosting) cual es recomendable compatible
+* Investigar api para restablecer la contraseña  compatible
+* Checar el por que no se descarga la excel en iphone y android 
+* visualizacion de los estilos tanto como web  y android (iphone)
+* pruebas funcionales ya en iphone entorno real 

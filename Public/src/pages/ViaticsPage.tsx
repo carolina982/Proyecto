@@ -570,7 +570,7 @@ const openModal =(viatico?:Viatico)=>{
                   factura.toLowerCase().endsWith(".pdf") ? (
                    <View style={{ marginBottom: 10 }}>
                      <Text>Factura en PDF</Text>
-                     <Button mode="contained" onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
+                     <Button mode="contained" buttonColor="#499dd4"onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
                    </View>
                 ):(
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
