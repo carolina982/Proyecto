@@ -1,6 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from '@react-native-picker/picker';
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -240,86 +240,152 @@ export default function TripsPage() {
     }
   };
 
-  const exportToExcel = async ()=>{
-    try {
-      if (!trips.length){
-        Alert.alert("Aviso","No hay viajes para exportar");
-        return;
-      }
-      const sortedTrips=[...trips].sort((a,b)=>
-        new Date(a.fechaSalida).getTime()-
-        new Date(b.fechaLlegada).getTime()
-      );
-      const ws_data:any [][]=[];
-      ws_data.push([
-        "Semana",
-        "Nombre",
-        "Destino",
-        "Fecha salida",
-        "Fecha llegada",
-        "Dia",
-        "Conductor",
-        "Acompañante",
-        "Kilometraje",
-        "Estado",
-      ]);
-      sortedTrips.forEach((t)=>{
-        const salida=new Date(t.fechaSalida);
-        const llegada=new Date(t.fechaLlegada);
+  const exportToExcel = async () => {
+  try {
+    if (!trips.length) {
+      Alert.alert("Aviso", "No hay viajes para exportar");
+      return;
+    }
 
-        const weekNumber =Math.ceil(salida.getDate()/7);
-        const dayNumber=salida.getDate();
+    const sortedTrips = [...trips].sort(
+      (a, b) =>
+        new Date(a.fechaSalida).getTime() -
+        new Date(b.fechaSalida).getTime()
+    );
 
-        ws_data.push([
-          weekNumber,
-          t.nombre ?? "N/A",
-          t.destino ?? "N/A",
-          salida.toLocaleDateString("es-ES"),
-          llegada.toLocaleDateString("es-ES"),
-          dayNumber,
-          users.find((u)=>u.id === t.conductorId)?.nombre ?? "N/A",
-          t.acompanante ?? "N/A",
-          Number(t.kilometraje ?? 0),
-          t.estado ?? "N/A",
-        ]);
+    const ws_data: any[][] = [];
+
+    let currentMonth = "";
+    let currentWeek = 0;
+    let currentDay = 0;
+
+    let monthTotal = 0;
+    let weekTotal = 0;
+    let dayTotal = 0;
+
+    for (const t of sortedTrips) {
+      const salida = new Date(t.fechaSalida);
+      const llegada = new Date(t.fechaLlegada);
+
+      const monthName = salida.toLocaleString("es-ES", {
+        month: "long",
+        year: "numeric",
       });
 
-      const ws=XLSX.utils.aoa_to_sheet(ws_data);
-      const wb= XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb,ws,"Reporte_Viajeas");
+      const weekNumber = Math.ceil(salida.getDate() / 7);
+      const dayNumber = salida.getDate();
 
-      if (Platform.OS === "web"){
-        const excelBuffer=XLSX.write(wb,{
-          bookType:"xlsx",
-          type:"array",
-        });
-        const blob =new Blob ([excelBuffer],{
-          type:"application/vnd.openxmlformats-officedocument.spreadsheetm.sheet",
-        });
-        const url =window.URL.createObjectURL(blob);
-        const a =document.createElement("a");
-        a.href=url;
-        a.download="Reporte_Viajes.xlsx";
-        a.click();
-        window.URL.revokeObjectURL(url);
-      }else{
-        const base64 =XLSX.write(wb,{
-          bookType:"xlsx",
-          type:"base64",
-        });
-        const fileUri=(File as any ).documentDirectory +"Reporte_Viaje.xlsx";
-        await FileSystem.writeAsStringAsync(fileUri,base64,{
-          encoding:"base64",
-        });
-         await Sharing.shareAsync(fileUri);
+      // 🔹 CAMBIO DE MES
+      if (monthName !== currentMonth) {
+
+        if (currentMonth !== "") {
+          ws_data.push([`TOTAL DÍA ${currentDay}: ${dayTotal}`]);
+          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+          ws_data.push([`TOTAL MES ${currentMonth}: ${monthTotal}`]);
+          ws_data.push([]);
+        }
+
+        ws_data.push([`MES: ${monthName.toUpperCase()}`]);
+        ws_data.push([
+          "Semana",
+          "Nombre",
+          "Destino",
+          "Fecha salida",
+          "Fecha llegada",
+          "Día",
+          "Conductor",
+          "Acompañante",
+          "Kilometraje",
+          "Estado",
+        ]);
+
+        currentMonth = monthName;
+        currentWeek = 0;
+        currentDay = 0;
+        monthTotal = 0;
+        weekTotal = 0;
+        dayTotal = 0;
       }
-      Alert.alert("Exito","Reporte Excel generado correctamente");
-    }catch (error){
-      console.error("Error exportando Excel",error);
-      Alert.alert("Error","No se pudo generar el archivo excel")
-    }
-  };
+      if (weekNumber !== currentWeek) {
 
+        if (currentWeek !== 0) {
+          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+          ws_data.push([]);
+        }
+        currentWeek = weekNumber;
+        weekTotal = 0;
+      }
+
+      if (dayNumber !== currentDay) {
+
+        if (currentDay !== 0) {
+          ws_data.push([`TOTAL DÍA ${currentDay}: ${dayTotal}`]);
+        }
+
+        currentDay = dayNumber;
+        dayTotal = 0;
+      }
+      ws_data.push([
+        weekNumber,
+        t.nombre ?? "N/A",
+        t.destino ?? "N/A",
+        salida.toLocaleDateString("es-ES"),
+        llegada.toLocaleDateString("es-ES"),
+        dayNumber,
+        users.find((u) => u.id === t.conductorId)?.nombre ?? "N/A",
+        t.acompanante ?? "N/A",
+        Number(t.kilometraje ?? 0),
+        t.estado ?? "N/A",
+      ]);
+
+      dayTotal++;
+      weekTotal++;
+      monthTotal++;
+    }
+
+    ws_data.push([`TOTAL DÍA ${currentDay}: ${dayTotal}`]);
+    ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+    ws_data.push([`TOTAL MES ${currentMonth}: ${monthTotal}`]);
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte_Viajes");
+    if (Platform.OS === "web") {
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx",type: "array",});
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Reporte_Viajes.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+    } else {
+
+      const base64 = XLSX.write(wb, {bookType: "xlsx",type: "base64",
+      });
+
+      const fileUri =
+        (FileSystem as any).documentDirectory + "Reporte_Viajes.xlsx";
+
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: "base64",
+      });
+
+      await Sharing.shareAsync(fileUri);
+    }
+
+    Alert.alert("Éxito", "Reporte Excel generado correctamente");
+
+  } catch (error) {
+    console.error("Error exportando Excel", error);
+    Alert.alert("Error", "No se pudo generar el archivo excel");
+  }
+};
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
@@ -360,7 +426,7 @@ export default function TripsPage() {
         <Picker.Item label="Día" value="dia" />
         <Picker.Item label="Semana" value="semana" />
         <Picker.Item label="Mes" value="mes" />
-        </Picker>
+       </Picker>
        </View>
        <Button mode="contained" buttonColor="#0d75bb" onPress={exportToExcel }>Exportar Excel  </Button>
          </View>

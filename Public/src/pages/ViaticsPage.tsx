@@ -1,6 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -192,75 +192,128 @@ export default function ViaticsPage() {
     return total;
   };
 
-  const exportViaticosToExcel=async ()=>{
-    try{
-      if (!viaticos.length){
-        Alert.alert("Aviso","No hay datos para exportar");
-        return;
-      }
-      const sortedViaticos =[...viaticos].sort((a,b)=>
-        new Date(a.createdAt).getTime()-
-        new Date(b.createdAt).getTime()
-      );
-      const ws_data:any [][]=[];
-      ws_data.push([
-        "Fecha",
-        "Viaje",
-        "Conductor",
-        "Diesel Cargas",
-        "Diesel Consto",
-        "Tag",
-        ...conceptosList,
-        "Total"
-      ]);
-      sortedViaticos.forEach(v=>{
-        const trip=trips.find(t=> t.id === v.tripId);
-        ws_data.push([
-          new Date(v.createdAt).toLocaleDateString(),
-          trip?.nombre ?? "N/A",
-          trip?.conductorNombre ?? "N/A",
-          v.dieselCargas ?? 0,
-          v.dieselCosto ?? 0,
-          v.tag ?? 0,
-          ...conceptosList.map(c=> Number(v.conceptos?.[c] ?? 0)),
-          Number(v.total ?? 0),
-        ]);
-      });
-      const ws=XLSX.utils.aoa_to_sheet(ws_data);
-      const wb=XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb,ws,"Viaticos");
+const exportViaticosToExcel = async () => {
+  try {
+    if (!viaticos.length) {
+      Alert.alert("Aviso", "No hay datos para exportar");
+      return;
+    }
 
-      if (Platform.OS === "web"){
-        const excelBuffer =XLSX.write(wb,{
-          bookType:"xlsx",
-          type:"array"
-        });
-        const blob =new Blob([excelBuffer],{
-          type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        });
-        const url=window.URL.createObjectURL(blob);
-        const a =document.createElement("a");
-        a.href=url;
-        a.download="Viaticos.xlsx";
-        a.click();
-        window.URL.revokeObjectURL(url);
-      }else{
-        const base64=XLSX.write(wb,{
-          bookType:"xlsx",
-          type:"base64"
-        });
-        const fileUri=(FileSystem as any).documentDirectory +"Viaticos"
-        await FileSystem.writeAsStringAsync(fileUri,base64,{
-          encoding:"base64" as any,
-        });
+    const sorted = [...viaticos].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() -
+        new Date(b.createdAt).getTime()
+    );
+
+    const ws_data: any[][] = [];
+
+    let currentMonth = "";
+    let currentWeek = 0;
+    let monthTotal = 0;
+
+    for (const v of sorted) {
+      const date = new Date(v.createdAt);
+      const monthName = date.toLocaleString("es-ES", {
+        month: "long",
+        year: "numeric",
+      });
+
+      const weekNumber = Math.ceil(date.getDate() / 7);
+
+      const trip = trips.find((t) => t.id === v.tripId);
+
+      if (monthName !== currentMonth) {
+        if (monthTotal > 0) {
+          ws_data.push([`TOTAL DEL MES: ${monthTotal}`]);
+          ws_data.push([]);
+        }
+
+        ws_data.push([`MES: ${monthName.toUpperCase()}`]);
+        ws_data.push([
+          "Semana",
+          "Fecha",
+          "Viaje",
+          "Conductor",
+          "Diesel",
+          "Tag",
+          ...conceptosList,
+          "Total",
+        ]);
+        
+        currentMonth = monthName;
+        currentWeek = 0;
+        monthTotal = 0;
+      }
+
+      if (weekNumber !== currentWeek) {
+        ws_data.push([`Semana ${weekNumber}`]);
+        currentWeek = weekNumber;
+      }
+
+      ws_data.push([
+        weekNumber,
+        date.toLocaleDateString(),
+        trip?.nombre ?? "N/A",
+        trip?.conductorNombre ?? "N/A",
+        v.dieselCosto ?? 0,
+        v.tag ?? 0,
+        ...conceptosList.map((c) =>
+          Number(v.conceptos?.[c] ?? 0)
+        ),
+        Number(v.total ?? 0),
+      ]);
+
+      monthTotal += Number(v.total ?? 0);
+    }
+
+    if (monthTotal > 0) {
+      ws_data.push([`TOTAL DEL MES: ${monthTotal}`]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Viaticos");
+    if (Platform.OS === "web") {
+      const excelBuffer = XLSX.write(wb, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Viaticos.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } else {
+      const base64 = XLSX.write(wb, {
+        bookType: "xlsx",
+        type: "base64",
+      });
+
+      const fileUri =
+        FileSystem.documentDirectory + "Viaticos.xlsx";
+
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
       }
-      Alert.alert("Exito","Reporte generado corretamente"); 
-    }catch (error){
-      console.error("Error exportando", error);
-      Alert.alert("Error","No se pudo generar el archivo");
     }
-  };
+
+    Alert.alert("Éxito", "Reporte generado correctamente");
+
+  } catch (error) {
+    console.error("Error exportando", error);
+    Alert.alert("Error", "No se pudo generar el archivo");
+  }
+};
 
 
 const openModal =(viatico?:Viatico)=>{
