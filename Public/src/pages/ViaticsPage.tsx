@@ -295,16 +295,18 @@ const exportViaticosToExcel = async () => {
         type: "base64",
       });
 
-      const fileUri =
-        FileSystem.documentDirectory + "Viaticos.xlsx";
+      const fileUri =FileSystem.documentDirectory + "Viaticos.xlsx";
 
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri);
+      const canShare=await Sharing.isAvailableAsync();
+      if (!canShare){
+        Alert.alert("Error","No se puede compartir el archivo");
+        return;
       }
+      await Sharing.shareAsync(fileUri);
     }
 
     Alert.alert("Éxito", "Reporte generado correctamente");
@@ -483,18 +485,19 @@ const openModal =(viatico?:Viatico)=>{
     }
   };
 
-  const renderItem = ({ item }: { item: Viatico }) => {
-    const trip = trips.find(t => t.id === item.tripId);
-
+  const renderItem=({item}:{item:Viatico})=>{
+    const trip=trips.find(t=> t.id === item.tripId);
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Viatico: {(item.tripId as any)?.nombre ?? "Sin asignar"} </Text>
-        <Text>Conductor: {(item.tripId as any)?.conductorId?.name ?? "Sin asignar"}</Text>
-        <Text>Total: ${item.total}</Text>
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-          <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Ver detalles </Button>
+        <Text style={styles.title}>
+          Viatico:{trip?.nombre ?? "Sin asignar"}
+        </Text>
+        <Text>Conductor:{trip?.conductorNombre ?? "Sin asignar"}</Text>
+        <Text>Toltal:${item.total}</Text>
+        <View style={{flexDirection:"row",gap:10,marginTop:10}}>
+          <Button mode="contained" buttonColor="#08bff" onPress={() => openModal(item)}>Ver detalles</Button>
           {currentUser?.rol === "Admin" && (
-            <Button mode="contained" buttonColor="red" onPress={() => deleteViatico(item.id)}>Eliminar</Button>
+            <Button mode="contained" buttonColor="red" onPress={()=>deleteViatico(item.id)}>Eliminar</Button>
           )}
         </View>
       </View>
@@ -510,9 +513,9 @@ const openModal =(viatico?:Viatico)=>{
          <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
            <View style={{flex:1, backgroundColor:"#fff",borderRadius:8,marginRight:8}}>
              <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{backgroundColor:"#fff"}}>
-             <Picker.Item label="Día" value="dia" />
-             <Picker.Item label="Semana" value="semana" />
-             <Picker.Item label="Mes" value="mes" />
+             <Picker.Item label="Día" value="day" />
+             <Picker.Item label="Semana" value="week" />
+             <Picker.Item label="Mes" value="month" />
             </Picker>
           </View>
          <Button mode="contained" buttonColor="#0d75bb" onPress={exportViaticosToExcel}> Exportar Excel</Button>
