@@ -8,21 +8,11 @@ import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
 import { useStore } from '../context/Store';
-
+import { Viatico } from "../types";
 
 
 interface Trip { id: string;nombre: string; conductorId: string; conductorNombre?: string;}
-interface Viatico {
-  id: string;
-  tripId: string;
-  conceptos: { [key: string]: number };
-  dieselCargas: number;
-  dieselCosto: number;
-  tag: number;
-  facturaUrl?: string;
-  total: number;
-  createdAt: string;
-}
+
 
 const conceptosBase = [ "Comidas","Hospedaje", "Taxi","Regaderas",
   "Pensión","Vulcanizadora","Casetas efectivo","Limpieza Unidad",
@@ -102,8 +92,7 @@ export default function ViaticsPage() {
   setTotalDieselGlobal(total);
   },[dieselHistorial]);
   useEffect(()=>{loadTrips(); }, [currentUser]);
-  useEffect(()=>{loadViaticos(); }, [currentUser, filter, conductorFilter, trips]);
-  
+  useEffect(()=>{if(currentUser){loadTrips();loadViaticos();}}, [currentUser,filter,conductorFilter]);
 
   const loadTrips = async () => {
     try {
@@ -146,7 +135,8 @@ export default function ViaticsPage() {
           return trip && trip.conductorId === conductorFilter;
         });
       }
-
+      console.log("TRIPS:",trips);
+      console.log("VIATICOS RAW:" ,viaticosData);
       viaticosData =viaticosData.map((v:any)=>{
         const conceptosPlano:any ={};
         conceptosBase.forEach(base=>{
@@ -163,6 +153,14 @@ export default function ViaticsPage() {
         };
       });
 
+     viaticosData=viaticosData.map((v:Viatico)=>{
+      const trip=trips.find(t=>t.id === v.tripId);
+      return{
+        ...v,
+        viajeNombre:trip?.nombre?? "Sin asignar",
+        conductorNombre:trip?.conductorNombre ?? "Sin asignar",
+      };
+     });
       setViaticos(viaticosData);
       calcularTotalDieselGlobal(viaticosData);
 
@@ -491,8 +489,8 @@ const openModal =(viatico?:Viatico)=>{
     );
     return(
       <View style={styles.card}>
-        <Text style={styles.title}>Viatico:{trip?.nombre?? "sin asignar" }</Text>
-        <Text style={styles.subtitle}>Conductor:{trip?.conductorNombre ?? "sin asignar"}</Text>
+        <Text style={styles.title}>Viatico:{item.viajeNombre}</Text>
+        <Text style={styles.subtitle}>Conductor:{item.conductorNombre }</Text>
         <Text style={styles.total}>Total:${item.total}</Text>
       <View style={styles.buttonRow}>
         <Button mode="contained" buttonColor="#0d75bb" style={styles.button}onPress={()=>openModal(item)}>Ver detalles</Button>

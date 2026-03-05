@@ -19,19 +19,26 @@ export interface User {
     placa?:string;
  }
 
- //viatico 
-export interface Viatic {
-    id:string;
-    tripId:string;
-    concepto:string;
-    monto:number;
-    comprobante?:string;
+ //viatico
+export interface Viatico {
+  id: string;
+  tripId: string;
+  conceptos: { [key: string]: number };
+  dieselCargas: number;
+  dieselCosto: number;
+  tag: number;
+  facturaUrl?: string;
+  total: number;
+  createdAt: string;
+  viajeNombre?:string;
+  conductorNombre?:string;
 }
-
 //viaje 
 export interface Trip{
     id:string;
+    nombre:string;
     conductorId:string;
+    conductorNombre?:string;
     destino:string;
     fechaInicio:String;
     fechaFin:string;
