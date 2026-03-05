@@ -306,7 +306,7 @@ const exportViaticosToExcel = async () => {
         Alert.alert("Error","No se puede compartir el archivo");
         return;
       }
-      await Sharing.shareAsync(fileUri);
+      await Sharing
     }
 
     Alert.alert("Éxito", "Reporte generado correctamente");
@@ -486,23 +486,21 @@ const openModal =(viatico?:Viatico)=>{
   };
 
   const renderItem=({item}:{item:Viatico})=>{
-    const trip=trips.find(t=> t.id === item.tripId);
-    return (
-      <View style={styles.card}>
-        <Text style={styles.title}>
-          Viatico:{trip?.nombre ?? "Sin asignar"}
-        </Text>
-        <Text>Conductor:{trip?.conductorNombre ?? "Sin asignar"}</Text>
-        <Text>Toltal:${item.total}</Text>
-        <View style={{flexDirection:"row",gap:10,marginTop:10}}>
-          <Button mode="contained" buttonColor="#08bff" onPress={() => openModal(item)}>Ver detalles</Button>
-          {currentUser?.rol === "Admin" && (
-            <Button mode="contained" buttonColor="red" onPress={()=>deleteViatico(item.id)}>Eliminar</Button>
-          )}
-        </View>
-      </View>
+    const trip=trips.find(
+      t=>String(t.id) === String(item.tripId)
     );
-  };
+    return(
+      <View style={styles.card}>
+        <Text style={styles.title}>Viatico:{trip?.nombre?? "sin asignar" }</Text>
+        <Text style={styles.subtitle}>Conductor:{trip?.conductorNombre ?? "sin asignar"}</Text>
+        <Text style={styles.total}>Total:${item.total}</Text>
+      <View style={styles.buttonRow}>
+        <Button mode="contained" buttonColor="#0d75bb" style={styles.button}onPress={()=>openModal(item)}>Ver detalles</Button>
+        <Button mode="contained" buttonColor="#e53935" style={styles.button} onPress={() => deleteViatico(item.id)}>Eliminar</Button>
+      </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -530,7 +528,7 @@ const openModal =(viatico?:Viatico)=>{
           </Text>
           <Text style={styles.label}>Viaje:</Text>                                                                                                                                                                                
           <Picker selectedValue={tripId} onValueChange={setTripId} style={styles.picker}>
-            <Picker.Item label="Selecciona un viaje" value="" />
+            <Picker.Item label="Selecciona un viaje" value />
             {trips.map(t => (
               <Picker.Item key={t.id} label={`${t.nombre} (${t.conductorNombre})`}value={t.id}/>
             ))}
@@ -650,4 +648,8 @@ const styles = StyleSheet.create({
   facturaPreview: {width: "100%", height: 200, resizeMode: "contain", marginBottom: 10 },
   inputLeftContainer:{alignItems:"flex-start",},
   inputLeft:{backgroundColor:"#fff", width:80, paddingHorizontal:0},
+  subtitle:{fontSize:16,color:"#555"},
+  total:{fontSize:16,marginTop:4,marginBottom:10},
+  buttonRow:{flexDirection:"row",justifyContent:"space-between",marginTop:10},
+  button:{flex:1, marginHorizontal:5},
 });

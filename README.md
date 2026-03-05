@@ -80,4 +80,4 @@ Join our community of developers creating universal apps.
 * Checar el por que no se descarga la excel en iphone y android 
 * visualizacion de los estilos tanto como web  y android (iphone)
 * pruebas funcionales ya en iphone entorno real 
-* checar el estilo de exportacion en viaticos y en vaijes
+* checar el estilo de exportacion en viaticos(cehcar bien lo de excel ) y en vaijes
