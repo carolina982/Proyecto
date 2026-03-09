@@ -32,6 +32,7 @@ export interface Viatico {
   createdAt: string;
   viajeNombre?:string;
   conductorNombre?:string;
+  
 }
 //viaje 
 export interface Trip{

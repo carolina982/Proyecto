@@ -275,7 +275,7 @@ export default function TripsPage() {
       const weekNumber = Math.ceil(salida.getDate() / 7);
       const dayNumber = salida.getDate();
 
-      // 🔹 CAMBIO DE MES
+      //  CAMBIO DE MES
       if (monthName !== currentMonth) {
 
         if (currentMonth !== "") {
@@ -386,6 +386,7 @@ export default function TripsPage() {
     Alert.alert("Error", "No se pudo generar el archivo excel");
   }
 };
+
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;

@@ -92,15 +92,16 @@ export default function ViaticsPage() {
   setTotalDieselGlobal(total);
   },[dieselHistorial]);
   useEffect(()=>{loadTrips(); }, [currentUser]);
-  useEffect(()=>{if(currentUser){loadTrips();loadViaticos();}}, [currentUser,filter,conductorFilter]);
 
+  
+  useEffect(()=>{if(currentUser){loadTrips();loadViaticos();}},[currentUser,filter,conductorFilter]);
   const loadTrips = async () => {
     try {
       const res = await api.get("/trips");
       let tripsData = res.data.map((t: any) => ({ 
         ...t,
         id: t._id,
-        conductorNombre: t.conductorNombre || t.conductor || "Sin asignar"
+        conductorNombre: t.conductorNombre || t.conductor?.nombre || "Sin asignar"
       }));
 
       if (currentUser?.rol === "Chofer")
@@ -157,7 +158,7 @@ export default function ViaticsPage() {
       const trip=trips.find(t=>t.id === v.tripId);
       return{
         ...v,
-        viajeNombre:trip?.nombre?? "Sin asignar",
+        viajeNombre:trip?.nombre,
         conductorNombre:trip?.conductorNombre ?? "Sin asignar",
       };
      });
@@ -207,7 +208,13 @@ const exportViaticosToExcel = async () => {
 
     let currentMonth = "";
     let currentWeek = 0;
+    let currentDay=0;
+
     let monthTotal = 0;
+    let weekTotal=0;
+    let dayTotal=0;
+
+
 
     for (const v of sorted) {
       const date = new Date(v.createdAt);
@@ -217,12 +224,13 @@ const exportViaticosToExcel = async () => {
       });
 
       const weekNumber = Math.ceil(date.getDate() / 7);
-
       const trip = trips.find((t) => t.id === v.tripId);
 
       if (monthName !== currentMonth) {
         if (monthTotal > 0) {
-          ws_data.push([`TOTAL DEL MES: ${monthTotal}`]);
+          ws_data.push([`TOTAL DIA${currentDay}:${dayTotal}`]);
+          ws_data.push([`TOTAL SEMANA${currentWeek}:${weekTotal}`]);
+          ws_data.push([`TOTAL DEL MES${currentMonth}:${monthTotal}`]);
           ws_data.push([]);
         }
 
@@ -240,19 +248,27 @@ const exportViaticosToExcel = async () => {
         
         currentMonth = monthName;
         currentWeek = 0;
+        currentDay=0;
         monthTotal = 0;
+        weekTotal=0;
+        dayTotal=0;
       }
 
       if (weekNumber !== currentWeek) {
-        ws_data.push([`Semana ${weekNumber}`]);
-        currentWeek = weekNumber;
+        if (currentWeek !==0){
+        ws_data.push([`TOTAL SEMANA${currentWeek}:${weekNumber}`]);
+        ws_data.push([]);
+        }
+        currentWeek=weekNumber;
+        weekTotal=0;
       }
 
+ 
       ws_data.push([
         weekNumber,
         date.toLocaleDateString(),
-        trip?.nombre ?? "N/A",
-        trip?.conductorNombre ?? "N/A",
+        trip?.nombre ,
+        trip?.conductorNombre ,
         v.dieselCosto ?? 0,
         v.tag ?? 0,
         ...conceptosList.map((c) =>
@@ -484,13 +500,12 @@ const openModal =(viatico?:Viatico)=>{
   };
 
   const renderItem=({item}:{item:Viatico})=>{
-    const trip=trips.find(
-      t=>String(t.id) === String(item.tripId)
-    );
+    const viajeNombre=(item.tripId as any)?.nombre ;
+    const conductorNombre=(item.tripId as any)?.conductorNombre ?? "Sin asignar"
     return(
       <View style={styles.card}>
-        <Text style={styles.title}>Viatico:{item.viajeNombre}</Text>
-        <Text style={styles.subtitle}>Conductor:{item.conductorNombre }</Text>
+        <Text style={styles.title}>Viatico:{viajeNombre}</Text>
+        <Text style={styles.subtitle}>Conductor:{conductorNombre }</Text>
         <Text style={styles.total}>Total:${item.total}</Text>
       <View style={styles.buttonRow}>
         <Button mode="contained" buttonColor="#0d75bb" style={styles.button}onPress={()=>openModal(item)}>Ver detalles</Button>
