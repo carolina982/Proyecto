@@ -21,6 +21,8 @@ export interface User {
 
  //viatico
 export interface Viatico {
+  updatedAt: string | number | Date;
+  fecha: string | number | Date;
   id: string;
   tripId: string;
   conceptos: { [key: string]: number };

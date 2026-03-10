@@ -63,7 +63,7 @@ export default function PerfilPage({
         <Picker.Item label="Chofer" value="Chofer" />
       </Picker>
 
-      <Button mode="contained" buttonColor="#0d75bb" style={styles.button} onPress={handleSave} loading={isSaving}>  Guardar Cambios
+      <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" style={styles.button} onPress={handleSave} loading={isSaving}>  Guardar Cambios
       </Button>
     </ScrollView>
   );

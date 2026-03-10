@@ -152,21 +152,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
   label: { marginBottom: 8, fontWeight: 'bold', color: '#333' },
   input: { width: "100%", height: 50, backgroundColor: "transparent", marginBottom: 15 },
-  
-  // Estilo que imita un Input de Android
-  customPicker: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#0d75bb",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 15,
-    marginBottom: 20
-  },
+  customPicker:{width: "100%", height: 50,backgroundColor: "#fff",borderRadius: 10,borderWidth: 1,borderColor: "#0d75bb",flexDirection: "row",alignItems: "center",justifyContent: "space-between",paddingHorizontal: 15,marginBottom: 20},
   pickerText: { fontSize: 16, color: "#333" },
   arrowIcon: { color: "#0d75bb", fontSize: 12 },
 

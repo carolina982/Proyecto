@@ -157,8 +157,8 @@ export default function UnitsPage() {
           </>
         )}
         <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
-          <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal(item)}> Editar </Button>
-          <Button mode="contained" buttonColor="red" onPress={() =>deleteUnit(item.id)}>Eliminar</Button>
+          <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" onPress={() => openModal(item)}> Editar </Button>
+          <Button mode="contained" buttonColor="red" textColor="rgb(243, 246, 248)"onPress={() =>deleteUnit(item.id)}>Eliminar</Button>
         </View>
       </View>
     );
@@ -166,7 +166,7 @@ export default function UnitsPage() {
   return (
     <View style={styles.container}>
        <Text style={styles.title}>Unidades Registradas</Text>
-         <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nueva Unidad </Button>
+         <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={() => openModal()}>Nueva Unidad </Button>
            <FlatList data={units}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
              <Modal visible={modalVisible} animationType="slide">
                <View style={styles.modalContent}>
@@ -195,8 +195,8 @@ export default function UnitsPage() {
                  </>
                 )}
                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 15 }}>
-               <Button mode="contained" buttonColor="#888"  onPress={() => setModalVisible(false)}>Cancelar</Button>
-               <Button mode="contained" buttonColor="#0d75bb" onPress={saveUnit}>Guardar</Button>
+               <Button mode="contained" buttonColor="#888" textColor="rgb(243, 246, 248)" onPress={() => setModalVisible(false)}>Cancelar</Button>
+               <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={saveUnit}>Guardar</Button>
           </View>
         </View>
       </Modal>

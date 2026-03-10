@@ -192,7 +192,7 @@ export default function TripsPage() {
   if (kilometraje && kilometraje.trim() !== "") {
     payload.kilometraje = Number(kilometraje);
   }
-  //se llama a atraer el tipo de remolque 
+  // llama a atraer el tipo de remolque 
   if(mostrarRemolque){
     if(tipoRemolque)payload.tipoRemolque=tipoRemolque;
     if(placaRemolque)payload.placaRemolque=placaRemolque;
@@ -387,6 +387,7 @@ export default function TripsPage() {
   }
 };
 
+
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
     const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
@@ -406,8 +407,8 @@ export default function TripsPage() {
         <Text style={styles.textSmall}>Def:{item.def}</Text>
         <Text style={styles.textSmall}>Kilometraje: {item.kilometraje ?? 0} km</Text>
         <View style={{ flexDirection: "row", marginTop: 5, gap: 10 }}>
-          {canEdit && <Button mode="contained" buttonColor="#008bff" onPress={() => openModal(item)}>Editar</Button>}
-          {canDelete && <Button mode="contained" buttonColor="red" onPress={() => deleteTrip(item.id)}>Eliminar</Button>}
+          {canEdit && <Button mode="contained" buttonColor="#008bff" textColor="rgb(243, 246, 248)"onPress={() => openModal(item)}>Editar</Button>}
+          {canDelete && <Button mode="contained" buttonColor="red"textColor="rgb(243, 246, 248)" onPress={() => deleteTrip(item.id)}>Eliminar</Button>}
         </View>
       </View>
     );
@@ -418,10 +419,10 @@ export default function TripsPage() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viajes Registrados</Text>
-      {isAdmin && <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viaje</Button>}
+      {isAdmin && <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" onPress={() => openModal()}>Nuevo Viaje</Button>}
       {isAdmin && (
        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
-       <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
+       <Text style={{ fontWeight: "bold", marginRight: 8,}}>Exportar por:</Text>
        <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 5, marginRight: 8 }}>
        <Picker selectedValue={exportType} onValueChange={(value) => setExportType(value)}style={{ height: 20 }}>
         <Picker.Item label="Día" value="dia" />
@@ -429,7 +430,7 @@ export default function TripsPage() {
         <Picker.Item label="Mes" value="mes" />
        </Picker>
        </View>
-       <Button mode="contained" buttonColor="#0d75bb" onPress={exportToExcel }>Exportar Excel  </Button>
+       <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={exportToExcel }>Exportar Excel  </Button>
          </View>
       )}
       <FlatList data={trips}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
@@ -518,8 +519,8 @@ export default function TripsPage() {
         </>
         )}  
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-          <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
-          <Button mode="contained" buttonColor="#167abdff" onPress={saveTrip}>Guardar
+          <Button mode="contained" buttonColor="#888"textColor="rgb(243, 246, 248)" onPress={() => setModalVisible(false)}>Cancelar</Button>
+          <Button mode="contained" buttonColor="#167abdff" textColor="rgb(243, 246, 248)"onPress={saveTrip}>Guardar
       </Button>
     </View>
   </ScrollView>

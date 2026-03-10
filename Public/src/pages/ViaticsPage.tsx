@@ -197,7 +197,6 @@ const exportViaticosToExcel = async () => {
       Alert.alert("Aviso", "No hay datos para exportar");
       return;
     }
-
     const sorted = [...viaticos].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() -
@@ -208,29 +207,31 @@ const exportViaticosToExcel = async () => {
 
     let currentMonth = "";
     let currentWeek = 0;
-    let currentDay=0;
-
+    let currentDay = 0;
     let monthTotal = 0;
-    let weekTotal=0;
-    let dayTotal=0;
-
-
+    let weekTotal = 0;
+    let dayTotal = 0;
 
     for (const v of sorted) {
-      const date = new Date(v.createdAt);
+      const  rawDate =v.createdAt || v.fecha || v.updatedAt;
+      const date= rawDate ? new Date (rawDate):new Date();
       const monthName = date.toLocaleString("es-ES", {
         month: "long",
         year: "numeric",
       });
 
       const weekNumber = Math.ceil(date.getDate() / 7);
+
+      
+      const day = date.getDate();
       const trip = trips.find((t) => t.id === v.tripId);
 
+      // CAMBIO DE MES
       if (monthName !== currentMonth) {
         if (monthTotal > 0) {
-          ws_data.push([`TOTAL DIA${currentDay}:${dayTotal}`]);
-          ws_data.push([`TOTAL SEMANA${currentWeek}:${weekTotal}`]);
-          ws_data.push([`TOTAL DEL MES${currentMonth}:${monthTotal}`]);
+          ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
+          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+          ws_data.push([`TOTAL DEL MES ${currentMonth}: ${monthTotal}`]);
           ws_data.push([]);
         }
 
@@ -245,49 +246,69 @@ const exportViaticosToExcel = async () => {
           ...conceptosList,
           "Total",
         ]);
-        
+
         currentMonth = monthName;
         currentWeek = 0;
-        currentDay=0;
+        currentDay = 0;
+
         monthTotal = 0;
-        weekTotal=0;
-        dayTotal=0;
+        weekTotal = 0;
+        dayTotal = 0;
       }
 
+      // CAMBIO DE SEMANA
       if (weekNumber !== currentWeek) {
-        if (currentWeek !==0){
-        ws_data.push([`TOTAL SEMANA${currentWeek}:${weekNumber}`]);
-        ws_data.push([]);
+        if (currentWeek !== 0) {
+          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+          ws_data.push([]);
         }
-        currentWeek=weekNumber;
-        weekTotal=0;
+        currentWeek = weekNumber;
+        weekTotal = 0;
       }
 
- 
+      // CAMBIO DE DIA
+      if (day !== currentDay) {
+        if (currentDay !== 0) {
+          ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
+        }
+
+        currentDay = day;
+        dayTotal = 0;
+      }
+
+      const total = Number(v.total ?? 0);
+
       ws_data.push([
         weekNumber,
         date.toLocaleDateString(),
-        trip?.nombre ,
-        trip?.conductorNombre ,
+        trip?.nombre ?? "Sin viaje",
+        trip?.conductorNombre ?? "Sin conductor",
         v.dieselCosto ?? 0,
         v.tag ?? 0,
         ...conceptosList.map((c) =>
           Number(v.conceptos?.[c] ?? 0)
         ),
-        Number(v.total ?? 0),
+        total,
       ]);
 
-      monthTotal += Number(v.total ?? 0);
+      monthTotal += total;
+      weekTotal += total;
+      dayTotal += total;
     }
 
     if (monthTotal > 0) {
-      ws_data.push([`TOTAL DEL MES: ${monthTotal}`]);
+      ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
+      ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+      ws_data.push([`TOTAL DEL MES ${currentMonth}: ${monthTotal}`]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(wb, ws, "Viaticos");
+
     if (Platform.OS === "web") {
+
       const excelBuffer = XLSX.write(wb, {
         bookType: "xlsx",
         type: "array",
@@ -298,39 +319,46 @@ const exportViaticosToExcel = async () => {
       });
 
       const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "Viaticos.xlsx";
       a.click();
+
       window.URL.revokeObjectURL(url);
+
     } else {
+
       const base64 = XLSX.write(wb, {
         bookType: "xlsx",
         type: "base64",
       });
 
-      const fileUri =FileSystem.documentDirectory + "Viaticos.xlsx";
+      const fileUri = FileSystem.documentDirectory + "Viaticos.xlsx";
 
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      const canShare=await Sharing.isAvailableAsync();
-      if (!canShare){
-        Alert.alert("Error","No se puede compartir el archivo");
+      const canShare = await Sharing.isAvailableAsync();
+
+      if (!canShare) {
+        Alert.alert("Error", "No se puede compartir el archivo");
         return;
       }
-      await Sharing
+
+      await Sharing.shareAsync(fileUri);
     }
 
     Alert.alert("Éxito", "Reporte generado correctamente");
 
   } catch (error) {
+
     console.error("Error exportando", error);
+
     Alert.alert("Error", "No se pudo generar el archivo");
   }
 };
-
 
 const openModal =(viatico?:Viatico)=>{
   if (viatico) {
@@ -518,7 +546,7 @@ const openModal =(viatico?:Viatico)=>{
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Viáticos Registrados</Text>
-      <Button mode="contained" buttonColor="#0d75bb" onPress={() => openModal()}>Nuevo Viático</Button>
+      <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" onPress={() => openModal()}>Nuevo Viático</Button>
       {currentUser?.rol !== "Chofer" && (
        <View style={{flexDirection:"row",alignItems:"center", marginTop:10, marginBottom:10,}}>
          <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
@@ -529,7 +557,7 @@ const openModal =(viatico?:Viatico)=>{
              <Picker.Item label="Mes" value="month" />
             </Picker>
           </View>
-         <Button mode="contained" buttonColor="#0d75bb" onPress={exportViaticosToExcel}> Exportar Excel</Button>
+         <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" onPress={exportViaticosToExcel}> Exportar Excel</Button>
         </View>
       )}
       <FlatList data={viaticos}keyExtractor={item => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
@@ -614,32 +642,33 @@ const openModal =(viatico?:Viatico)=>{
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
              
              <Text style={styles.label}>Subir Factura:</Text>
+             
               {factura ? (
                <>
                 {showFactura ? (
                   factura.toLowerCase().endsWith(".pdf") ? (
                    <View style={{ marginBottom: 10 }}>
                      <Text>Factura en PDF</Text>
-                     <Button mode="contained" buttonColor="#499dd4"onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
+                     <Button mode="contained" buttonColor="#499dd4"textColor="rgb(243, 246, 248)"onPress={() => Platform.OS === "web" ? window.open(factura, "_blank") : Linking.openURL(factura)}>Abrir PDF</Button>
                    </View>
                 ):(
                   <Image source={{ uri: factura }} style={styles.facturaPreview} />
                 )
               ) : (
-              <Button mode="contained"buttonColor="#0d75bb" onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
+              <Button mode="contained"buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={() => setShowFactura(true)}>Mostrar Factura</Button>
               )}
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10, marginTop: 5 }}>
-                <Button mode="contained" buttonColor="#888" onPress={pickFactura}>Reemplazar factura</Button>
-                <Button mode="contained" buttonColor="#e27975ff" onPress={() => { setFactura(null); setFacturaRemoved(true); setShowFactura(false); }}>Eliminar</Button>
+                <Button mode="contained" buttonColor="#888"textColor="rgb(243, 246, 248)" onPress={pickFactura}>Reemplazar factura</Button>
+                <Button mode="contained" buttonColor="#e27975ff" textColor="rgb(243, 246, 248)"onPress={() => { setFactura(null); setFacturaRemoved(true); setShowFactura(false); }}>Eliminar</Button>
               </View>
               </>
              ) : (
-           <Button mode="contained" buttonColor="#094268" onPress={pickFactura}>Subir factura</Button>
+           <Button mode="contained" buttonColor="#094268"textColor="rgb(243, 246, 248)" onPress={pickFactura}>Subir factura</Button>
          )}
           {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>                                                                                                                                                                                                            
-              <Button mode="contained" buttonColor="#888" onPress={() => setModalVisible(false)}>Cancelar</Button>
-              <Button mode="contained" buttonColor="#167abd" onPress={saveViatico}>Guardar</Button>
+              <Button mode="contained" buttonColor="#888"textColor="rgb(243, 246, 248)" onPress={() => setModalVisible(false)}>Cancelar</Button>
+              <Button mode="contained" buttonColor="#167abd" textColor="rgb(243, 246, 248)"onPress={saveViatico}>Guardar</Button>
             </View>
           )}
         </ScrollView>
@@ -665,4 +694,5 @@ const styles = StyleSheet.create({
   total:{fontSize:16,marginTop:4,marginBottom:10},
   buttonRow:{flexDirection:"row",justifyContent:"space-between",marginTop:10},
   button:{flex:1, marginHorizontal:5},
+
 });

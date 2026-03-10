@@ -167,7 +167,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
         </View>
       ))}
       {currentUser.rol?.toLowerCase() === "admin" && (
-        <Button mode="contained"buttonColor="#0d75bb"style={styles.createButton}onPress={() => {
+        <Button mode="contained"buttonColor="#0d75bb"textColor="rgb(243, 246, 248)"style={styles.createButton}onPress={() => {
             setTitulo(""); setContenido("");
             setImageUri(null); setImageFile(null);
             setEditingId(null); setModalVisible(true);
@@ -184,7 +184,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
             <Button mode="contained"
               buttonColor={imageUri || imageFile ? "#28a745" : "#007bff"}
               style={{ marginBottom: 10 }}
-              onPress={handleSelectImage}
+              onPress={handleSelectImage} textColor="rgb(243, 246, 248)"
             >
               {imageUri || imageFile ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
@@ -194,10 +194,10 @@ export default function HomePage({ currentUser }: HomePageProps) {
               />
             )}
             <View style={styles.buttonsRow}>
-              <Button mode="contained"buttonColor="#888"
-                onPress={()=>{setModalVisible(false);setEditingId(null);setImageUri(null);setImageFile(null);}}>Cancelar
+              <Button mode="contained"buttonColor="#888" textColor="rgb(243, 246, 248)"
+                onPress={()=>{setModalVisible(false);setEditingId(null);setImageUri(null);setImageFile(null)}}>Cancelar
               </Button>
-              <Button mode="contained" buttonColor="#007bff" onPress={handleSaveAnnouncement}>Guardar</Button>
+              <Button mode="contained" buttonColor="#007bff"textColor="rgb(243, 246, 248)" onPress={handleSaveAnnouncement}>Guardar</Button>
             </View>
           </View>
         </View>
