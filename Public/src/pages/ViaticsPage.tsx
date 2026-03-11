@@ -191,6 +191,7 @@ export default function ViaticsPage() {
     return total;
   };
 
+  //exportacion de excel 
 const exportViaticosToExcel = async () => {
   try {
     if (!viaticos.length) {
@@ -208,6 +209,7 @@ const exportViaticosToExcel = async () => {
     let currentMonth = "";
     let currentWeek = 0;
     let currentDay = 0;
+
     let monthTotal = 0;
     let weekTotal = 0;
     let dayTotal = 0;
@@ -221,6 +223,7 @@ const exportViaticosToExcel = async () => {
       });
 
       const weekNumber = Math.ceil(date.getDate() / 7);
+      const dayNumber = date.getDate();
 
       
       const day = date.getDate();
@@ -267,7 +270,7 @@ const exportViaticosToExcel = async () => {
       }
 
       // CAMBIO DE DIA
-      if (day !== currentDay) {
+      if (dayNumber !== currentDay) {
         if (currentDay !== 0) {
           ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
         }
@@ -276,7 +279,7 @@ const exportViaticosToExcel = async () => {
         dayTotal = 0;
       }
 
-      const total = Number(v.total ?? 0);
+    //const total = Number(v.total ?? 0);
 
       ws_data.push([
         weekNumber,
@@ -288,12 +291,12 @@ const exportViaticosToExcel = async () => {
         ...conceptosList.map((c) =>
           Number(v.conceptos?.[c] ?? 0)
         ),
-        total,
+      
       ]);
 
-      monthTotal += total;
-      weekTotal += total;
-      dayTotal += total;
+      monthTotal ++;
+      weekTotal ++;
+      dayTotal ++;
     }
 
     if (monthTotal > 0) {
@@ -334,10 +337,10 @@ const exportViaticosToExcel = async () => {
         type: "base64",
       });
 
-      const fileUri = FileSystem.documentDirectory + "Viaticos.xlsx";
+      const fileUri = (FileSystem as any).documentDirectory + "Viaticos.xlsx";
 
       await FileSystem.writeAsStringAsync(fileUri, base64, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding:"base64",
       });
 
       const canShare = await Sharing.isAvailableAsync();

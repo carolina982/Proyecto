@@ -325,6 +325,7 @@ export default function TripsPage() {
         currentDay = dayNumber;
         dayTotal = 0;
       }
+
       ws_data.push([
         weekNumber,
         t.nombre ?? "N/A",
@@ -366,7 +367,9 @@ export default function TripsPage() {
 
     } else {
 
-      const base64 = XLSX.write(wb, {bookType: "xlsx",type: "base64",
+      const base64 = XLSX.write(wb, {
+        bookType: "xlsx",
+        type: "base64",
       });
 
       const fileUri =

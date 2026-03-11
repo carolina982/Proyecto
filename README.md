@@ -80,5 +80,5 @@ Join our community of developers creating universal apps.
 * Checar el por que no se descarga la excel en iphone y android 
 * visualizacion de los estilos tanto como web  y android (iphone)
 * pruebas funcionales ya en iphone entorno real 
-* checar el estilo de exportacion en viaticos(cehcar bien lo de excel ) y en viajes
-* viaticos checar el por que no muestra el nombre y nombre del conductor en viaticos 
+* viaticos checar excel por que no se estan exportando los datos
+* revisar para que se cierre automaticamante la secion 
