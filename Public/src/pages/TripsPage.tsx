@@ -372,8 +372,7 @@ export default function TripsPage() {
         type: "base64",
       });
 
-      const fileUri =
-        (FileSystem as any).documentDirectory + "Reporte_Viajes.xlsx";
+      const fileUri =(FileSystem as any).documentDirectory + "Reporte_Viajes.xlsx";
 
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: "base64",

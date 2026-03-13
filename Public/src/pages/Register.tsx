@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   customPicker:{width: "100%", height: 50,backgroundColor: "#fff",borderRadius: 10,borderWidth: 1,borderColor: "#0d75bb",flexDirection: "row",alignItems: "center",justifyContent: "space-between",paddingHorizontal: 15,marginBottom: 20},
   pickerText: { fontSize: 16, color: "#333" },
   arrowIcon: { color: "#0d75bb", fontSize: 12 },
-
   photoButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   photoButton: { flex: 0.48, height: 45, backgroundColor: "#007bff", justifyContent: "center", alignItems: "center", borderRadius: 10 },
   photoButtonText: { color: "#fff", fontSize: 14, fontWeight: "bold" },

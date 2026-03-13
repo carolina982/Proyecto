@@ -144,6 +144,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
         : Alert.alert("Error", "No se pudo eliminar anuncio");
     }
   };
+  
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Bienvenidos</Text>

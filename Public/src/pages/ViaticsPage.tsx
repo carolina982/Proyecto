@@ -228,7 +228,7 @@ const exportViaticosToExcel = async () => {
       
       const day = date.getDate();
       const trip = trips.find((t) => t.id === v.tripId);
-
+      
       // CAMBIO DE MES
       if (monthName !== currentMonth) {
         if (monthTotal > 0) {
@@ -279,7 +279,7 @@ const exportViaticosToExcel = async () => {
         dayTotal = 0;
       }
 
-    //const total = Number(v.total ?? 0);
+      const total = Number(v.total ?? 0);
 
       ws_data.push([
         weekNumber,
@@ -294,8 +294,8 @@ const exportViaticosToExcel = async () => {
       
       ]);
 
-      monthTotal ++;
-      weekTotal ++;
+     monthTotal += total;
+      weekTotal += total;
       dayTotal ++;
     }
 
@@ -539,8 +539,8 @@ const openModal =(viatico?:Viatico)=>{
         <Text style={styles.subtitle}>Conductor:{conductorNombre }</Text>
         <Text style={styles.total}>Total:${item.total}</Text>
       <View style={styles.buttonRow}>
-        <Button mode="contained" buttonColor="#0d75bb" style={styles.button}onPress={()=>openModal(item)}>Ver detalles</Button>
-        <Button mode="contained" buttonColor="#e53935" style={styles.button} onPress={() => deleteViatico(item.id)}>Eliminar</Button>
+        <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"style={styles.button}onPress={()=>openModal(item)}>Ver detalles</Button>
+        <Button mode="contained" buttonColor="#e53935"textColor="rgb(243, 246, 248)" style={styles.button} onPress={() => deleteViatico(item.id)}>Eliminar</Button>
       </View>
       </View>
     )

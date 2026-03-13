@@ -82,3 +82,10 @@ Join our community of developers creating universal apps.
 * pruebas funcionales ya en iphone entorno real 
 * viaticos checar excel por que no se estan exportando los datos
 * revisar para que se cierre automaticamante la secion 
+* analisar los campos de cada codigo ver el disño 
+
+* 
+
+
+
+
