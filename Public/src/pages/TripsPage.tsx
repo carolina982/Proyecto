@@ -239,7 +239,7 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo eliminar el viaje");
     }
   };
-
+//exportacion excel 
   const exportToExcel = async () => {
   try {
     if (!trips.length) {
@@ -306,6 +306,8 @@ export default function TripsPage() {
         weekTotal = 0;
         dayTotal = 0;
       }
+
+      //cambio de semana 
       if (weekNumber !== currentWeek) {
 
         if (currentWeek !== 0) {
@@ -315,7 +317,7 @@ export default function TripsPage() {
         currentWeek = weekNumber;
         weekTotal = 0;
       }
-
+      // cambio de dia 
       if (dayNumber !== currentDay) {
 
         if (currentDay !== 0) {

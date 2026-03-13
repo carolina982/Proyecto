@@ -191,7 +191,7 @@ export default function ViaticsPage() {
     return total;
   };
 
-  //exportacion de excel 
+  //exportacion  excel 
 const exportViaticosToExcel = async () => {
   try {
     if (!viaticos.length) {
@@ -231,6 +231,7 @@ const exportViaticosToExcel = async () => {
       
       // CAMBIO DE MES
       if (monthName !== currentMonth) {
+
         if (monthTotal > 0) {
           ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
           ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
@@ -241,6 +242,7 @@ const exportViaticosToExcel = async () => {
         ws_data.push([`MES: ${monthName.toUpperCase()}`]);
         ws_data.push([
           "Semana",
+          "Nombre",
           "Fecha",
           "Viaje",
           "Conductor",
@@ -275,28 +277,26 @@ const exportViaticosToExcel = async () => {
           ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
         }
 
-        currentDay = day;
+        currentDay = dayNumber;
         dayTotal = 0;
       }
 
-      const total = Number(v.total ?? 0);
+      const total =Number (v.total ?? 0);
 
       ws_data.push([
         weekNumber,
         date.toLocaleDateString(),
-        trip?.nombre ?? "Sin viaje",
-        trip?.conductorNombre ?? "Sin conductor",
+        trip?.nombre?? "N/A" ,
+        trip?.conductorNombre ?? "N/A",
         v.dieselCosto ?? 0,
         v.tag ?? 0,
-        ...conceptosList.map((c) =>
-          Number(v.conceptos?.[c] ?? 0)
-        ),
-      
+        ...conceptosList.map(c=>Number(v.conceptos?.[c] ?? 0),
+      ),
+      total
       ]);
-
-     monthTotal += total;
-      weekTotal += total;
-      dayTotal ++;
+      monthTotal +=total;
+      weekTotal +=total;
+      dayTotal +=total;
     }
 
     if (monthTotal > 0) {
@@ -498,7 +498,7 @@ const openModal =(viatico?:Viatico)=>{
           total += Number(c.costo || 0);
         });
       }else{
-        total += Number(v.dieselCargas || 0);
+        total += Number(v.dieselCosto || 0);
       }
     });
     setTotalDieselGlobal(total);
