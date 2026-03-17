@@ -173,8 +173,7 @@ export default function ViaticsPage() {
 
   const calcularTotal = () => {
     let total = 0;
-    conceptosBase.forEach(base =>{
-      const cantidad =Number(conceptos[`${base} Cantidad`] || 0);
+    conceptosBase.forEach(base =>{const cantidad =Number(conceptos[`${base} Cantidad`] || 0);
 
       if (base === "Comidas"){
         total +=cantidad *400;
@@ -242,7 +241,7 @@ const exportViaticosToExcel = async () => {
         ws_data.push([`MES: ${monthName.toUpperCase()}`]);
         ws_data.push([
           "Semana",
-          "Nombre",
+
           "Fecha",
           "Viaje",
           "Conductor",
@@ -277,7 +276,7 @@ const exportViaticosToExcel = async () => {
           ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
         }
 
-        currentDay = dayNumber;
+        currentDay = day;
         dayTotal = 0;
       }
 
@@ -327,6 +326,8 @@ const exportViaticosToExcel = async () => {
       a.href = url;
       a.download = "Viaticos.xlsx";
       a.click();
+
+
 
       window.URL.revokeObjectURL(url);
 

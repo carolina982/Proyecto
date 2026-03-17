@@ -74,15 +74,14 @@ Join our community of developers creating universal apps.
 
 - Pendientes en realizar en la aplicacion 
 
-* Solo por lo mientras funcionan local todavia no esta subia  a hosting 
-* Verificar(hosting) cual es recomendable compatible
+* Solo por lo mientras funcionan local todavia no esta subido a hosting 
+* Verificar(hosting) cual es recomendable compatible 
 * Investigar api para restablecer la contraseña  compatible
-* Checar el por que no se descarga la excel en iphone y android 
-* visualizacion de los estilos tanto como web  y android (iphone)
+* 
+* 
 * pruebas funcionales ya en iphone entorno real 
-* viaticos checar excel por que no se estan exportando los datos
-* revisar para que se cierre automaticamante la secion 
-* no se esta exportando bien el excel en viaticos 
+* viaticos checar excel por que no se estan exportando los datos 
+* Revisar para que se cierre automaticamante la secion 
 * 
 
 
