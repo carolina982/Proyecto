@@ -80,7 +80,7 @@ Join our community of developers creating universal apps.
 * 
 * 
 * pruebas funcionales ya en iphone entorno real 
-* viaticos checar excel por que no se estan exportando los datos 
+* 
 * Revisar para que se cierre automaticamante la secion 
 * 
 
