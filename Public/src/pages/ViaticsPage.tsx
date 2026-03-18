@@ -132,7 +132,7 @@ export default function ViaticsPage() {
 
       if (conductorFilter) {
         viaticosData = viaticosData.filter((v: any) => {
-          const trip = trips.find(t => t.id === v.tripId);
+          const trip=trips.find((t)=>t.id === (typeof v.tripId === "object" ? v.tripId._id : v.tripId));
           return trip && trip.conductorId === conductorFilter;
         });
       }
@@ -191,57 +191,52 @@ export default function ViaticsPage() {
   };
 
   //exportacion  excel 
-const exportViaticosToExcel = async () => {
+const exportViaticosToExcel =async ()=>{
   try {
-    if (!viaticos.length) {
-      Alert.alert("Aviso", "No hay datos para exportar");
+    if (!viaticos.length){
+      Alert.alert("Aviso ","No hay datos para exportar");
       return;
     }
-    const sorted = [...viaticos].sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() -
-        new Date(b.createdAt).getTime()
+    const sorted=[...viaticos].sort( (a,b)=>
+      new Date(a.createdAt || a.fecha || 0).getTime()-
+      new Date(b.createdAt || b.fecha || 0).getTime()
     );
+    const ws_data:any [][]=[];
+    let currentMonth="";
+    let currentWeek=0;
+    let currentDay=0;
 
-    const ws_data: any[][] = [];
+    let monthTotal=0;
+    let weekTotal=0;
+    let dayTotal=0;
 
-    let currentMonth = "";
-    let currentWeek = 0;
-    let currentDay = 0;
-
-    let monthTotal = 0;
-    let weekTotal = 0;
-    let dayTotal = 0;
-
-    for (const v of sorted) {
-      const  rawDate =v.createdAt || v.fecha || v.updatedAt;
-      const date= rawDate ? new Date (rawDate):new Date();
-      const monthName = date.toLocaleString("es-ES", {
-        month: "long",
-        year: "numeric",
+    for (const v of sorted){
+      const rawDate=v.createdAt ||v.fecha || v.updatedAt;
+      const date=rawDate ? new Date(rawDate) :new Date();
+      if (isNaN(date.getTime())) continue;
+      const monthName =date.toLocaleString("es-Es",{
+        month:"long",
+        year:"numeric",
       });
-
-      const weekNumber = Math.ceil(date.getDate() / 7);
-      const dayNumber = date.getDate();
-
+      const weekNumber=Math.ceil(date.getDate()/7);
+      const dayNumber=date.getDate();
       
-      const day = date.getDate();
-      const trip = trips.find((t) => t.id === v.tripId);
-      
-      // CAMBIO DE MES
-      if (monthName !== currentMonth) {
-
-        if (monthTotal > 0) {
-          ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
-          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
-          ws_data.push([`TOTAL DEL MES ${currentMonth}: ${monthTotal}`]);
+      const tripId=typeof v.tripId === "object" ? v.tripId :v.tripId;
+      const trip=trips.find(t=>t.id  === tripId);
+      const viajeNombre= v.viajeNombre || trip?.nombre || (v.tripId as any)?.nombre || "N/A";
+      const conductorNombre=v.conductorNombre || trip?.conductorNombre || (v.tripId as any)?.conductorNombre || "Sin asignar";
+      const dieselTotal= Array.isArray((v as any).dieselHistorial) ?(v as any).dieselHistorial.reduce((acc:number,d:any)=>acc+Number (d.costo || 0),0):Number(v.dieselCosto || 0);
+      //cambio  de mes 
+      if (monthName !== currentMonth){
+        if (monthTotal > 0){
+          ws_data.push([`Total Dia ${currentDay}:${dayTotal}`]);
+          ws_data.push([`Total Semana ${currentWeek}:${weekTotal}`]);
+          ws_data.push([`Total del mes ${currentMonth}:${monthTotal}`]);
           ws_data.push([]);
         }
-
-        ws_data.push([`MES: ${monthName.toUpperCase()}`]);
+        ws_data.push([`Mes:${monthName.toUpperCase()}`]);
         ws_data.push([
           "Semana",
-
           "Fecha",
           "Viaje",
           "Conductor",
@@ -250,119 +245,101 @@ const exportViaticosToExcel = async () => {
           ...conceptosList,
           "Total",
         ]);
-
-        currentMonth = monthName;
-        currentWeek = 0;
-        currentDay = 0;
-
-        monthTotal = 0;
-        weekTotal = 0;
-        dayTotal = 0;
+        currentMonth=monthName;
+        currentWeek=0;
+        currentDay=0;
+        monthTotal=0;
+        weekTotal=0;
+        dayTotal=0;
       }
-
-      // CAMBIO DE SEMANA
-      if (weekNumber !== currentWeek) {
-        if (currentWeek !== 0) {
-          ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
+      // cambio de semana 
+      if (weekNumber !== currentWeek){
+        if (currentWeek !== 0){
+          ws_data.push([`Total semana ${currentWeek}:${weekTotal}`]);
           ws_data.push([]);
         }
-        currentWeek = weekNumber;
-        weekTotal = 0;
+        currentWeek=weekNumber;
+        weekTotal=0;
       }
-
-      // CAMBIO DE DIA
-      if (dayNumber !== currentDay) {
-        if (currentDay !== 0) {
-          ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
+      // cambio de dia 
+      if (dayNumber !== currentDay){
+        if (currentDay !== 0){
+          ws_data.push([`Total Dia ${currentDay}:${dayTotal}`]);
         }
-
-        currentDay = day;
-        dayTotal = 0;
+        currentDay=dayNumber;
+        dayTotal=0;
       }
 
-      const total =Number (v.total ?? 0);
+      const conceptosValores=conceptosList.map(c=>{
+        if (c === "Comidas Costo"){
+          const cantidad=Number(v.conceptos?.["Comidas Cantidad"]?? 0);
+          return cantidad * 400;
+        }
+        return Number(v.conceptos?.[c] ?? 0);
+      });
+      const total =Number(v.total ?? 0);
 
       ws_data.push([
         weekNumber,
         date.toLocaleDateString(),
-        trip?.nombre?? "N/A" ,
-        trip?.conductorNombre ?? "N/A",
-        v.dieselCosto ?? 0,
-        v.tag ?? 0,
-        ...conceptosList.map(c=>Number(v.conceptos?.[c] ?? 0),
-      ),
-      total
+        viajeNombre,
+        conductorNombre,
+        dieselTotal,
+        Number(v.tag || 0),
+        ...conceptosValores,
+        total,
       ]);
-      monthTotal +=total;
-      weekTotal +=total;
-      dayTotal +=total;
+      monthTotal+=total;
+      weekTotal+=total;
+      dayTotal+=total;
     }
-
-    if (monthTotal > 0) {
-      ws_data.push([`TOTAL DIA ${currentDay}: ${dayTotal}`]);
-      ws_data.push([`TOTAL SEMANA ${currentWeek}: ${weekTotal}`]);
-      ws_data.push([`TOTAL DEL MES ${currentMonth}: ${monthTotal}`]);
+    if (monthTotal>0){
+      ws_data.push([`Total Dia ${currentDay}:${dayTotal}`]);
+      ws_data.push([`Total Semana ${currentWeek}:${weekTotal}`]);
+      ws_data.push([`Total del Mes ${currentMonth}:${monthTotal}`])
     }
+    const ws =XLSX.utils.aoa_to_sheet(ws_data);
+    const wb =XLSX.utils.book_new();
 
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    const wb = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(wb, ws, "Viaticos");
-
-    if (Platform.OS === "web") {
-
-      const excelBuffer = XLSX.write(wb, {
-        bookType: "xlsx",
-        type: "array",
+    XLSX.utils.book_append_sheet(wb,ws,"Viaticos");
+    
+    if (Platform.OS === "web"){
+      const excelBuffer= XLSX.write(wb,{
+        bookType:"xlsx",
+        type:"array",
       });
-
-      const blob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      const blob=new Blob([excelBuffer],{
+        type:"application/vnd.openxmlformats-oficedocument.spreadsheetml.sheet",
       });
-
-      const url = window.URL.createObjectURL(blob);
-
+      const url=window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "Viaticos.xlsx";
+      a.href=url;
+      a.download="Viaticos.xlsx";
       a.click();
-
-
-
       window.URL.revokeObjectURL(url);
-
-    } else {
-
-      const base64 = XLSX.write(wb, {
-        bookType: "xlsx",
-        type: "base64",
+    }else{
+      const base64=XLSX.write(wb,{
+        bookType:"xlsx",
+        type:"base64",
       });
-
-      const fileUri = (FileSystem as any).documentDirectory + "Viaticos.xlsx";
-
-      await FileSystem.writeAsStringAsync(fileUri, base64, {
+      const fileUri=(FileSystem as any).documentDirectory +"Viaticos.xlsx";
+      await FileSystem.writeAsStringAsync(fileUri,base64,{
         encoding:"base64",
       });
-
-      const canShare = await Sharing.isAvailableAsync();
-
-      if (!canShare) {
-        Alert.alert("Error", "No se puede compartir el archivo");
+      const canShare=await Sharing.isAvailableAsync();
+      if (!canShare){
+        Alert.alert("Error","No se puede compartir el archivo ");
         return;
       }
-
       await Sharing.shareAsync(fileUri);
     }
-
-    Alert.alert("Éxito", "Reporte generado correctamente");
-
-  } catch (error) {
-
-    console.error("Error exportando", error);
-
-    Alert.alert("Error", "No se pudo generar el archivo");
+    Alert.alert("Exito","Reporte generado correctamente");
+  }catch (error){
+    console.error("Error exportando",error);
+    Alert.alert("Error","No se pudo generar el archivo");
   }
 };
+
 
 const openModal =(viatico?:Viatico)=>{
   if (viatico) {

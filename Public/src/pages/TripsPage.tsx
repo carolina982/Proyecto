@@ -239,6 +239,7 @@ export default function TripsPage() {
       Alert.alert("Error", "No se pudo eliminar el viaje");
     }
   };
+
 //exportacion excel 
   const exportToExcel = async () => {
   try {
@@ -353,8 +354,8 @@ export default function TripsPage() {
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reporte_Viajes");
-    if (Platform.OS === "web") {
 
+    if (Platform.OS === "web") {
       const excelBuffer = XLSX.write(wb, { bookType: "xlsx",type: "array",});
       const blob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -382,7 +383,6 @@ export default function TripsPage() {
 
       await Sharing.shareAsync(fileUri);
     }
-
     Alert.alert("Éxito", "Reporte Excel generado correctamente");
 
   } catch (error) {
