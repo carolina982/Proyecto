@@ -78,8 +78,8 @@ Join our community of developers creating universal apps.
 * Verificar(hosting) cual es recomendable compatible 
 * Investigar api para restablecer la contraseña  compatible
 * pruebas funcionales ya en iphone entorno real 
-* Revisar para que se cierre automaticamante la secion 
-* 
+* checar para subirlo al dominio y los detalles en  los apartados de  viajes y viaticos en el apartado de excel para que no se vea bien ancho el del excel 
+* Revisar en que hsoting  se puede subir para hacer las pruebas reales  cuando la aplicacion este arriba 
 
 
 
