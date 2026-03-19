@@ -77,10 +77,7 @@ Join our community of developers creating universal apps.
 * Solo por lo mientras funcionan local todavia no esta subido a hosting 
 * Verificar(hosting) cual es recomendable compatible 
 * Investigar api para restablecer la contraseña  compatible
-* 
-* 
 * pruebas funcionales ya en iphone entorno real 
-* 
 * Revisar para que se cierre automaticamante la secion 
 * 
 

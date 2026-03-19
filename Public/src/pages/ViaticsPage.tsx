@@ -309,7 +309,7 @@ const exportViaticosToExcel =async ()=>{
         type:"array",
       });
       const blob=new Blob([excelBuffer],{
-        type:"application/vnd.openxmlformats-oficedocument.spreadsheetml.sheet",
+        type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url=window.URL.createObjectURL(blob);
       const a = document.createElement("a");
