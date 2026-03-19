@@ -3,13 +3,13 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Image, Linking, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ActivityIndicator, Button, TextInput } from "react-native-paper";
 import * as XLSX from "xlsx";
 import { api, BASE_URL } from "../api/api";
 import { useStore } from '../context/Store';
 import { Viatico } from "../types";
-
 
 interface Trip { id: string;nombre: string; conductorId: string; conductorNombre?: string;}
 
@@ -529,10 +529,10 @@ const openModal =(viatico?:Viatico)=>{
       <Text style={styles.title}>Viáticos Registrados</Text>
       <Button mode="contained" buttonColor="#0d75bb"textColor="rgb(243, 246, 248)" onPress={() => openModal()}>Nuevo Viático</Button>
       {currentUser?.rol !== "Chofer" && (
-       <View style={{flexDirection:"row",alignItems:"center", marginTop:10, marginBottom:10,}}>
+       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
          <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
-           <View style={{flex:1, backgroundColor:"#fff",borderRadius:8,marginRight:8}}>
-             <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{backgroundColor:"#fff"}}>
+           <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 5, marginRight: 8 }}>
+             <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{height:20}}>
              <Picker.Item label="Día" value="day" />
              <Picker.Item label="Semana" value="week" />
              <Picker.Item label="Mes" value="month" />
@@ -543,8 +543,7 @@ const openModal =(viatico?:Viatico)=>{
       )}
       <FlatList data={viaticos}keyExtractor={item => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
       <Modal visible={modalVisible} animationType="slide">
-
-        <ScrollView style={styles.modalContent}>
+         <KeyboardAwareScrollView enableOnAndroid extraScrollHeight={120} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, paddingBottom: 200,flexGrow:1 }} >
           <Text style={styles.modalTitle}>
             {editingViatico ? "Editar Viático" : "Nuevo Viático"}
           </Text>
@@ -619,7 +618,7 @@ const openModal =(viatico?:Viatico)=>{
                   </View>
             </View>
              <Text style={styles.label}>TAG:</Text>
-             <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
+             <TextInput value={tag}onChangeText={setTag}keyboardType="numeric"returnKeyLabel="done"mode="flat"underlineColor="#0d75bb" activeUnderlineColor="#0d75bb"textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
              <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 15 }}>Total: ${calcularTotal()}</Text>
              
              <Text style={styles.label}>Subir Factura:</Text>
@@ -652,7 +651,8 @@ const openModal =(viatico?:Viatico)=>{
               <Button mode="contained" buttonColor="#167abd" textColor="rgb(243, 246, 248)"onPress={saveViatico}>Guardar</Button>
             </View>
           )}
-        </ScrollView>
+
+       </KeyboardAwareScrollView>
       </Modal>
     </View>
   );

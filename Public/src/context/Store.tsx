@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
-import { Trip, Unit, User, Viatic } from "../types";
+import { Trip, Unit, User, Viatico } from "../types";
+
 
 // ================== PARCHE DE PORTABILIDAD (ARREGLA EL ERROR ROJO) ==================
 if (Platform.OS !== 'web') {
@@ -17,7 +18,7 @@ interface StoreContextProps {
   users: User[];
   trips: Trip[];
   units: Unit[];
-  viatics: Viatic[];
+  viatics: Viatico[];
 
   setCurrentUser: (user: User | null) => void;
   addUser: (user: User) => void;
@@ -28,8 +29,8 @@ interface StoreContextProps {
   updateTrip: (trip: Trip) => void;
   removeTrip: (tripId: string) => void;
 
-  addViatic: (viatic: Viatic) => void;
-  updateViatic: (viatic: Viatic) => void;
+  addViatic: (viatic: Viatico) => void;
+  updateViatic: (viatic: Viatico) => void;
   removeViatic: (viaticId: string) => void;
 
 
@@ -51,7 +52,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [viatics, setViatics] = useState<Viatic[]>([]);
+  const [viatics, setViatics] = useState<Viatico[]>([]);
 
 
   useEffect(() => {
@@ -109,8 +110,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     setTrips((prev) => prev.filter((t) => t.id !== tripId));
 
 
-  const addViatic = (viatic: Viatic) => setViatics((prev) => [...prev, viatic]);
-  const updateViatic = (updatedViatic: Viatic) =>
+  const addViatic = (viatic: Viatico) => setViatics((prev) => [...prev, viatic]);
+  const updateViatic = (updatedViatic: Viatico) =>
     setViatics((prev) => prev.map((v) => (v.id === updatedViatic.id ? updatedViatic : v)));
   const removeViatic = (viaticId: string) =>
     setViatics((prev) => prev.filter((v) => v.id !== viaticId));
@@ -124,8 +125,18 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
 
   const login = (user: User) => setCurrentUser(user);
-  const logout = () => setCurrentUser(null);
-
+  const logout =async()=>{
+    try {
+      if (Platform.OS === "web"){
+        localStorage.removeItem("storeData");
+      }else{
+        await AsyncStorage.removeItem("storeData");
+      }
+      setCurrentUser(null);
+    }catch (error){
+      console.error("Error cerrando sesion",error);
+    }
+  };
   return (
     <StoreContext.Provider
       value={{
