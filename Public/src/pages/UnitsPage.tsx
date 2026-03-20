@@ -2,6 +2,7 @@ import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { Button, TextInput, } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "../api/api";
 
 interface Unit {
@@ -167,17 +168,18 @@ export default function UnitsPage() {
     <View style={styles.container}>
        <Text style={styles.title}>Unidades Registradas</Text>
          <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={() => openModal()}>Nueva Unidad </Button>
-           <FlatList data={units}keyExtractor={(item) => item.id}renderItem={renderItem}style={{ marginTop: 15 }}/>
+           <FlatList data={units}keyExtractor={(item) => item.id}contentContainerStyle={{paddingBottom:120}}renderItem={renderItem}style={{ marginTop: 15 }}/>
              <Modal visible={modalVisible} animationType="slide">
+              <SafeAreaView style={{flex:1,backgroundColor:"#fff"}}>
                <View style={styles.modalContent}>
                 
                <Text style={styles.modalTitle}>{editingUnit ? "Editar Unidad" : "Nueva Unidad"}</Text>
-               <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" textColor="#000"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
-               <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
-               <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
-               <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"textColor="#000"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
+               <TextInput placeholder="Nombre"value={nombre}onChangeText={setNombre} mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
+               <TextInput placeholder="Placas"value={placas}onChangeText={setPlacas}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
+               <TextInput placeholder="Modelo"value={modelo}onChangeText={setModelo}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
+               <TextInput placeholder="Capacidad"value={capacidad}onChangeText={setCapacidad}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb"placeholderTextColor="#000"dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
                <TextInput placeholder="Estado (Disponible / Mantenimiento / Ocupado)"value={estado}onChangeText={(text) => setEstado(text as Unit["estado"])} mode="flat"underlineColor="#0d75bb"
-               activeUnderlineColor="#0d75bb" textColor="#000" placeholderTextColor="#000" dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
+               activeUnderlineColor="#0d75bb"  placeholderTextColor="#000" dense contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input}/>
                
                {mostrarRemolque && (
                <>
@@ -199,6 +201,7 @@ export default function UnitsPage() {
                <Button mode="contained" buttonColor="#0d75bb" textColor="rgb(243, 246, 248)"onPress={saveUnit}>Guardar</Button>
           </View>
         </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -212,6 +215,6 @@ const styles = StyleSheet.create({
   estadoBadge: {paddingHorizontal: 8,paddingVertical: 3,borderRadius: 12,},
   estadoText: { color: "#fff", fontWeight: "bold" },
   modalContent: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
+  modalTitle: { fontSize:22, fontWeight: "bold", marginBottom:10,marginTop:10 },
   input: { borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: "transparent"},
 });
