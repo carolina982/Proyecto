@@ -532,7 +532,7 @@ const openModal =(viatico?:Viatico)=>{
        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
          <Text style={{ fontWeight: "bold", marginRight: 8}}>Exportar por:</Text>
            <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 5, marginRight: 8 }}>
-             <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{height:20}}>
+             <Picker selectedValue={filter} onValueChange={(value)=>setFilter(value)} style={{height:20}}  mode={Platform.OS === "ios"?"dropdown":"dropdown"}>
              <Picker.Item label="Día" value="day" />
              <Picker.Item label="Semana" value="week" />
              <Picker.Item label="Mes" value="month" />

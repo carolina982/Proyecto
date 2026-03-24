@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -13,7 +14,7 @@ export default function Register({ navigation }: any) {
   const [apellido, setApellido] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer");
+  const [rol, setRol] = useState<"Admin" | "Chofer">("Chofer" );
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -119,12 +120,20 @@ export default function Register({ navigation }: any) {
       
       <Text style={styles.label}>Selecciona tu rol:</Text>
       
-      {/* Selector Manual (Se ve igual en iPhone y Android) */}
-      <TouchableOpacity style={styles.customPicker} onPress={showRolPicker}>
-        <Text style={styles.pickerText}>{rol}</Text>
-        <Text style={styles.arrowIcon}>▼</Text>
-      </TouchableOpacity>
-
+      {Platform .OS ===  "web" ? (
+        <View style={styles.pickerContainer}>
+          <Picker selectedValue={rol} onValueChange={(itemValue)=> setRol(itemValue)} style={styles.picker}>
+            <Picker.Item label="Chofer" value="Chofer" />
+            <Picker.Item label="Admin" value="Admin" />
+          </Picker>
+        </View>
+      ):(
+        <TouchableOpacity style={styles.customPicker} onPress={showRolPicker}>
+          <Text style={styles.pickerText}>{rol}</Text>
+          <Text style={styles.arrowIcon}>▼</Text>
+        </TouchableOpacity>
+      )
+    }
       <View style={styles.photoButtons}>
         <TouchableOpacity style={styles.photoButton} onPress={pickImageFromGallery}>
           <Text style={styles.photoButtonText}>Elegir foto</Text>
@@ -163,4 +172,6 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   registerButton: { marginTop: 15, alignItems: "center" },
   registerText: { color: "#007bff", fontSize: 16 },
+  pickerContainer:{borderWidth:1, borderRadius:0.4,marginBottom:20},
+  picker:{width:"100%",height:25},
 });

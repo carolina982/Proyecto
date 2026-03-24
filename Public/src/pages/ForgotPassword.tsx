@@ -5,29 +5,31 @@ import { Button, DefaultTheme, Provider as PaperProvider, TextInput } from "reac
 export default function ForgotPassword({ navigation }: any) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const handleSend = async () => {
-    if (!email) {
-      Alert.alert("Error", "Ingresa tu correo electrónico");
+  const handleSend =async ()=>{
+    if (!email){
+      Alert.alert("Error","Ingresa tu correo electronico");
       return;
     }
-    console.log("Enviando correo de recuperación para:", email);
-    setLoading(true);
+    setLoading (true);
     try {
-      const res = await fetch("http://192.168.1.81:3000/api/users/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      const res=await fetch ("http://192.168.1.81:3000/api/auth/forgot-passwprd",{
+        method:"POST",
+        headers:{"Content-Type":"application /json",},
+        body:JSON.stringify({email:email.trim().toLowerCase()}),
       });
-      const data = await res.json();
-      Alert.alert("Aviso", data.message || "Correo enviado si la cuenta existe");
-    } catch (error) {
-      console.error("Error enviando correo:", error);
-      Alert.alert("Error", "No se pudo enviar el correo");
-    } finally {
+      const data =await res.json();
+      if (!res.ok){
+        throw new Error (data.message);
+      }
+      Alert.alert ("Exito","Codigo enviado correctamente");
+      navigation.navigate ("ResetPassword",{email});
+    } catch (error:any){
+      console.error("Error",error);
+      Alert.alert("Error ",error.message || "No se puedo enviar el correo");
+    }finally {
       setLoading(false);
     }
   };
-
   return (
     <PaperProvider
       theme={{...DefaultTheme,

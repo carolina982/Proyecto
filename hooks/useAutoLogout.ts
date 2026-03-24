@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
 
-const INACTIVITY_TIME = 90 * 9000; 
+const INACTIVITY_TIME = 90 * 9000;  // duracion de tiempo automatico
 
 export default function useAutoLogout(logout: () => void) {
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);

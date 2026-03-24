@@ -1,10 +1,9 @@
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { launchImageLibrary } from "react-native-image-picker";
 import { Button, TextInput } from "react-native-paper";
 import { api, BASE_URL } from "../api/api";
 import { User } from "../types";
-
 
 interface Announcement {
   id: string;
@@ -45,25 +44,28 @@ export default function HomePage({ currentUser }: HomePageProps) {
         : Alert.alert("Error", "No se pudieron cargar los anuncios");
     }
   };
-  const handleSelectImage = async () => {
-    if (Platform.OS === "web") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = () => {
-        if (input.files && input.files.length > 0) {
-          setImageFile(input.files[0]);
+  const handleSelectImage =async()=>{
+    try{
+      //pedir permiso
+       const permission=await ImagePicker.requestMediaLibraryPermissionsAsync();
+       if (!permission.granted){
+        Alert.alert("Permiso requerido", "se necesita acceso a la galeria");
+        return;
+       }
+       const result =await ImagePicker.launchImageLibraryAsync({
+        mediaTypes:ImagePicker.MediaTypeOptions.Images,
+        quality:0.7,
+        allowsEditing:true,
+        });
+        if (!result.canceled){
+          const uri=result.assets[0].uri;
+          setImageUri(uri);
         }
-      };
-      input.click();
-    } else {
-      const result = await launchImageLibrary({ mediaType: "photo", quality: 0.7 });
-      if (!result.didCancel && result.assets && result.assets.length > 0) {
-        const uri = result.assets[0].uri;
-        if (uri) setImageUri(uri);
-      }
+    }catch (error){
+      console.error(error);
+      Alert.alert("Error","No se pudo seleccionar la imagen")
     }
-  };
+  }
   const handleSaveAnnouncement = async () => {
     if (!titulo || !contenido) {
       Platform.OS === "web"
@@ -78,8 +80,13 @@ export default function HomePage({ currentUser }: HomePageProps) {
       if (Platform.OS === "web") {
         if (imageFile) formData.append("image", imageFile);
       } else {
-        if (imageUri && !imageUri.startsWith("http")) {
-          formData.append("image", { uri: imageUri, type: "image/jpeg", name: "anuncio.jpg" } as any);
+        if (imageUri && !imageUri.startsWith("http")){
+          const filename =imageUri.split("/").pop() || "imagen.jpg";
+          formData.append ("image",{
+            uri:imageUri,
+            name:filename,
+            type:"imqge/jpeg",
+          } as any);
         }
       }
       const url = editingId ? `/announcements/${editingId}` : "/announcements";
@@ -161,8 +168,8 @@ export default function HomePage({ currentUser }: HomePageProps) {
           <Text style={styles.date}>{new Date(a.fecha).toLocaleDateString()}</Text>
           {currentUser.rol?.toLowerCase() === "admin" && (
             <View style={styles.buttonsRow}>
-              <Button mode="contained"buttonColor="#f39c12"style={styles.actionButton}onPress={() => handleEdit(a)}>Editar</Button>
-              <Button mode="contained"buttonColor="red"style={styles.actionButton}onPress={() => deleteAnnouncement(a.id)}>Eliminar</Button>
+              <Button mode="contained"buttonColor="#f39c12"textColor="rgb(243, 246, 248)"style={styles.actionButton}onPress={() => handleEdit(a)}>Editar</Button>
+              <Button mode="contained"buttonColor="red"textColor="rgb(243, 246, 248)"style={styles.actionButton}onPress={() => deleteAnnouncement(a.id)}>Eliminar</Button>
             </View>
           )}
         </View>
@@ -190,9 +197,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
               {imageUri || imageFile ? "Cambiar Imagen" : "Agregar Imagen"}
             </Button>
             {(imageUri || imageFile) && (
-              <Image source={{uri: Platform.OS === "web" ? URL.createObjectURL(imageFile!) : imageUri!,}}
-                style={styles.previewImage}
-              />
+              <Image source={{uri:Platform.OS === "web"?imageFile ?URL.createObjectURL(imageFile):undefined :imageUri || undefined,}} style={styles.previewImage}/>
             )}
             <View style={styles.buttonsRow}>
               <Button mode="contained"buttonColor="#888" textColor="rgb(243, 246, 248)"

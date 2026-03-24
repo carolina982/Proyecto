@@ -75,10 +75,15 @@ Join our community of developers creating universal apps.
 - Pendientes en realizar en la aplicacion 
 
 * Solo por lo mientras funcionan local todavia no esta subido a hosting 
-* Verificar(hosting) cual es recomendable compatible 
-* Investigar api para restablecer la contraseña  compatible
-* checar para subirlo al dominio y los detalles en  los apartados de  viajes y viaticos en el apartado de excel para que no se vea bien ancho el del excel 
-* Revisar en que hsoting  se puede subir para hacer las pruebas reales  cuando la aplicacion este arriba 
+
+* Restablcer la contraseña => solo falta  configuracion de la (api)
+* checar para subirlo al dominio 
+* Revisar en que hsoting  se puede subir para sea el mas recomdendable para el uso 
+
+
+
+
+ 
 
 
 
