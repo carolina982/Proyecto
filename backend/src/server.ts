@@ -1,4 +1,5 @@
 import cors from "cors";
+import dotenv from "dotenv";
 import express from "express";
 import path from "path";
 import connectDB from "./config/db";
@@ -10,8 +11,10 @@ import unitRoutes from "./routes/unitRoutes";
 import userRoutes from "./routes/userRoutes";
 import viaticRoutes from "./routes/viaticRoutes";
 
+dotenv.config();
+
 const app = express();
-const PORT = 3000;
+const PORT =Number(process.env.PORT) || 3000;
 connectDB();
 
 app.use(cors());
@@ -27,5 +30,5 @@ app.use("/api/auth",authRoutes);
 
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+ console.log(`Servidor corriendo en puerto ${PORT}`)
 });

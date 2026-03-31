@@ -428,7 +428,7 @@ export default function TripsPage() {
        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
        <Text style={{ fontWeight: "bold", marginRight: 8,}}>Exportar por:</Text>
        <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 5, marginRight: 8 }}>
-       <Picker selectedValue={exportType} onValueChange={(value) => setExportType(value)}style={{ height: 20 }} mode={Platform.OS === "ios"?"dropdown":"dropdown"}>
+       <Picker selectedValue={exportType} onValueChange={(value) => setExportType(value)}style={{ height: 20 }} >
         <Picker.Item label="Día" value="dia" />
         <Picker.Item label="Semana" value="semana" />
         <Picker.Item label="Mes" value="mes" />
