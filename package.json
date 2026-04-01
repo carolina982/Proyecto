@@ -3,7 +3,10 @@
   "main": "node_modules/expo/AppEntry.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "react-scripts start",
+    "build":"react-scripts build",
+    "test":"react-scripts test",
+    "eject":"react-scripts eject",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
