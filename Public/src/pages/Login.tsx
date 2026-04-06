@@ -18,7 +18,7 @@ export default function Login({ navigation }: any) {
     }
     setLoading(true);
     try {
-      const response=await fetch ("http://192.168.1.81:3000/api/users/login",
+      const response=await fetch ("http://44.222.178.134:3000/api/users/login",
         {
         method:"POST",
         headers:{"Content-Type":"application/json"},
