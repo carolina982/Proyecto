@@ -18,7 +18,7 @@ export default function Login({ navigation }: any) {
     }
     setLoading(true);
     try {
-      const response=await fetch ("http://44.222.178.134:3000/api/auth/login",
+      const response=await fetch ("https://hamamelidaceous-elenor-depressedly.ngrok-free.dev/api/auth/login",
         {
         method:"POST",
         headers:{"Content-Type":"application/json"},
