@@ -3,7 +3,7 @@
   "main": "node_modules/expo/AppEntry.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "expo start",
     "build":"react-scripts build",
     "test":"react-scripts test",
     "eject":"react-scripts eject",
