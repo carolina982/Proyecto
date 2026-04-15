@@ -90,3 +90,4 @@ Join our community of developers creating universal apps.
 
 
 
+* cehcar adonde que se queden esatable el diseño 
