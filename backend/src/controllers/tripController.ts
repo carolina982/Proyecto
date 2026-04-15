@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Trip from "../models/Trip";
 
 export const getTrip = async (req: Request, res: Response) => {
@@ -12,11 +13,13 @@ export const getTrip = async (req: Request, res: Response) => {
     let trips;
 
   
-    if (user.rol?.toLowerCase() === "chofer") {
-      trips = await Trip.find({ conductorId: user.id });
-      } else {
-       trips = await Trip.find();
-       }
+    if (user.rol?.toLowerCase()==="chofer"){
+      trips=await Trip.find({
+        conductorId:String(user.id)
+      });
+    }else{
+      trips =await Trip.find();
+    }
     return res.status(200).json(trips);
     } catch (error) {
     console.error("Error al obtener los viajes:", error);
@@ -32,8 +35,11 @@ export const getTripById = async (req: Request, res: Response) => {
 
     const user = (req as any).user;
 
-    if (user?.rol?.toLowerCase() === "chofer" && trip.conductorId !== user.id) {
-      return res.status(403).json({ message: "No tienes permiso para ver este viaje" });
+    if (
+      user?.rol?.toLowerCase() === "chofer" && 
+      String(trip.conductorId) ! == String(user.id)
+    ){
+      return res.status(403).json({message:"No tienes permiso"});
     }
 
     res.json(trip);
@@ -54,7 +60,7 @@ export const createTrip = async (req: Request, res: Response) => {
     const newTrip = new Trip({
       nombre,
       unidadId,
-      conductorId,
+      conductorId:new mongoose.Types.ObjectId(conductorId),
       fechaSalida: new Date(fechaSalida),
       fechaLlegada:fechaLlegada ? new Date(fechaLlegada):null,
       destino,
@@ -78,8 +84,10 @@ export const updateTrip = async (req: Request, res: Response) => {
     if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
 
     const user = (req as any).user;
-    if (user?.rol?.toLowerCase() === "chofer" && trip.conductorId !== user.id) {
-      return res.status(403).json({ message: "No tienes permiso para actualizar este viaje" });
+    if (
+      user?.rol?.toLowerCase() === "chofer" &&  String(trip.conductorId) !==String (user.id)
+    ){
+      return res.status(403).json({message:"No tienes permiso"});
     }
 
     Object.assign(trip, req.body);
@@ -98,8 +106,11 @@ export const deleteTrip = async (req: Request, res: Response) => {
     if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
 
     const user = (req as any).user;
-    if (user?.rol?.toLowerCase() === "chofer" && trip.conductorId !== user.id) {
-      return res.status(403).json({ message: "No tienes permiso para eliminar este viaje" });
+    if (
+      user?.rol?.toLowerCase() === "chofer" &&
+      String(trip.conductorId) !== String(user.id)
+    ){
+      return res.status(403).json({message:"No tienes permiso"})
     }
 
     await trip.deleteOne();
