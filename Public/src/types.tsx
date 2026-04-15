@@ -41,7 +41,7 @@ export interface Trip{
     id:string;
     nombre:string;
     conductorId:string;
-    conductorNombre?:string;
+    conductorNombre?:any;
     destino:string;
     fechaInicio:String;
     fechaFin:string;

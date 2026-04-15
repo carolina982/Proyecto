@@ -180,7 +180,7 @@ export default function HomePage({ currentUser }: HomePageProps) {
             setImageUri(null); setImageFile(null);
             setEditingId(null); setModalVisible(true);
           }} >
-          Crear Anuncio
+          Crear Aviso
         </Button>
       )}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>

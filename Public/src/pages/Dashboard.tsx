@@ -147,5 +147,3 @@ const styles = StyleSheet.create({
   drawerName: {fontSize: 18,fontWeight: "bold",marginBottom: 5, },
   drawerRole: {fontSize: 14,marginBottom: 20,color: "#666",  },
 });
-
-

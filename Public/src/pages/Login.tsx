@@ -18,7 +18,7 @@ export default function Login({ navigation }: any) {
     }
     setLoading(true);
     try {
-      const response=await fetch ("https://hamamelidaceous-elenor-depressedly.ngrok-free.dev/api/auth/login",
+      const response=await fetch ("https://volta-backend-drkt.onrender.com/api/auth/login",
         {
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -39,7 +39,7 @@ export default function Login({ navigation }: any) {
         await import("@react-native-async-storage/async-storage")).default;
         await AsyncStorage.setItem("token",data.token);
     }
-    login(data);
+    login(data.user);
     }catch (error){
       console.error("Login error",error);
       Alert.alert("Error","No se pudo iniciar sesion .Intenta mas tarder");

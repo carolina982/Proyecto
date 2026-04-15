@@ -17,7 +17,7 @@ interface Trip {
   id: string; 
   nombre: string;
   unidadId: string; 
-  conductorId: string;
+  conductorId: string |{_id:string};
   fechaSalida: string; 
   fechaLlegada: string;
   destino: string;  
@@ -32,6 +32,7 @@ interface User { id: string; nombre: string; apellido?: string; }
 
 export default function TripsPage() {
   const { currentUser } = useStore();
+  console.log("current user",currentUser);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -49,11 +50,13 @@ export default function TripsPage() {
   const [def,setDef]=useState("");
   const [exportType , setExportType]=useState("");
   const [showLlegadaPicker,setShowLlegadaPicker]=useState (false);
+  const [showSalidaPicker,setShowSalidaPicker]=useState (false);
   const [selectedUnit,setSelectedUnit]=useState<Unit | null>(null);
   const [unitPlaca,setUnitPlaca]=useState("");
   const [tipoRemolque,setTipoRemolque]=useState("");
   const [mostrarRemolque,setMostrarRemolque]=useState(false);
   const [placaRemolque,setPlacaRemolque]=useState("");
+
 
   useEffect(() => {
     if (currentUser) {
@@ -66,6 +69,7 @@ export default function TripsPage() {
     return (
       <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
         <Text>Cargando usuario...</Text>
+
       </View>
     );
   }
@@ -88,12 +92,21 @@ export default function TripsPage() {
     const res =await api.get("/trips",{
       headers:{
         Authorization:`Bearer ${token}`,
-      }
+      },
     });
+    console.log("Respuesta backend",res.data);
     let allTrips = res.data.map((t: any) => ({...t, id: t._id }));
     if (!isAdmin) {
-      allTrips = allTrips.filter((t: Trip) => t.conductorId === currentUser.id);
-    }
+  allTrips = allTrips.filter((t: any) => {
+    const conductor = typeof t.conductorId === "object"
+      ? t.conductorId._id
+      : t.conductorId;
+
+      console.log ("Condutor del vaije",conductor);
+      console.log("Usuario actual",currentUser.id);
+    return String(conductor) === String(currentUser._id);
+  });
+}
     setTrips(allTrips);
     generateReports(allTrips);
   } catch (error: any) {
@@ -139,7 +152,8 @@ export default function TripsPage() {
       setEditingTrip(trip);
       setNombre(trip.nombre);
       setUnidadId(trip.unidadId);
-      setConductorId(trip.conductorId);
+      const conductorId =typeof trip.conductorId === "object"? trip.conductorId._id : trip.conductorId;
+      setConductorId(conductorId);
       setFechaSalida(new Date(trip.fechaSalida).toLocaleDateString("es-ES"));
       setFechaLlegada(trip.fechaLlegada? new Date(trip.fechaLlegada).toLocaleDateString("es-ES"): "");
       setDestino(trip.destino);
@@ -181,6 +195,7 @@ export default function TripsPage() {
     unidadId,
     conductorId,
     destino,
+    fechaLlegada:parseDate(fechaLlegada),
     estado: estadoCalculado,
   };
   if (fechaSalida && fechaSalida.trim() !== "") {
@@ -394,9 +409,11 @@ export default function TripsPage() {
 
   const renderItem = ({ item }: { item: Trip }) => {
     const unidadNombre = units.find(u => u.id === item.unidadId)?.nombre || item.unidadId;
-    const conductorNombre = users.find(u => u.id === item.conductorId)?.nombre || item.conductorId;
+    const conductorId=typeof item.conductorId ==="object" ?item.conductorId._id :item.conductorId;
+    const conductorNombre=users.find(u => u.id === conductorId)?.nombre || "N/A";
     const AcompananteNombre=item.acompanante === "none" ? "Sin acompañante" :(users.find(u=> u.id === item.acompanante)?.nombre ?? "Sin acompañante");
-    const canEdit = isAdmin || currentUser.id === item.conductorId;
+    const conductorIdItme=typeof item.conductorId === "object" ? item.conductorId._id :item.conductorId;
+    const canEdit=isAdmin || String (currentUser._id) === String(conductorIdItme);
     const canDelete = isAdmin;
     return (
       <View style={styles.card}>
@@ -499,27 +516,73 @@ export default function TripsPage() {
         <Text style={styles.label}>Kilometraje km:</Text>
          <TextInput value={kilometraje} onChangeText={setKilometraje} keyboardType="numeric" mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense  textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} />
         <Text style={styles.label}>Fecha de Salida:</Text>
-         <TextInput value={fechaSalida} onChangeText={setFechaSalida} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }} style={styles.input} />
+        {Platform.OS === "web" ?(
+          <input type="date" onChange={(e)=>{
+            const date=new Date(e.target.value);
+            const f= 
+                    ("0" + date.getDate()).slice(-2) +"/" +
+                    ("0" + (date.getMonth () +1)).slice (-2) +"/"+
+                    date.getFullYear();
+
+                    setFechaSalida(f);
+          }}
+          style={{padding:10,borderRadius:5,marginBottom:10}}/>
+        ):(
+          <>
+          <TouchableOpacity onPress={()=>setShowLlegadaPicker(true)}>
+            <TextInput value="fechaSalida" placeholder="Seleccionar fecha" editable={false} style={styles.input}/>
+          </TouchableOpacity>
+          { setShowSalidaPicker && (
+            <DateTimePicker value={new Date()} mode="date" display="default" onChange={(event,date)=>{
+              setShowSalidaPicker(false);
+              if (date){
+                const f =
+                  ("0" + date.getDate()).slice(-2)+ "/"+
+                  ("0" +(date.getMonth()+1)).slice(-2)+"/"+
+                  date.getFullYear();
+
+                  setFechaSalida(f);
+              }
+            }}
+            />
+          )}
+          </>
+        )}
+        
         <Text style={styles.label}>Fecha de Llegada:</Text>
          <TextInput value={fechaLlegada} onChangeText={setFechaLlegada} mode="flat" underlineColor="#0d75bb" activeUnderlineColor="#0d75bb" dense textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input} />
         </>
         ) : (
         <>
-        <Text style={styles.label}>Fecha de entrega</Text>
-        <TouchableOpacity onPress={()=>setShowLlegadaPicker(true)}>
-        <TextInput value={fechaLlegada}placeholder="Seleccionar fecha"editable={true}onChangeText={setFechaLlegada}mode="flat"underlineColor="#0d75bb"activeUnderlineColor="#0d75bb" dense  textColor="#000"contentStyle={{ color: "#000", fontWeight: "600" }}style={styles.input}/>
-        </TouchableOpacity>
-        {showLlegadaPicker && (
-          <DateTimePicker value={new Date ()} mode="date" display="default" onChange={(event,date)=>{
-            setShowLlegadaPicker(false);
-            if(date){
-              const f= ("0"+date.getDate()).slice(-2) + "/"+
-                       ("0"+(date.getMonth()+1)).slice(-2)+"/"+ 
-                       date.getFullYear();
-                       setFechaLlegada(f);
-                     }}}
-                    />
-              )}
+        <Text style={styles.label}>Fecha de llegada</Text>
+        {Platform.OS === "web" ?(
+          <input type="date" onChange={(e)=>{const date=new Date(e.target.value);
+            const f= 
+               ("0" + date.getDate()).slice(-2) +"/" +
+               ("0" + (date.getMonth() +1)).slice(-2) + "/"+
+               date.getFullYear();
+               setFechaLlegada(f);
+          }}
+          />
+        ):(
+          <>
+          <TouchableOpacity onPress={() => setShowLlegadaPicker(true)}>
+            <TextInput value={fechaLlegada} placeholder="seleccionar fecha" editable={false} style={styles.input}/>
+          </TouchableOpacity>
+          {showLlegadaPicker && (
+            <DateTimePicker value={new Date()} mode="date" display="default" onChange={(event,date)=> {
+              setShowLlegadaPicker(false)
+              if (date){
+                const f= ("0" +date.getDate()).slice(-2) +"/"+
+                         ("0" + (date.getMonth ()+1)).slice (-2) +"/"+
+                         date.getFullYear();
+                    setFechaLlegada(f);
+              }
+            }}
+            />
+          )}
+          </>
+        )}
         </>
         )}  
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
