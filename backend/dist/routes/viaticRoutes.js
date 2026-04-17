@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const viaticController_1 = require("../controllers/viaticController");
+const upload_1 = require("../middlewares/upload");
+const validate_1 = require("../middlewares/validate");
+const viaticValidator_1 = require("../validators/viaticValidator");
+const router = (0, express_1.Router)();
+router.get("/", viaticController_1.getViatic);
+router.get("/trip/:tripId", viaticController_1.getViaticByTrip);
+router.get("/:id", viaticController_1.getViaticById);
+router.post("/", upload_1.upload.single("factura"), viaticValidator_1.createViaticValidator, validate_1.validate, viaticController_1.createViatic);
+router.put("/:id", upload_1.upload.single("factura"), viaticValidator_1.updateViaticValidator, validate_1.validate, viaticController_1.updateViatic);
+router.delete("/:id", viaticController_1.deleteViatic);
+exports.default = router;

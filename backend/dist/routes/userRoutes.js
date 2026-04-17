@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const userController_1 = require("../controllers/userController");
+const upload_1 = require("../middlewares/upload");
+const validate_1 = require("../middlewares/validate");
+const userValidator_1 = require("../validators/userValidator");
+const router = express_1.default.Router();
+router.post("/login", userValidator_1.loginUserValidator, validate_1.validate, userController_1.loginUser);
+router.post("/register", upload_1.upload.single("imagenUrl"), userValidator_1.registerUserValidator, validate_1.validate, userController_1.registesrUser);
+router.get("/", userController_1.getUser);
+router.get("/:id", userController_1.getUserById);
+router.post("/", userController_1.createUser);
+router.patch("/:id", upload_1.upload.single("photo"), userController_1.updateUser);
+router.delete("/:id", userController_1.deleteUser);
+router.post("/forgot-password", userController_1.forgotPassword);
+router.post("/reset-password/:token", userController_1.resetPassword);
+exports.default = router;

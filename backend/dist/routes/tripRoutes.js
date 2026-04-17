@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const tripController_1 = require("../controllers/tripController");
+const auth_1 = require("../middlewares/auth");
+const validate_1 = require("../middlewares/validate");
+const tripValidator_1 = require("../validators/tripValidator");
+const router = (0, express_1.Router)();
+router.post("/", auth_1.verifyToken, tripValidator_1.createTripValidator, validate_1.validate, tripController_1.createTrip);
+router.get("/", auth_1.verifyToken, tripController_1.getTrip);
+router.get("/:id", auth_1.verifyToken, tripController_1.getTripById);
+router.put("/:id", auth_1.verifyToken, tripValidator_1.updateTripValidator, validate_1.validate, tripController_1.updateTrip);
+router.delete("/:id", auth_1.verifyToken, tripController_1.deleteTrip);
+exports.default = router;
