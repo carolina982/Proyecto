@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config";
 import { transporter } from "../config/mailer";
 import User, { IUser } from "../models/User";
+
 export const getUser = async (req: Request, res: Response) => {
   try {
     const users: IUser[] = await User.find();
@@ -14,6 +15,7 @@ export const getUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
+
 export const getUserById = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id || id.length !== 24) {
@@ -30,6 +32,7 @@ export const getUserById = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
+
 export const createUser = async (req: Request, res: Response) => {
   const { nombre, email, password, rol } = req.body;
   if (!nombre || !email || !password || !rol) {
@@ -48,18 +51,19 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error creando usuario", error });
   }
 };
+
 // Registrar usuario
 export const registesrUser =async (req:Request , res:Response)=>{
   try {
-    const {nombre,apellido,email,password,rol}=req.body;
-    if (!nombre||!apellido||!email||!password||!rol){
+    const {nombre,apellido,email,password,rol,contacto}=req.body;
+    if (!nombre||!apellido||!email||!password||!rol||!contacto){
       return res.status(400).json({message:"Faltan datos obligatorios"});
     }
     const existingUser =await User.findOne({email:email.toLowerCase()});
     if (existingUser){
       return res.status(400).json({message:"Usiario ya existe"});
     }
-    const newUser = new User ({nombre, apellido,email:email.toLowerCase(),password,rol, photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
+    const newUser = new User ({nombre,apellido,email:email.toLowerCase(),password,rol,contacto, photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
     await newUser.save ();
     const token =jwt.sign(
       {id:newUser._id , email:newUser.email , rol:newUser.rol},
@@ -79,6 +83,7 @@ export const registesrUser =async (req:Request , res:Response)=>{
     res.status(500).json({message:"Error interno del servidor"});
   }
 };
+
 // Login usuario
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -112,6 +117,7 @@ export const loginUser = async (req: Request, res: Response) => {
       email: user.email,
       rol: user.rol,
       photoUrl: user.photoUrl || null,
+      contacto:user.contacto,
       token,
     });
   } catch (error) {
@@ -122,8 +128,8 @@ export const loginUser = async (req: Request, res: Response) => {
   
 export const updateUser=  async (req:Request, res:Response)=>{
   try {
-    const {nombre,apellido,email,rol}=req.body;
-    const updateData: any ={nombre, apellido,email, rol};
+    const {nombre,apellido,email,rol,contacto}=req.body;
+    const updateData: any ={nombre, apellido,email, rol,contacto};
     if (req.file){
       updateData.photoUrl =`/uploads/${req.file.filename}`;}
     const user =await User.findByIdAndUpdate(req.params.id,updateData,{new:true});
@@ -135,6 +141,7 @@ export const updateUser=  async (req:Request, res:Response)=>{
     res.status(500).json({message:"Error al actualizar usuario"});
   }
 };
+
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   console.log("Id recibiendo en backend", id);
@@ -168,7 +175,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetTokenExp = new Date(Date.now() + 3600000);
     await user.save();
 
-    const resetUrl = `http://192.168.1.81:3000/api/users/reset-password/${token}`;
+    const resetUrl = `https://volta-backend-m25k.onrender.com/api/users/reset-password/${token}`;
 
     await transporter.sendMail({
       to: user.email,

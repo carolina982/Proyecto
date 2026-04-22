@@ -6,6 +6,7 @@ export const registerUserValidator=[
     body("email").isEmail().withMessage("Correo invalido"),
     body("password").notEmpty().withMessage("La contraseña es obligatoria"),
     body("rol").notEmpty().isIn(["Admin","Chofer"]).withMessage("Rol no valido"),
+    body("contacto").notEmpty().withMessage("Ingrese el numero de contacto"),
 ];
 
 export const loginUserValidator=[

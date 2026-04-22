@@ -77,17 +77,6 @@ Join our community of developers creating universal apps.
 * Solo por lo mientras funcionan local todavia no esta subido a hosting 
 
 * Restablcer la contraseña => solo falta  configuracion de la (api)
-* checar para subirlo al dominio 
+* checar para subirlo al dominio (backend ya esta alojada en render )
 * Revisar en que hsoting  se puede subir para sea el mas recomdendable para el uso 
 
-
-
-
- 
-
-
-
-
-
-
-* cehcar adonde que se queden esatable el diseño 

@@ -98,7 +98,7 @@ export const createViatic = async (req:Request, res:Response)=>{
      }
      const newViatic=await Viatico.create({
       tripId,
-      tripNombre:viaje.nombre,
+      tripNombre:viaje,
       conductorNombre:(viaje as any).conductorId.nombre || "Sin asignar",
       conceptos:conceptosFinal,
       dieselHistorial:Array.isArray(dieselHistorial) ?  dieselHistorial:[],
