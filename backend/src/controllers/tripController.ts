@@ -66,7 +66,7 @@ export const createTrip = async (req: Request, res: Response) => {
       destino,
       estado,
       kilometrajeSalida: Number(kilometrajeSalida) || 0,
-      KilometrajeLlegada: Number(kilometrajeLlegada) || 0,
+      kilometrajeLlegada: Number(kilometrajeLlegada) || 0,
       acompanante: acompanante || null,
       def: def || "",
     });
@@ -112,7 +112,7 @@ export const updateTrip = async (req: Request, res: Response) => {
       trip.kilometrajeSalida=Number(kilometrajeSalida);
     }
     if (kilometrajeLlegada !== undefined){
-      trip.KilometrajeLlegada=Number(kilometrajeSalida);
+      trip.kilometrajeLlegada=Number(kilometrajeSalida);
     }
     if (acompanante !== undefined){
       trip.acompanante=acompanante || null;
