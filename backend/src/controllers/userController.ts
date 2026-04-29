@@ -175,7 +175,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetTokenExp = new Date(Date.now() + 3600000);
     await user.save();
 
-    const resetUrl = `https://volta-backend-m25k.onrender.com/api/users/reset-password/${token}`;
+    const resetUrl = `https://volta-backend-px1a.onrender.com/api/users/reset-password/${token}`;
 
     await transporter.sendMail({
       to: user.email,
