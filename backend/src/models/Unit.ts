@@ -8,6 +8,12 @@ export interface IUnit extends Document {
     estado:"Disponible" | "Mantenimiento " | "Ocupado";
     tipoRemolque?:"Lowboy" |"Caja Seca" |"";
     placaRemolque?:string;
+
+    inventarios?:{
+      archivo:string;
+      conductorId:string;
+      fecha:Date;
+    }[];
 }
 const uniSchema =new Schema<IUnit> ({
     nombre:{type:String , required:true},
@@ -17,6 +23,13 @@ const uniSchema =new Schema<IUnit> ({
     estado:{type:String , enum:["Disponible" , "Mantenimiento" , "Ocupado"]},
     tipoRemolque:{type:String, enum:["Lowboy","Caja Seca",""],default:""},
     placaRemolque:{type:String,default:""},
+    inventarios:[
+      {
+        archivo:{type:String, required:true},
+        conductorId:{type:Schema.Types.ObjectId,ref:"Users"},
+        fecha:{type:Date,default:Date.now}
+      }
+    ],
 },
 {timestamps:true}
 );
@@ -28,4 +41,8 @@ uniSchema.set("toJSON", {
     delete ret._id;
   },
 });
+
+
+
+
 export default  mongoose.model<IUnit> ("unit" , uniSchema);
