@@ -25,6 +25,7 @@ export const getUnits =async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error obteniendo unidades" , error});
     }
 };
+
 export const getUnitById= async (req:Request , res:Response)=>{
     try {
        const {id}=req.params;
@@ -41,6 +42,7 @@ export const getUnitById= async (req:Request , res:Response)=>{
         res.status(500).json({message:"Error al obtener unidad ", error})
     }
 };
+
 export const updateUnit=async (req:Request, res:Response)=>{
     try {
         const {id}=req.params;

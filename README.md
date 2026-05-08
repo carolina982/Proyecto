@@ -79,6 +79,7 @@ Join our community of developers creating universal apps.
 * Restablcer la contraseña => solo falta  configuracion de la (api)
 * checar para subirlo al dominio (backend ya esta alojada en render )
 * Revisar en que hsoting  se puede subir para sea el mas recomdendable para el uso 
-* cehcar el diseño de unidades para los inventarios 
+* cehcar el diseño de unidades para los inventarios => el por que no se aguarda el documento de inventarios 
+
 
 
