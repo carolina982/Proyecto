@@ -1,13 +1,13 @@
 import multer from "multer";
 import path from "path";
 
-const storage=multer.diskStorage({
+const storage =multer.diskStorage({
     destination:function(req,file,cd){
-        cd (null,"uplads");
+        cd (null,"uploads");
     },
-    filename:function(req,file,cd){
-        const ext =path.extname(file.originalname);
-        cd(null.Date.now()+ext);
+    filename:function (req,file,cd){
+        const ext=path.extname(file.originalname);
+        cd (null,Date.now()+ext);
     },
 });
 export const upload =multer({storage});

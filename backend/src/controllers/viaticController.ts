@@ -27,6 +27,7 @@ export const getViatic= async (req:Request, res:Response)=>{
   }
 };
 
+
 export const getViaticById = async (req:Request , res:Response)=>{
   try {
     const viatic=await Viatico.findById(req.params.id)
@@ -54,6 +55,7 @@ export const getViaticById = async (req:Request , res:Response)=>{
   }
 };
 
+
 export const getViaticByTrip = async (req: Request, res: Response) => {
   try {
     const tripId = req.params.tripId;
@@ -72,49 +74,50 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
   }
 };
 
-export const createViatic = async (req:Request, res:Response)=>{
+
+export const createViatic =async (req:Request, res :Response)=>{
   try {
-    const {tripId, conceptos,dieselHistorial,dieselCargas,dieselCosto,tag,total}=req.body;
-    let conceptosFinal:any={};
-    if(conceptos){
-      const conceptosObj= 
-      typeof conceptos === "string"
-      ? JSON.parse(conceptos)
-      :conceptos;
+    const {tripId,conceptos,dieselHistorial,dieselCosto,dieselCargas,tag,total}=req.body;
+    let conceptosFinal :any ={};
+    if (conceptos){
+      const conceptosObj= typeof conceptos === "string" ?JSON.parse(conceptos):conceptos;
       Object.entries(conceptosObj).forEach(([nombre,data]:any)=>{
         conceptosFinal[nombre]={
           cantidad:Number(data.cantidad || 0),
-          costo:Number(data.costo ||0),
+          costo:Number (data.costo || 0),
         };
       });
     }
-     let factura="";
-     if (req.file){
-      factura=`/uploads/${req.file.filename}`;
-     }
-     const viaje =await Trip.findById(tripId).populate("conductorId","Nombre");
-     if(!viaje){
+    let factura ="";
+    if (req.file){
+      factura= `/upload/${req.file.filename}`;
+    }
+    const viaje=await Trip.findById(tripId).populate("conductorId","nombre");
+    if (!viaje){
       return res.status(400).json({message:"Viaje no econtrado"});
-     }
-     const newViatic=await Viatico.create({
+    }
+    const newViatic=await Viatico.create({
       tripId,
-      tripNombre:viaje,
-      conductorNombre:(viaje as any).conductorId.nombre || "Sin asignar",
+      tripNombre: 
+      viaje.rutaAcubrir || 
+      viaje.destino || 
+      "Sin viaje",
+      conductorNombre:
+      (viaje as any).conductorId?.nombre || "Sin asignar",
       conceptos:conceptosFinal,
-      dieselHistorial:Array.isArray(dieselHistorial) ?  dieselHistorial:[],
+      dieselHistorial: typeof dieselHistorial === "string" ?JSON.parse(dieselHistorial):[],
       dieselCargas:Number(dieselCargas) || 0,
-      dieselCosto:Number(dieselCosto) || 0,
-      tag:Number(tag) || 0 ,
-      total:Number(total) || 0 ,
+      diselCosto: Number(dieselCosto) || 0,
+      tag:Number (tag) || 0,
+      total:Number (total)  || 0,
       factura,
-     });
-     
-     return res.status(201).json(newViatic);
-  }catch (error){
-    console.error("Error al crear viatico",error);
-    return res.status(500).json({message:"Error al crear viatico"});
-  }
-};
+    });
+    return res.status (201).json(newViatic);
+    }catch (error){
+      console.error("Error al crear viatico",error);
+      return res.status(500).json({message:"Error al crear viatico "})
+    }
+  };
 
 
 export const updateViatic = async (req:Request, res:Response)=>{
@@ -144,6 +147,7 @@ export const updateViatic = async (req:Request, res:Response)=>{
     res.status(500).json({message:"Error actualizado viatico"});
   }
 };
+
 
  export const deleteViatic = async (req: Request, res: Response) => {
    try {

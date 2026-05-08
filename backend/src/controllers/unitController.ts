@@ -61,6 +61,7 @@ export const updateUnit=async (req:Request, res:Response)=>{
         res.status(500).json({message:"Error al actuzalizar unidad",error});
     }
 };
+
 export const deleteUnit = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
