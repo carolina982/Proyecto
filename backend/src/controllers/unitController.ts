@@ -6,10 +6,13 @@ export const createUnit =async (req:Request, res:Response)=>{
     try{
         const data=req.body as IUnit;
         if (!data.tipoRemolque){
+            data.tipoRemolque="";
             data.placaRemolque="";
         }
         const unit:IUnit =await Unit.create(data);
-        res.status(201).json(unit);
+        const newUnit =await Unit.findById(unit._id)
+         .populate("Inventarios.conductorId","nombre");
+         return res.status(201).json(unit);
     }catch (error){
         console.error("Error creando unidad",error);
         res.status(500).json({message:"Error creando unidad", error});
@@ -18,7 +21,7 @@ export const createUnit =async (req:Request, res:Response)=>{
 
 export const getUnits =async (req:Request , res:Response)=>{
     try {
-        const units :IUnit[]=await Unit.find();
+        const units :IUnit[]=await Unit.find().populate("inventarios.conductorId","nombre").sort({createdAt:1});
         res.json(units);
     }catch (error){
         console.error("Error obteniendo unidades" , error),
@@ -34,7 +37,7 @@ export const getUnitById= async (req:Request , res:Response)=>{
        }
        const unit =await Unit.findById(id);
        if (!unit){
-        return  res.status(404).json({message:"Unidad no econtrada"});
+        return  res.status(404).json({message:"Unidad no encontrada"});
        }
        res.json(unit);
     }catch (error){
@@ -51,6 +54,7 @@ export const updateUnit=async (req:Request, res:Response)=>{
         }
         const data=req.body;
         if(!data.tipoRemolque){
+            data.tipoRemolque="";
             data.placaRemolque="";
         }
         const unit =await Unit.findByIdAndUpdate(id,data,{new:true});
