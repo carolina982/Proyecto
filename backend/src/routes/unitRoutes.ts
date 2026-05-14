@@ -71,6 +71,7 @@ router.post("/:id/inventario", upload.single("file"), async (req, res) => {
     unit.inventarios.push({ archivo: fileUrl, conductorId, fecha: new Date(), });
     await unit.save();
 
+    
     res.json({ ok: true, inventarios: unit.inventarios, });
   } catch (error) {
     console.error("ERROR INVENTARIO", error);
