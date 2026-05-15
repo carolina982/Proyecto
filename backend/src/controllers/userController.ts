@@ -56,7 +56,7 @@ export const createUser = async (req: Request, res: Response) => {
 export const registesrUser =async (req:Request , res:Response)=>{
   try {
     const {nombre,apellido,email,password,rol,contacto}=req.body;
-    if (!nombre||!apellido||!email||!password||!rol||!contacto){
+    if (!nombre || !apellido || !email|| !password || !rol || !contacto){
       return res.status(400).json({message:"Faltan datos obligatorios"});
     }
     const existingUser =await User.findOne({email:email.toLowerCase()});
