@@ -1,8 +1,10 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import fs from "fs";
 import path from "path";
 import connectDB from "./config/db";
+
 
 import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";
@@ -16,6 +18,12 @@ dotenv.config();
 const app = express();
 const PORT =Number(process.env.PORT) || 3000;
 connectDB();
+
+const uploadsPath="/opt/render/project/src/uploads";
+if (!fs.existsSync(uploadsPath)){
+  fs.mkdirSync(uploadsPath,{recursive:true});
+};
+
 
 app.use(cors({
   origin: "*",
