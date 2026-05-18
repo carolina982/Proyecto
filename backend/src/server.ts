@@ -19,7 +19,7 @@ const app = express();
 const PORT =Number(process.env.PORT) || 3000;
 connectDB();
 
-const uploadsPath="/opt/render/project/src/uploads";
+const uploadsPath=path.join(__dirname,"../uploads");
 if (!fs.existsSync(uploadsPath)){
   fs.mkdirSync(uploadsPath,{recursive:true});
 };
@@ -34,7 +34,7 @@ app.use(cors({
 app.options("*",cors());
 
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname,"../uploads")));
+app.use("/uploads", express.static(uploadsPath));
 
 app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);
