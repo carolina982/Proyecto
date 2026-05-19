@@ -26,9 +26,9 @@ router.post("/:id/image",upload.single("image"),async (req, res) => {
           error: "Unidad no encontrada",
         });
       }
-      /*const imagenUrl =
-        `https://${req.get("host")}/uploads/${req.file.filename}`;*/
-        const imagenUrl=req.file.path;
+      const imagenUrl =
+        `https://${req.get("host")}/uploads/${req.file.filename}`;
+      
 
       unit.imagenUrl = imagenUrl;
       await unit.save();
