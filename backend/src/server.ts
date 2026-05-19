@@ -4,6 +4,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import connectDB from "./config/db";
+ dotenv.config();
 
 
 import announcement from "./routes/announcementRoutes";
