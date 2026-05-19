@@ -27,7 +27,7 @@ router.post("/:id/image",upload.single("image"),async (req, res) => {
         });
       }
       const imagenUrl =
-        `${req.get("host")}/uploads/${req.file.filename}`;
+        `https://${req.get("host")}/uploads/${req.file.filename}`;
 
       unit.imagenUrl = imagenUrl;
       await unit.save();

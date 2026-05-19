@@ -1,4 +1,4 @@
-import fs from "fs";
+/*import fs from "fs";
 import multer from "multer";
 import path from "path";
 
@@ -13,5 +13,20 @@ const storage=multer.diskStorage({
         cd (null, name);
     },
 });
+
+export const upload =multer({storage});*/
+
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary";
+
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params:async (req , file)=>({
+        folder:"units",
+        allowed_formats:["jpg","jpeg","png"],
+    }),
+});
+
 
 export const upload =multer({storage});
