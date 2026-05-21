@@ -8,6 +8,7 @@ exports.registerUserValidator = [
     (0, express_validator_1.body)("email").isEmail().withMessage("Correo invalido"),
     (0, express_validator_1.body)("password").notEmpty().withMessage("La contraseña es obligatoria"),
     (0, express_validator_1.body)("rol").notEmpty().isIn(["Admin", "Chofer"]).withMessage("Rol no valido"),
+    (0, express_validator_1.body)("contacto").notEmpty().withMessage("Ingrese el numero de contacto"),
 ];
 exports.loginUserValidator = [
     (0, express_validator_1.body)("email").isEmail().withMessage("Correo invalido"),

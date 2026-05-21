@@ -49,19 +49,20 @@ const getTripById = async (req, res) => {
 exports.getTripById = getTripById;
 const createTrip = async (req, res) => {
     try {
-        const { nombre, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado, kilometraje, acompanante, def } = req.body;
-        if (!nombre || !unidadId || !conductorId || !fechaSalida || !destino || !estado) {
+        const { rutaAcubrir, unidadId, conductorId, fechaSalida, fechaLlegada, destino, estado, kilometrajeSalida, kilometrajeLlegada, acompanante, def } = req.body;
+        if (!rutaAcubrir || !unidadId || !conductorId || !fechaSalida || !destino || !estado) {
             return res.status(400).json({ message: "Faltan campos obligatorios" });
         }
         const newTrip = new Trip_1.default({
-            nombre,
+            rutaAcubrir,
             unidadId,
             conductorId: new mongoose_1.default.Types.ObjectId(conductorId),
             fechaSalida: new Date(fechaSalida),
             fechaLlegada: fechaLlegada ? new Date(fechaLlegada) : null,
             destino,
             estado,
-            kilometraje: Number(kilometraje) || 0,
+            kilometrajeSalida: Number(kilometrajeSalida) || 0,
+            kilometrajeLlegada: Number(kilometrajeLlegada) || 0,
             acompanante: acompanante || null,
             def: def || "",
         });
@@ -83,7 +84,35 @@ const updateTrip = async (req, res) => {
         if (user?.rol?.toLowerCase() === "chofer" && String(trip.conductorId) !== String(user.id)) {
             return res.status(403).json({ message: "No tienes permiso" });
         }
-        Object.assign(trip, req.body);
+        const { rutaAcubrir, destino, fechaLlegada, fechaSalida, kilometrajeSalida, kilometrajeLlegada, estado, unidadId, conductorId, acompanante, def } = req.body;
+        if (rutaAcubrir !== undefined)
+            trip.rutaAcubrir = rutaAcubrir;
+        if (destino !== undefined)
+            trip.destino = destino;
+        if (unidadId !== undefined)
+            trip.unidadId = unidadId;
+        if (estado !== undefined)
+            trip.estado = estado;
+        if (def !== undefined)
+            trip.def = def;
+        if (conductorId) {
+            trip.conductorId = new mongoose_1.default.Types.ObjectId(conductorId);
+        }
+        if (fechaSalida) {
+            trip.fechaSalida = new Date(fechaSalida);
+        }
+        if (fechaLlegada) {
+            trip.fechaLlegada = new Date(fechaLlegada);
+        }
+        if (kilometrajeSalida == undefined) {
+            trip.kilometrajeSalida = Number(kilometrajeSalida);
+        }
+        if (kilometrajeLlegada !== undefined) {
+            trip.kilometrajeLlegada = Number(kilometrajeSalida);
+        }
+        if (acompanante !== undefined) {
+            trip.acompanante = acompanante || null;
+        }
         await trip.save();
         res.json({ message: "Viaje actualizado", trip });
     }

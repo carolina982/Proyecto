@@ -42,6 +42,14 @@ const uniSchema = new mongoose_1.Schema({
     estado: { type: String, enum: ["Disponible", "Mantenimiento", "Ocupado"] },
     tipoRemolque: { type: String, enum: ["Lowboy", "Caja Seca", ""], default: "" },
     placaRemolque: { type: String, default: "" },
+    imagenUrl: { type: String, default: "" },
+    inventarios: [
+        {
+            archivo: { type: String, required: true },
+            conductorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
+            fecha: { type: Date, default: Date.now }
+        }
+    ],
 }, { timestamps: true });
 uniSchema.set("toJSON", {
     virtuals: true,
@@ -51,4 +59,4 @@ uniSchema.set("toJSON", {
         delete ret._id;
     },
 });
-exports.default = mongoose_1.default.model("unit", uniSchema);
+exports.default = mongoose_1.default.model("Unit", uniSchema);

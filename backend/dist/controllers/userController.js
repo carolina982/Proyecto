@@ -94,15 +94,15 @@ exports.createUser = createUser;
 // Registrar usuario
 const registesrUser = async (req, res) => {
     try {
-        const { nombre, apellido, email, password, rol } = req.body;
-        if (!nombre || !apellido || !email || !password || !rol) {
+        const { nombre, apellido, email, password, rol, contacto } = req.body;
+        if (!nombre || !apellido || !email || !password || !rol || !contacto) {
             return res.status(400).json({ message: "Faltan datos obligatorios" });
         }
         const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ message: "Usiario ya existe" });
         }
-        const newUser = new User_1.default({ nombre, apellido, email: email.toLowerCase(), password, rol, photoUrl: req.file ? `/uploads/${req.file.filename}` : null, });
+        const newUser = new User_1.default({ nombre, apellido, email: email.toLowerCase(), password, rol, contacto, photoUrl: req.file ? `/uploads/${req.file.filename}` : null, });
         await newUser.save();
         const token = jsonwebtoken_1.default.sign({ id: newUser._id, email: newUser.email, rol: newUser.rol }, config_1.JWT_SECRET, { expiresIn: "1d" });
         res.status(201).json({ id: newUser._id,
@@ -148,6 +148,7 @@ const loginUser = async (req, res) => {
             email: user.email,
             rol: user.rol,
             photoUrl: user.photoUrl || null,
+            contacto: user.contacto,
             token,
         });
     }
@@ -159,8 +160,8 @@ const loginUser = async (req, res) => {
 exports.loginUser = loginUser;
 const updateUser = async (req, res) => {
     try {
-        const { nombre, apellido, email, rol } = req.body;
-        const updateData = { nombre, apellido, email, rol };
+        const { nombre, apellido, email, rol, contacto } = req.body;
+        const updateData = { nombre, apellido, email, rol, contacto };
         if (req.file) {
             updateData.photoUrl = `/uploads/${req.file.filename}`;
         }
@@ -207,7 +208,7 @@ const forgotPassword = async (req, res) => {
         user.resetToken = token;
         user.resetTokenExp = new Date(Date.now() + 3600000);
         await user.save();
-        const resetUrl = `http://192.168.1.81:3000/api/users/reset-password/${token}`;
+        const resetUrl = `https://volta-backend-px1a.onrender.com/api/users/reset-password/${token}`;
         await mailer_1.transporter.sendMail({
             to: user.email,
             from: "correo@volta.com",

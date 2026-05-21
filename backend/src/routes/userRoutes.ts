@@ -7,7 +7,7 @@ import { loginUserValidator, registerUserValidator } from "../validators/userVal
 
 const router = express.Router();
 router.post("/login", loginUserValidator,validate,loginUser);
-router.post("/register",upload.single("imagenUrl"), registerUserValidator,validate,registesrUser);
+router.post("/register",upload.single("photo"),registerUserValidator,validate,registesrUser);
 router.get("/", getUser);
 router.get("/:id", getUserById);
 router.post("/", createUser);

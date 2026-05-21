@@ -10,10 +10,13 @@ const createUnit = async (req, res) => {
     try {
         const data = req.body;
         if (!data.tipoRemolque) {
+            data.tipoRemolque = "";
             data.placaRemolque = "";
         }
         const unit = await Unit_1.default.create(data);
-        res.status(201).json(unit);
+        const newUnit = await Unit_1.default.findById(unit._id)
+            .populate("Inventarios.conductorId", "nombre");
+        return res.status(201).json(unit);
     }
     catch (error) {
         console.error("Error creando unidad", error);
@@ -23,7 +26,7 @@ const createUnit = async (req, res) => {
 exports.createUnit = createUnit;
 const getUnits = async (req, res) => {
     try {
-        const units = await Unit_1.default.find();
+        const units = await Unit_1.default.find().populate("inventarios.conductorId", "nombre").sort({ createdAt: 1 });
         res.json(units);
     }
     catch (error) {
@@ -40,7 +43,7 @@ const getUnitById = async (req, res) => {
         }
         const unit = await Unit_1.default.findById(id);
         if (!unit) {
-            return res.status(404).json({ message: "Unidad no econtrada" });
+            return res.status(404).json({ message: "Unidad no encontrada" });
         }
         res.json(unit);
     }
@@ -58,6 +61,7 @@ const updateUnit = async (req, res) => {
         }
         const data = req.body;
         if (!data.tipoRemolque) {
+            data.tipoRemolque = "";
             data.placaRemolque = "";
         }
         const unit = await Unit_1.default.findByIdAndUpdate(id, data, { new: true });

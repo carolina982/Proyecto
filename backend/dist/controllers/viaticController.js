@@ -79,12 +79,10 @@ const getViaticByTrip = async (req, res) => {
 exports.getViaticByTrip = getViaticByTrip;
 const createViatic = async (req, res) => {
     try {
-        const { tripId, conceptos, dieselHistorial, dieselCargas, dieselCosto, tag, total } = req.body;
+        const { tripId, conceptos, dieselHistorial, dieselCosto, dieselCargas, tag, total } = req.body;
         let conceptosFinal = {};
         if (conceptos) {
-            const conceptosObj = typeof conceptos === "string"
-                ? JSON.parse(conceptos)
-                : conceptos;
+            const conceptosObj = typeof conceptos === "string" ? JSON.parse(conceptos) : conceptos;
             Object.entries(conceptosObj).forEach(([nombre, data]) => {
                 conceptosFinal[nombre] = {
                     cantidad: Number(data.cantidad || 0),
@@ -94,20 +92,22 @@ const createViatic = async (req, res) => {
         }
         let factura = "";
         if (req.file) {
-            factura = `/uploads/${req.file.filename}`;
+            factura = `/upload/${req.file.filename}`;
         }
-        const viaje = await Trip_1.default.findById(tripId).populate("conductorId", "Nombre");
+        const viaje = await Trip_1.default.findById(tripId).populate("conductorId", "nombre");
         if (!viaje) {
             return res.status(400).json({ message: "Viaje no econtrado" });
         }
         const newViatic = await Viatic_1.default.create({
             tripId,
-            tripNombre: viaje.nombre,
-            conductorNombre: viaje.conductorId.nombre || "Sin asignar",
+            tripNombre: viaje.rutaAcubrir ||
+                viaje.destino ||
+                "Sin viaje",
+            conductorNombre: viaje.conductorId?.nombre || "Sin asignar",
             conceptos: conceptosFinal,
-            dieselHistorial: Array.isArray(dieselHistorial) ? dieselHistorial : [],
+            dieselHistorial: typeof dieselHistorial === "string" ? JSON.parse(dieselHistorial) : [],
             dieselCargas: Number(dieselCargas) || 0,
-            dieselCosto: Number(dieselCosto) || 0,
+            diselCosto: Number(dieselCosto) || 0,
             tag: Number(tag) || 0,
             total: Number(total) || 0,
             factura,
@@ -116,7 +116,7 @@ const createViatic = async (req, res) => {
     }
     catch (error) {
         console.error("Error al crear viatico", error);
-        return res.status(500).json({ message: "Error al crear viatico" });
+        return res.status(500).json({ message: "Error al crear viatico " });
     }
 };
 exports.createViatic = createViatic;

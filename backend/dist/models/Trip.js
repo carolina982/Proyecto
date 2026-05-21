@@ -35,14 +35,15 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const tripSchema = new mongoose_1.Schema({
-    nombre: { type: String, required: true },
+    rutaAcubrir: { type: String, required: true },
     destino: { type: String, required: true },
     fechaSalida: { type: Date, required: true },
     fechaLlegada: { type: Date, required: false, default: null },
     conductorId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
     unidadId: { type: String, required: true },
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
-    kilometraje: { type: Number, default: 0 },
+    kilometrajeSalida: { type: Number, default: 0 },
+    kilometrajeLlegada: { type: Number, default: 0 },
     acompanante: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: false, default: null },
     def: { type: String, required: true },
 }, { timestamps: true });

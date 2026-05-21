@@ -15,7 +15,7 @@ const ConceptosSchema = new mongoose_1.default.Schema({
 const ViaticoSchema = new mongoose_1.default.Schema({
     tripId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Trip", required: true, },
     conceptos: { type: Map, of: ConceptosSchema, default: {}, },
-    dieselHistorial: { ype: [DieselSchema], default: [], },
+    dieselHistorial: { type: [DieselSchema], default: [], },
     dieselCargas: { type: Number, default: 0 },
     diselCosto: { type: Number, default: 0 },
     tag: { type: Number, default: 0 },

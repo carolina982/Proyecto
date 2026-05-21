@@ -14,16 +14,13 @@
     "@types/morgan": "^1.9.10",
     "@types/serve-static": "^1.15.9",
     "bcryptjs": "^3.0.2",
-    "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
-    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.8.7",
     "mongose": "^0.0.2-security",
     "multer": "^2.1.1",
-    "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.3"
   },
   "devDependencies": {

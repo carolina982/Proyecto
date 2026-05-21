@@ -1,10 +1,8 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import fs from "fs";
 import path from "path";
 import connectDB from "./config/db";
- dotenv.config();
 
 
 import announcement from "./routes/announcementRoutes";
@@ -14,7 +12,7 @@ import unitRoutes from "./routes/unitRoutes";
 import userRoutes from "./routes/userRoutes";
 import viaticRoutes from "./routes/viaticRoutes";
 
-dotenv.config();
+
 
 const app = express();
 const PORT =Number(process.env.PORT) || 3000;

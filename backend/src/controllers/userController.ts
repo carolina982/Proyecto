@@ -56,25 +56,31 @@ export const createUser = async (req: Request, res: Response) => {
 export const registesrUser =async (req:Request , res:Response)=>{
   try {
     const {nombre,apellido,email,password,rol,contacto}=req.body;
-    if (!nombre || !apellido || !email|| !password || !rol || !contacto){
+    if (!nombre || 
+        !apellido || 
+        !email || 
+        !password || 
+        !rol ){
       return res.status(400).json({message:"Faltan datos obligatorios"});
     }
     const existingUser =await User.findOne({email:email.toLowerCase()});
     if (existingUser){
       return res.status(400).json({message:"Usiario ya existe"});
     }
-    const newUser = new User ({nombre,apellido,email:email.toLowerCase(),password,rol,contacto, photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
+    const newUser = new User ({nombre,apellido,email:email.toLowerCase(),password,rol, contacto,photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
     await newUser.save ();
     const token =jwt.sign(
       {id:newUser._id , email:newUser.email , rol:newUser.rol},
       JWT_SECRET,
       {expiresIn:"1d"}
     );
-    res.status(201).json({id:newUser._id , 
+    res.status(201).json({
+      id:newUser._id , 
       nombre:newUser.nombre, 
       apellido:newUser.apellido,
-      email:newUser.apellido,
+      email:newUser.email,
       rol:newUser.rol,
+      contacto:newUser.contacto,
       photoUrl:newUser.photoUrl || null ,
       token,
     });

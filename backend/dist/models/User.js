@@ -41,9 +41,10 @@ const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
     nombre: { type: String, required: true },
     apellido: { type: String },
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     rol: { type: String, enum: ["Admin", "Chofer"], required: true },
+    contacto: { type: String },
     photoUrl: { type: String, default: null },
     resetToken: { type: String },
     resetTokenExp: { type: Date },
