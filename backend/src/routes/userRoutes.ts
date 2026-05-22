@@ -1,5 +1,5 @@
 import express from "express";
-import { createUser, deleteUser, forgotPassword, getUser, getUserById, loginUser, registesrUser, resetPassword, updateUser, } from "../controllers/userController";
+import { createUser, deleteUser, forgotPassword, getUser, getUserById, loginUser, registerUser, resetPassword, updateUser, } from "../controllers/userController";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import { loginUserValidator, registerUserValidator } from "../validators/userValidator";
@@ -7,7 +7,7 @@ import { loginUserValidator, registerUserValidator } from "../validators/userVal
 
 const router = express.Router();
 router.post("/login", loginUserValidator,validate,loginUser);
-router.post("/register",upload.single("photo"),registerUserValidator,validate,registesrUser);
+router.post("/register",upload.single("photo"),registerUserValidator,validate,registerUser);
 router.get("/", getUser);
 router.get("/:id", getUserById);
 router.post("/", createUser);

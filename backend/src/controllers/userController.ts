@@ -53,7 +53,7 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 // Registrar usuario
-export const registesrUser =async (req:Request , res:Response)=>{
+export const registerUser =async (req:Request , res:Response)=>{
   try {
     const {nombre,apellido,email,password,rol,contacto}=req.body;
     if (!nombre || 
@@ -67,7 +67,14 @@ export const registesrUser =async (req:Request , res:Response)=>{
     if (existingUser){
       return res.status(400).json({message:"Usiario ya existe"});
     }
-    const newUser = new User ({nombre,apellido,email:email.toLowerCase(),password,rol, contacto,photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
+    const hashedPassword =await bcrypt.hash(password,10);
+    const newUser = new User ({nombre,
+      apellido,
+      email:email.toLowerCase(),
+      password:hashedPassword,
+      rol,
+      contacto,
+      photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
     await newUser.save ();
     const token =jwt.sign(
       {id:newUser._id , email:newUser.email , rol:newUser.rol},
