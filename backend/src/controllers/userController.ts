@@ -34,21 +34,26 @@ export const getUserById = async (req: Request, res: Response) => {
 };
 
 export const createUser = async (req: Request, res: Response) => {
-  const { nombre, email, password, rol } = req.body;
-  if (!nombre || !email || !password || !rol) {
+  const { nombre, email, password, rol, contacto } = req.body;
+  if (!nombre || !email || !password || !rol || !contacto) {
     return res.status(400).json({ message: "Faltan datos" });
   }
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "Usuario ya existe" });
-
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Usuario ya existe"
+      });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ nombre, email, password: hashedPassword, rol });
-
+    const user = await User.create({nombre,email,password: hashedPassword,rol,contacto});
     return res.status(201).json(user);
   } catch (error) {
     console.error("Error creando usuario:", error);
-    return res.status(500).json({ message: "Error creando usuario", error });
+    return res.status(500).json({
+      message: "Error creando usuario",
+      error
+    });
   }
 };
 
@@ -65,7 +70,8 @@ export const registerUser =async (req:Request , res:Response)=>{
     }
     const existingUser =await User.findOne({email:email.toLowerCase()});
     if (existingUser){
-      return res.status(400).json({message:"Usiario ya existe"});
+      return res.status(400).json({message:"Usuario ya existe"});
+    
     }
     const hashedPassword =await bcrypt.hash(password,10);
     const newUser = new User ({nombre,
@@ -100,19 +106,25 @@ export const registerUser =async (req:Request , res:Response)=>{
 // Login usuario
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
+  const cleanEmail=email.trim().toLowerCase();
   console.log("Datos recibidos en login",{email,password});
   if (!email || !password) {
     return res.status(400).json({ message: "Faltan datos" });
   }
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: cleanEmail});
+    console.log("Email",email);
+    console.log("user:",user);
     if (!user) {
-      console.log("Usuario no econtrado");
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+    
     }
     console.log("usuario econtrado", user.email);
+    console.log("password input",password);
+    console.log("password hash",user.password);
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("match",isMatch);
     if (!isMatch) {
       console.log("contraseña incorrecta");
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
