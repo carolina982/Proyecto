@@ -35,120 +35,135 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   const { nombre, email, password, rol, contacto } = req.body;
+
   if (!nombre || !email || !password || !rol || !contacto) {
     return res.status(400).json({ message: "Faltan datos" });
   }
+
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
     if (existingUser) {
-      return res.status(400).json({
-        message: "Usuario ya existe"
-      });
+      return res.status(400).json({ message: "Usuario ya existe" });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({nombre,email,password: hashedPassword,rol,contacto});
+
+    
+
+    const user = await User.create({
+      nombre,
+      email: email.toLowerCase(),
+      password,
+      rol,
+      contacto,
+    });
+
     return res.status(201).json(user);
   } catch (error) {
     console.error("Error creando usuario:", error);
-    return res.status(500).json({
-      message: "Error creando usuario",
-      error
-    });
+    return res.status(500).json({ message: "Error creando usuario" });
   }
 };
 
 // Registrar usuario
-export const registerUser =async (req:Request , res:Response)=>{
+export const registerUser = async (req: Request, res: Response) => {
   try {
-    const {nombre,apellido,email,password,rol,contacto}=req.body;
-    if (!nombre || 
-        !apellido || 
-        !email || 
-        !password || 
-        !rol ){
-      return res.status(400).json({message:"Faltan datos obligatorios"});
+    const { nombre, apellido, email, password, rol, contacto } = req.body;
+
+    if (!nombre || !apellido || !email || !password || !rol) {
+      return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
-    const existingUser =await User.findOne({email:email.toLowerCase()});
-    if (existingUser){
-      return res.status(400).json({message:"Usuario ya existe"});
+
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "Usuario ya existe" });
+    }
+
     
-    }
-    const hashedPassword =await bcrypt.hash(password,10);
-    const newUser = new User ({nombre,
+
+    const newUser = await User.create({
+      nombre,
       apellido,
-      email:email.toLowerCase(),
-      password:hashedPassword,
+      email: email.toLowerCase(),
+      password,
       rol,
       contacto,
-      photoUrl:req.file ?`/uploads/${req.file.filename}`:null,});
-    await newUser.save ();
-    const token =jwt.sign(
-      {id:newUser._id , email:newUser.email , rol:newUser.rol},
+      photoUrl: req.file ? `/uploads/${req.file.filename}` : null,
+    });
+
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email, rol: newUser.rol },
       JWT_SECRET,
-      {expiresIn:"1d"}
+      { expiresIn: "1d" }
     );
-    res.status(201).json({
-      id:newUser._id , 
-      nombre:newUser.nombre, 
-      apellido:newUser.apellido,
-      email:newUser.email,
-      rol:newUser.rol,
-      contacto:newUser.contacto,
-      photoUrl:newUser.photoUrl || null ,
+
+    return res.status(201).json({
+      _id: newUser._id,
+      nombre: newUser.nombre,
+      apellido: newUser.apellido,
+      email: newUser.email,
+      rol: newUser.rol,
+      contacto: newUser.contacto,
+      photoUrl: newUser.photoUrl || null,
       token,
     });
-  }catch (error){
-    console.error("Error  resgistrando usuario", error);
-    res.status(500).json({message:"Error interno del servidor"});
+  } catch (error) {
+    console.error("Error registrando usuario", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
 // Login usuario
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  const cleanEmail=email.trim().toLowerCase();
-  console.log("Datos recibidos en login",{email,password});
+
   if (!email || !password) {
     return res.status(400).json({ message: "Faltan datos" });
   }
 
   try {
-    const user = await User.findOne({ email: cleanEmail});
-    console.log("Email",email);
-    console.log("user:",user);
+    const cleanEmail = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email: cleanEmail });
+
     if (!user) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
-    
+      return res.status(401).json({
+        message: "Usuario o contraseña incorrectos",
+      });
     }
-    console.log("usuario econtrado", user.email);
-    console.log("password input",password);
-    console.log("password hash",user.password);
+
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("match",isMatch);
+
     if (!isMatch) {
-      console.log("contraseña incorrecta");
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+      return res.status(401).json({
+        message: "Usuario o contraseña incorrectos",
+      });
     }
+
     const token = jwt.sign(
       { id: user._id, email: user.email, rol: user.rol },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
-    console .log ("Token generado", token ? "ok":"Error");
-    res.json({
-      id: user._id,
+
+    return res.json({
+      _id: user._id,
       nombre: user.nombre,
       apellido: user.apellido,
       email: user.email,
       rol: user.rol,
       photoUrl: user.photoUrl || null,
-      contacto:user.contacto,
+      contacto: user.contacto,
       token,
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Error en el servidor" });
-}
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
 };
   
 export const updateUser=  async (req:Request, res:Response)=>{
