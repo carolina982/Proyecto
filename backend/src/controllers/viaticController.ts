@@ -35,7 +35,7 @@ export const getViaticById = async (req:Request , res:Response)=>{
       path:"tripId",
       populate:{
         path:"conductorId",
-        select:"namw email"
+        select:"name email"
       }
     });
     if (!viatic){
@@ -106,8 +106,8 @@ export const createViatic =async (req:Request, res :Response)=>{
       (viaje as any).conductorId?.nombre || "Sin asignar",
       conceptos:conceptosFinal,
       dieselHistorial: typeof dieselHistorial === "string" ?JSON.parse(dieselHistorial):[],
+      diselCosto:Number(dieselCosto) || 0,
       dieselCargas:Number(dieselCargas) || 0,
-      diselCosto: Number(dieselCosto) || 0,
       tag:Number (tag) || 0,
       total:Number (total)  || 0,
       factura,
@@ -129,7 +129,7 @@ export const updateViatic = async (req:Request, res:Response)=>{
       dieselHistorial:req.body.dieselHistorial
       ?JSON.parse(req.body.dieselHistorial)
       :undefined,
-      dieselCragas:Number(req.body.dieselCargas || 0),
+      dieselCargas:Number(req.body.dieselCargas || 0),
       dieselCosto:Number(req.body.dieselCosto || 0),
       tag:Number(req.body.tag || 0),
       total:Number(req.body.total || 0),
