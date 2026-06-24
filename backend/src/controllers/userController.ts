@@ -71,7 +71,7 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const { nombre, apellido, email, password, rol, contacto } = req.body;
 
-    if (!nombre || !apellido || !email || !password || !rol) {
+    if (!nombre || !apellido  || !rol) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
