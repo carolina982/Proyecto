@@ -33,36 +33,64 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
+const VALID_ROLES = ["Admin", "Operador", "Ayudante General"] as const;
+
+const normalizeRole = (rol: string) => {
+  const trimmed = rol.trim();
+  const match = VALID_ROLES.find(
+    (validRole) => validRole.toLowerCase() === trimmed.toLowerCase()
+  );
+  return match ?? null;
+};
+
 export const createUser = async (req: Request, res: Response) => {
-  const { nombre, email, password, rol, contacto } = req.body;
-
-  if (!nombre || !email || !password || !rol || !contacto) {
-    return res.status(400).json({ message: "Faltan datos" });
-  }
-
   try {
-    const existingUser = await User.findOne({
-      email: email.toLowerCase(),
-    });
+    const { nombre, apellido, email, password, rol, contacto } = req.body;
 
-    if (existingUser) {
-      return res.status(400).json({ message: "Usuario ya existe" });
+    if (!nombre || !apellido || !rol) {
+      return res.status(400).json({
+        message: "Nombre, apellido y rol son obligatorios",
+      });
     }
 
-    
+    const role = normalizeRole(rol);
+    if (!role) {
+      return res.status(400).json({ message: "Rol no válido" });
+    }
+
+    if (role === "Admin" && (!email || !password)) {
+      return res.status(400).json({
+        message: "Admin requiere correo y contraseña",
+      });
+    }
+
+    if (email) {
+      const existingUser = await User.findOne({
+        email: email.toLowerCase(),
+      });
+
+      if (existingUser) {
+        return res.status(400).json({
+          message: "Usuario ya existe",
+        });
+      }
+    }
 
     const user = await User.create({
       nombre,
-      email: email.toLowerCase(),
-      password,
-      rol,
+      apellido,
+      rol: role,
+      email: email ? email.toLowerCase() : undefined,
+      password: password || undefined,
       contacto,
     });
 
     return res.status(201).json(user);
   } catch (error) {
-    console.error("Error creando usuario:", error);
-    return res.status(500).json({ message: "Error creando usuario" });
+    console.error("Error creando usuario ", error);
+    return res.status(500).json({
+      message: "Error creando usuario",
+    });
   }
 };
 
@@ -71,7 +99,7 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const { nombre, apellido, email, password, rol, contacto } = req.body;
 
-    if (!nombre || !apellido  || !rol) {
+    if (!nombre || !apellido || !email || !password || !rol) {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
@@ -116,6 +144,7 @@ export const registerUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
 
 // Login usuario
 export const loginUser = async (req: Request, res: Response) => {

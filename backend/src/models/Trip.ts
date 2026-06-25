@@ -1,5 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+interface Ikilometraje{
+  numero:number;
+  descripcion:string;
+}
+
 export interface ITrip extends Document {
   rutaAcubrir: string;         
   destino: string;         
@@ -8,8 +13,8 @@ export interface ITrip extends Document {
   conductorId: string| mongoose.Types.ObjectId;   
   unidadId:string;      
   estado: string;   
-  kilometrajeSalida?: number;
-  kilometrajeLlegada?: number;
+  kilometrajeSalida:Ikilometraje[];
+  kilometrajeLlegada:Ikilometraje[];
   acompanante:string|null|mongoose.Types.ObjectId;
   def:string;  
 }
@@ -22,8 +27,17 @@ const tripSchema = new Schema<ITrip>(
     conductorId:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true},
     unidadId:{type:String , required:true},
     estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
-    kilometrajeSalida:{type:Number , default: 0},
-    kilometrajeLlegada:{type:Number ,default: 0},
+
+    kilometrajeSalida:[{
+      numero:{type:Number,required:true},
+      descripcion:{type:String,default:""},
+    },],
+    
+    kilometrajeLlegada:[{
+      numero:{type:Number,required:true},
+      descripcion:{type:String,default:""},
+    },],
+
     acompanante:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:false,default:null},
     def:{type:String , required:true},
     

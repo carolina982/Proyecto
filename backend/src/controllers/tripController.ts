@@ -109,10 +109,10 @@ export const updateTrip = async (req: Request, res: Response) => {
       trip.fechaLlegada= new Date(fechaLlegada);
     }
     if (kilometrajeSalida ! == undefined){
-      trip.kilometrajeSalida=Number(kilometrajeSalida);
+      trip.kilometrajeSalida=(kilometrajeSalida);
     }
     if (kilometrajeLlegada !== undefined){
-      trip.kilometrajeLlegada=Number(kilometrajeSalida);
+      trip.kilometrajeLlegada=(kilometrajeSalida);
     }
     if (acompanante !== undefined){
       trip.acompanante=acompanante || null;
