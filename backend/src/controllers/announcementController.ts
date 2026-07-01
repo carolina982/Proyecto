@@ -13,6 +13,7 @@ export const getAnnouncements = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error cargando anuncios" });
   }
 };
+
 export const createAnnouncements = async (req: Request, res: Response) => {
   try {
     console.log("Body recibido:", req.body);
@@ -45,9 +46,12 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Anuncio no encontrado" });
     }
     if (req.file) {
-      if (existing.image) {
-        const oldPath = path.join(__dirname, "../../uploads", existing.image);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      if (existing.image){
+        const oldPath=path.join(__dirname,"../../uploads",path.basename(existing.image)
+      );
+      if (fs.existsSync(oldPath)){
+        fs.unlinkSync(oldPath);
+      }
       }
       existing.image =`/uploads/${req.file.filename}`;
     }
@@ -61,6 +65,7 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
+
 export const deleteAnnouncement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -68,9 +73,11 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
     if (!existing) {
       return res.status(404).json({ message: "Anuncio no encontrado" });
     }
-    if (existing.image) {
-      const oldPath = path.join(__dirname, "../../uploads", existing.image);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    if (existing.image){
+      const oldPath=path.join(__dirname,"../../uploads",path.basename(existing.image));
+      if (fs.existsSync(oldPath)){
+        fs.unlinkSync(oldPath);
+      }
     }
     await Announcement.findByIdAndDelete(id);
     res.json({ message: "Anuncio eliminado correctamente" });

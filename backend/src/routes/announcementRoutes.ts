@@ -1,13 +1,15 @@
 import express from "express";
 import { createAnnouncements, deleteAnnouncement, getAnnouncements, updateAnnouncement } from "../controllers/announcementController";
+import { verifyToken } from "../middlewares/auth";
+import { authorize } from "../middlewares/authorize";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import { createAnnouncementsValidator, updateAnnouncementValidator } from "../validators/announcementValidator";
 
 const router =express.Router();
 router.get("/",getAnnouncements);
-router.post("/",upload.single("image"),createAnnouncementsValidator,validate,createAnnouncements);
-router.put("/:id",upload.single("image"),updateAnnouncementValidator,validate,updateAnnouncement);
-router.delete("/:id" , deleteAnnouncement);
+router.post("/",verifyToken,authorize(["Admin"]),upload.single("image"),createAnnouncementsValidator,validate,createAnnouncements);
+router.put("/:id",verifyToken,authorize(["Admin"]),upload.single("image"),updateAnnouncementValidator,validate,updateAnnouncement);
+router.delete("/:id",verifyToken,authorize(["Admin"]),deleteAnnouncement);
 
 export default router;

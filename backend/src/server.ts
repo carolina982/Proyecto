@@ -4,6 +4,8 @@ import fs from "fs";
 import path from "path";
 import connectDB from "./config/db";
 
+import dotenv from "dotenv";
+dotenv.config();
 
 import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";

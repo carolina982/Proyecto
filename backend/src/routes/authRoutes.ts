@@ -1,16 +1,25 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config/config";
+import { EMAIL_FROM, JWT_SECRET } from "../config/config";
+import { resend } from "../config/resend";
 import Trip from "../models/Trip";
 import User from "../models/User";
 
 
+
 const router = Router();
 
-let resetToken = "123456789";
+let resetToken="";
+
+const generateResetCode=()=>{
+  return crypto.randomInt(100000,999999).toString();
+};
+
 console.log("authRoutes cargando correctamente");
 // REGISTER
+
 router.put("/trips/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,24 +112,54 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ message: "Email requerido" });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
-
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    console.log(`Token para ${email}: ${resetToken}`);
-
-    return res.json({
-      message: "Código enviado",
-      token: resetToken,
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
     });
 
-  } catch (error) {
-    console.error("Error en forgot-password", error);
-    return res.status(500).json({ message: "Error del servidor" });
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no encontrado",
+      });
+    }
+
+    //  generar código correctamente
+    const resetToken = generateResetCode();
+
+    //  guardar token en DB
+    user.resetToken = resetToken;
+    user.resetTokenExp=new Date(Date.now()+10 *60 *1000);
+    await user.save();
+
+    // enviar correo
+    await resend.emails.send({
+      from:` Volta App <${EMAIL_FROM}>`,
+      to:"al222010146@gmail.com",
+      subject: "Recuperación de contraseña",
+      html: `
+       <h2>Recuperación de contraseña</h2>
+        <p>Tu código de recuperación es:</p>
+        <h1>${resetToken}</h1>
+        <p>Este código expira en 10 minutos.</p>
+      `,
+
+    })
+    return res.json({
+      message: "Código enviado correctamente",
+    });
+  } catch (error:any) {
+    console.log("erro full");
+    console.dir(error,{depth:null});
+    console.log("Code",error?.code);
+    console.log("Response",error?.response);
+    console.log("Response code",error?.responseCode)
+    console.error("Error en forgot-password:", error);
+    return res.status(500).json({
+      message: "No se pudo enviar el correo",
+      error: (error as any).message,
+    });
   }
 });
+
 
 // RESET PASSWORD
 router.post("/reset-password", async (req, res) => {
@@ -131,19 +170,22 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Faltan datos" });
     }
 
-    if (token !== resetToken) {
-      return res.status(400).json({ message: "Token inválido" });
-    }
-
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
+      resetToken: token,
+      resetTokenExp: { $gt: new Date() },
+    });
 
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(400).json({ message: "Token inválido o expirado" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExp = undefined;
+
     await user.save();
 
     return res.json({
