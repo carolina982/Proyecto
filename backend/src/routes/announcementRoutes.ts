@@ -8,8 +8,8 @@ import { createAnnouncementsValidator, updateAnnouncementValidator } from "../va
 
 const router =express.Router();
 router.get("/",getAnnouncements);
-router.post("/",verifyToken,authorize(["Admin"]),upload.single("image"),createAnnouncementsValidator,validate,createAnnouncements);
-router.put("/:id",verifyToken,authorize(["Admin"]),upload.single("image"),updateAnnouncementValidator,validate,updateAnnouncement);
-router.delete("/:id",verifyToken,authorize(["Admin"]),deleteAnnouncement);
+router.post("/",verifyToken,authorize(["admin"]),upload.single("image"),createAnnouncementsValidator,validate,createAnnouncements);
+router.put("/:id",verifyToken,authorize(["admin"]),upload.single("image"),updateAnnouncementValidator,validate,updateAnnouncement);
+router.delete("/:id",verifyToken,authorize(["admin"]),deleteAnnouncement);
 
 export default router;
