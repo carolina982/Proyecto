@@ -68,7 +68,7 @@ Join our community of developers creating universal apps.
      ```
 5. Aplicacion 
 
-     ```bash
+     ```bashw
      npx expo start 
      ```
 
