@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { createUnit, deleteUnit, getUnitById, getUnits, updateUnit } from "../controllers/unitController";
+import { createUnit, deleteUnit, getUnitById, getUnitCount, getUnits, updateUnit } from "../controllers/unitController";
+import { verifyToken } from "../middlewares/auth";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import Unit from "../models/Unit";
@@ -7,6 +8,7 @@ import { createUnitValidator, updateUnitValidator } from "../validators/unitVali
 
 
 const router =Router ();
+router.get("/",verifyToken,getUnitCount)
 router.post ("/",createUnitValidator,validate,createUnit);
 router.get("/", getUnits);
 router.get("/:id" , getUnitById);

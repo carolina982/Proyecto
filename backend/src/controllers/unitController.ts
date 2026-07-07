@@ -84,3 +84,12 @@ export const deleteUnit = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error eliminando unidad", error });
   }
 };
+
+export const getUnitCount=async (req:Request,res:Response)=>{
+    try {
+        const count =await Unit.countDocuments();
+        res.status(200).json({count});
+    }catch (error){
+        res.status(500).json({message:"Error al contar unidades",error});
+    }
+};

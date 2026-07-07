@@ -168,3 +168,12 @@ export const updateViatic = async (req:Request, res:Response)=>{
     res.status(500).json({ message: "Error al eliminar viático" });
   }
 };
+
+export const getViaticCount=async (req:Request,res:Response)=>{
+  try {
+    const count =await Viatico.countDocuments();
+    res.status(200).json({count});
+  }catch(error){
+    res.status(500).json({message:"Error al contar viaticos",error});
+  }
+};

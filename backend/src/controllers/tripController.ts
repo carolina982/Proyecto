@@ -173,3 +173,12 @@ export const deleteTrip = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al eliminar viaje" });
   }
 };
+
+export const getTripCount = async (req:Request,res:Response)=>{
+  try{
+    const count=await Trip.countDocuments();
+    res.status(200).json({count});
+  }catch (error){
+    res.status(500).json({message:"Error al contar los vaijes",error})
+  }
+}
