@@ -7,7 +7,7 @@ import { createUnitValidator, updateUnitValidator } from "../validators/unitVali
 
 
 const router =Router ();
-router.get("/",getUnitCount)
+router.get("/count",getUnitCount)
 router.post ("/",createUnitValidator,validate,createUnit);
 router.get("/", getUnits);
 router.get("/:id" , getUnitById);
