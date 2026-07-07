@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { createViatic, deleteViatic, getViatic, getViaticById, getViaticByTrip, getViaticCount, updateViatic, } from "../controllers/viaticController";
-import { verifyToken } from "../middlewares/auth";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import { createViaticValidator, updateViaticValidator } from "../validators/viaticValidator";
 
 const router = Router();
-router.get("/count",verifyToken,getViaticCount);
+router.get("/count",getViaticCount);
 router.get("/", getViatic);
 router.get("/trip/:tripId", getViaticByTrip);
 router.get("/:id", getViaticById);

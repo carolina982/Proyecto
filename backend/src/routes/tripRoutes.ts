@@ -5,7 +5,7 @@ import { validate } from "../middlewares/validate";
 import { createTripValidator, updateTripValidator } from "../validators/tripValidator";
 
 const router =Router ();
-router.get("/count",verifyToken,getTripCount);
+router.get("/count",getTripCount);
 router.post("/",verifyToken,createTripValidator,validate,createTrip);
 router.get("/",verifyToken,getTrip);
 router.get("/:id",verifyToken,getTripById);
