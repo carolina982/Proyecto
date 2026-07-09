@@ -11,7 +11,8 @@ router.post("/register",upload.single("photo"),registerUserValidator,validate,re
 router.get("/", getUser);
 router.get("/:id", getUserById);
 router.post("/", createUser);
-router.patch("/:id", upload.single("photo"), updateUser);
+router.patch("/:id", updateUser);
+router.patch("/:id/photo", upload.single("photo"), updateUser);
 router.delete("/:id", deleteUser);
 router.post ("/forgot-password",forgotPassword);
 router.post("/reset-password/:token",resetPassword);

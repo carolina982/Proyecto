@@ -30,13 +30,28 @@ const userSchema  = new Schema <IUser>({
  {timestamps:true}
 );
 
-userSchema.pre("findOneAndUpdate",async function (next){
-    const update=this.getUpdate() as any;
-    if (update.password){
-        const salt =await bcrypt.genSalt(10);
-        update.password=await bcrypt.hash(update.password,salt);
+userSchema.pre("findOneAndUpdate", async function (next) {
+  try {
+    const update = this.getUpdate() as Record<string, unknown> | null;
+    if (!update) return next();
+
+    const plainUpdate = update as { password?: string; $set?: { password?: string } };
+    const password = plainUpdate.password ?? plainUpdate.$set?.password;
+
+    if (password) {
+      const hash = await bcrypt.hash(password, 10);
+      if (plainUpdate.$set) {
+        plainUpdate.$set.password = hash;
+      } else {
+        plainUpdate.password = hash;
+      }
     }
-})
+
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
 
 userSchema.methods.comparePassword=function(password:string){
     if (!this.password) return false;
