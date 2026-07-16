@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { createUnit, deleteUnit, getUnitById, getUnitCount, getUnits, updateUnit } from "../controllers/unitController";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
@@ -51,7 +52,7 @@ router.post("/:id/image",upload.single("image"),async (req, res) => {
 
 router.post("/:id/inventario", upload.single("file"), async (req, res) => {
   try {
-    const { conductorId } = req.body;
+    const conductorIdRaw = req.body?.conductorId;
     if (!req.file) {
       return res.status(400).json({ error: "No se recibio archivo" });
     };
@@ -72,7 +73,16 @@ router.post("/:id/inventario", upload.single("file"), async (req, res) => {
     }
 
     const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-    unit.inventarios.push({ archivo: fileUrl, conductorId, fecha: new Date(), });
+    const conductorId =
+      conductorIdRaw && mongoose.Types.ObjectId.isValid(conductorIdRaw)
+        ? new mongoose.Types.ObjectId(conductorIdRaw)
+        : undefined;
+
+    unit.inventarios.push({
+      archivo: fileUrl,
+      ...(conductorId ? { conductorId } : {}),
+      fecha: new Date(),
+    } as any);
     await unit.save();
 
     

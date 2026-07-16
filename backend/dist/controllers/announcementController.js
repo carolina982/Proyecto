@@ -52,9 +52,10 @@ const updateAnnouncement = async (req, res) => {
         }
         if (req.file) {
             if (existing.image) {
-                const oldPath = path_1.default.join(__dirname, "../../uploads", existing.image);
-                if (fs_1.default.existsSync(oldPath))
+                const oldPath = path_1.default.join(__dirname, "../../uploads", path_1.default.basename(existing.image));
+                if (fs_1.default.existsSync(oldPath)) {
                     fs_1.default.unlinkSync(oldPath);
+                }
             }
             existing.image = `/uploads/${req.file.filename}`;
         }
@@ -77,9 +78,10 @@ const deleteAnnouncement = async (req, res) => {
             return res.status(404).json({ message: "Anuncio no encontrado" });
         }
         if (existing.image) {
-            const oldPath = path_1.default.join(__dirname, "../../uploads", existing.image);
-            if (fs_1.default.existsSync(oldPath))
+            const oldPath = path_1.default.join(__dirname, "../../uploads", path_1.default.basename(existing.image));
+            if (fs_1.default.existsSync(oldPath)) {
                 fs_1.default.unlinkSync(oldPath);
+            }
         }
         await Announcement_1.default.findByIdAndDelete(id);
         res.json({ message: "Anuncio eliminado correctamente" });

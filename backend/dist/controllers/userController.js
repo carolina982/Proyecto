@@ -36,8 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.deleteUser = exports.updateUser = exports.loginUser = exports.registesrUser = exports.createUser = exports.getUserById = exports.getUser = void 0;
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+exports.resetPassword = exports.forgotPassword = exports.deleteUser = exports.updateUser = exports.loginUser = exports.registerUser = exports.createUser = exports.getUserById = exports.getUser = void 0;
 const crypto = __importStar(require("crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config/config");
@@ -72,77 +71,160 @@ const getUserById = async (req, res) => {
     }
 };
 exports.getUserById = getUserById;
+const VALID_ROLES = ["Admin", "Operador", "Ayudante General"];
+const normalizeRole = (rol) => {
+    const trimmed = String(rol || "").trim();
+    // Compatibilidad con formularios antiguos
+    if (trimmed.toLowerCase() === "chofer")
+        return "Operador";
+    const match = VALID_ROLES.find((validRole) => validRole.toLowerCase() === trimmed.toLowerCase());
+    return match ?? null;
+};
 const createUser = async (req, res) => {
-    const { nombre, email, password, rol } = req.body;
-    if (!nombre || !email || !password || !rol) {
-        return res.status(400).json({ message: "Faltan datos" });
-    }
     try {
-        const existingUser = await User_1.default.findOne({ email });
-        if (existingUser)
-            return res.status(400).json({ message: "Usuario ya existe" });
-        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
-        const user = await User_1.default.create({ nombre, email, password: hashedPassword, rol });
-        return res.status(201).json(user);
+        const { nombre, apellido, email, password, rol, contacto } = req.body;
+        if (!nombre || !apellido || !rol) {
+            return res.status(400).json({
+                message: "Nombre, apellido y rol son obligatorios",
+            });
+        }
+        const role = normalizeRole(rol);
+        if (!role) {
+            return res.status(400).json({ message: "Rol no válido" });
+        }
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Correo y contraseña son obligatorios",
+            });
+        }
+        if (email) {
+            const existingUser = await User_1.default.findOne({
+                email: email.toLowerCase(),
+            });
+            if (existingUser) {
+                return res.status(400).json({
+                    message: "Usuario ya existe",
+                });
+            }
+        }
+        const user = await User_1.default.create({
+            nombre,
+            apellido,
+            rol: role,
+            email: email ? email.toLowerCase() : undefined,
+            password: password || undefined,
+            contacto,
+        });
+        const userObj = user.toObject();
+        delete userObj.password;
+        return res.status(201).json(userObj);
     }
     catch (error) {
-        console.error("Error creando usuario:", error);
-        return res.status(500).json({ message: "Error creando usuario", error });
+        console.error("Error creando usuario ", error);
+        if (error?.code === 11000) {
+            return res.status(400).json({ message: "Usuario ya existe" });
+        }
+        if (error?.name === "ValidationError") {
+            return res.status(400).json({
+                message: Object.values(error.errors || {})
+                    .map((e) => e.message)
+                    .join(". ") || "Datos inválidos",
+            });
+        }
+        return res.status(500).json({
+            message: "Error creando usuario",
+        });
     }
 };
 exports.createUser = createUser;
 // Registrar usuario
-const registesrUser = async (req, res) => {
+const registerUser = async (req, res) => {
     try {
         const { nombre, apellido, email, password, rol, contacto } = req.body;
-        if (!nombre || !apellido || !email || !password || !rol || !contacto) {
+        if (!nombre || !apellido || !email || !password || !rol) {
             return res.status(400).json({ message: "Faltan datos obligatorios" });
         }
-        const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
-        if (existingUser) {
-            return res.status(400).json({ message: "Usiario ya existe" });
+        const role = normalizeRole(rol);
+        if (!role) {
+            return res.status(400).json({
+                message: "Rol no válido. Usa Admin, Operador o Ayudante General",
+            });
         }
-        const newUser = new User_1.default({ nombre, apellido, email: email.toLowerCase(), password, rol, contacto, photoUrl: req.file ? `/uploads/${req.file.filename}` : null, });
-        await newUser.save();
+        const existingUser = await User_1.default.findOne({
+            email: email.toLowerCase(),
+        });
+        if (existingUser) {
+            return res.status(400).json({ message: "Usuario ya existe" });
+        }
+        const newUser = await User_1.default.create({
+            nombre,
+            apellido,
+            email: email.toLowerCase(),
+            password,
+            rol: role,
+            contacto,
+            photoUrl: req.file ? `/uploads/${req.file.filename}` : null,
+        });
         const token = jsonwebtoken_1.default.sign({ id: newUser._id, email: newUser.email, rol: newUser.rol }, config_1.JWT_SECRET, { expiresIn: "1d" });
-        res.status(201).json({ id: newUser._id,
+        return res.status(201).json({
+            _id: newUser._id,
             nombre: newUser.nombre,
             apellido: newUser.apellido,
-            email: newUser.apellido,
+            email: newUser.email,
             rol: newUser.rol,
+            contacto: newUser.contacto,
             photoUrl: newUser.photoUrl || null,
             token,
         });
     }
     catch (error) {
-        console.error("Error  resgistrando usuario", error);
-        res.status(500).json({ message: "Error interno del servidor" });
+        console.error("Error registrando usuario", error);
+        if (error?.code === 11000) {
+            return res.status(400).json({ message: "Usuario ya existe" });
+        }
+        if (error?.name === "ValidationError") {
+            return res.status(400).json({
+                message: Object.values(error.errors || {})
+                    .map((e) => e.message)
+                    .join(". ") || "Datos inválidos",
+            });
+        }
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
 };
-exports.registesrUser = registesrUser;
+exports.registerUser = registerUser;
 // Login usuario
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
-    console.log("Datos recibidos en login", { email, password });
     if (!email || !password) {
         return res.status(400).json({ message: "Faltan datos" });
     }
     try {
-        const user = await User_1.default.findOne({ email: email.toLowerCase() });
+        const cleanEmail = email.trim().toLowerCase();
+        const user = await User_1.default.findOne({ email: cleanEmail });
         if (!user) {
-            console.log("Usuario no econtrado");
-            return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+            return res.status(401).json({
+                message: "Usuario o contraseña incorrectos",
+            });
         }
-        console.log("usuario econtrado", user.email);
-        const isMatch = await bcryptjs_1.default.compare(password, user.password);
+        if (!user.password) {
+            return res.status(401).json({
+                message: "Este usuario no tiene acceso al inicio se sion "
+            });
+        }
+        console.log("Email recibido", email);
+        console.log("Password recibida", password);
+        console.log("password guardada", user.password);
+        const isMatch = await user.comparePassword(password);
+        console.log("coincide", isMatch);
         if (!isMatch) {
-            console.log("contraseña incorrecta");
-            return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+            return res.status(401).json({
+                message: "Usuario o contraseña incorrectos",
+            });
         }
         const token = jsonwebtoken_1.default.sign({ id: user._id, email: user.email, rol: user.rol }, config_1.JWT_SECRET, { expiresIn: "1d" });
-        console.log("Token generado", token ? "ok" : "Error");
-        res.json({
-            id: user._id,
+        return res.json({
+            _id: user._id,
             nombre: user.nombre,
             apellido: user.apellido,
             email: user.email,
@@ -154,26 +236,40 @@ const loginUser = async (req, res) => {
     }
     catch (error) {
         console.error("Login error:", error);
-        res.status(500).json({ message: "Error en el servidor" });
+        return res.status(500).json({ message: "Error en el servidor" });
     }
 };
 exports.loginUser = loginUser;
 const updateUser = async (req, res) => {
     try {
-        const { nombre, apellido, email, rol, contacto } = req.body;
-        const updateData = { nombre, apellido, email, rol, contacto };
+        const { nombre, apellido, email, password, rol, contacto } = req.body;
+        const updateData = {};
+        if (nombre !== undefined)
+            updateData.nombre = nombre;
+        if (apellido !== undefined)
+            updateData.apellido = apellido;
+        if (email !== undefined)
+            updateData.email = email;
+        if (rol !== undefined)
+            updateData.rol = rol;
+        if (contacto !== undefined)
+            updateData.contacto = contacto;
+        if (password)
+            updateData.password = password;
         if (req.file) {
             updateData.photoUrl = `/uploads/${req.file.filename}`;
         }
         const user = await User_1.default.findByIdAndUpdate(req.params.id, updateData, { new: true });
         if (!user) {
-            return res.status(404).json({ message: "Usuario no econtrado" });
+            return res.status(404).json({ message: "Usuario no encontrado" });
         }
-        res.json(user);
+        const userObj = user.toObject();
+        delete userObj.password;
+        return res.json(userObj);
     }
     catch (error) {
         console.error("Error al actualizar usuario", error);
-        res.status(500).json({ message: "Error al actualizar usuario" });
+        return res.status(500).json({ message: "Error al actualizar usuario" });
     }
 };
 exports.updateUser = updateUser;
@@ -230,18 +326,19 @@ const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
     try {
-        const user = await User_1.default.findOne({ resetToken: token,
+        const user = await User_1.default.findOne({
+            resetToken: token,
             resetTokenExp: { $gt: new Date() },
         });
         if (!user) {
-            return res.status(400).json({ message: "Token invalido o expirado" });
+            return res.status(400).json({ message: "Token inválido o expirado" });
         }
-        const hashed = await bcryptjs_1.default.hash(password, 10);
-        user.password = hashed;
+        // El pre('save') del modelo se encarga del hash
+        user.password = password;
         user.resetToken = undefined;
         user.resetTokenExp = undefined;
         await user.save();
-        res.json({ message: "Contraseña restablecidad correctamente" });
+        res.json({ message: "Contraseña restablecida correctamente" });
     }
     catch (error) {
         console.error("Error en resetPassword", error);

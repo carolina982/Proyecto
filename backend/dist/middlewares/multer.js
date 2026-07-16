@@ -5,14 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = void 0;
 const multer_1 = __importDefault(require("multer"));
-const path_1 = __importDefault(require("path"));
-const storage = multer_1.default.diskStorage({
-    destination: function (req, file, cd) {
-        cd(null, "/opt/render/project/src/uploads");
-    },
-    filename: function (req, file, cd) {
-        const ext = path_1.default.extname(file.originalname);
-        cd(null, `${Date.now()}${ext}`);
+const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
+const cloudinary_1 = __importDefault(require("../config/cloudinary"));
+const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
+    cloudinary: cloudinary_1.default,
+    params: {
+        folder: "announcements",
+        allowed_formats: ["jpg", "png", "jpeg"]
     },
 });
 exports.upload = (0, multer_1.default)({ storage });

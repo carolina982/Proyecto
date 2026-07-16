@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUnit = exports.updateUnit = exports.getUnitById = exports.getUnits = exports.createUnit = void 0;
+exports.getUnitCount = exports.deleteUnit = exports.updateUnit = exports.getUnitById = exports.getUnits = exports.createUnit = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const Unit_1 = __importDefault(require("../models/Unit"));
 const createUnit = async (req, res) => {
@@ -96,3 +96,13 @@ const deleteUnit = async (req, res) => {
     }
 };
 exports.deleteUnit = deleteUnit;
+const getUnitCount = async (req, res) => {
+    try {
+        const count = await Unit_1.default.countDocuments();
+        res.status(200).json({ count });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error al contar unidades", error });
+    }
+};
+exports.getUnitCount = getUnitCount;

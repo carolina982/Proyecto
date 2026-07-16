@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteViatic = exports.updateViatic = exports.createViatic = exports.getViaticByTrip = exports.getViaticById = exports.getViatic = void 0;
+exports.getViaticCount = exports.deleteViatic = exports.updateViatic = exports.createViatic = exports.getViaticByTrip = exports.getViaticById = exports.getViatic = void 0;
 const Trip_1 = __importDefault(require("../models/Trip"));
 const Viatic_1 = __importDefault(require("../models/Viatic"));
 const getViatic = async (req, res) => {
@@ -39,7 +39,7 @@ const getViaticById = async (req, res) => {
             path: "tripId",
             populate: {
                 path: "conductorId",
-                select: "namw email"
+                select: "name email"
             }
         });
         if (!viatic) {
@@ -79,7 +79,7 @@ const getViaticByTrip = async (req, res) => {
 exports.getViaticByTrip = getViaticByTrip;
 const createViatic = async (req, res) => {
     try {
-        const { tripId, conceptos, dieselHistorial, dieselCosto, dieselCargas, tag, total } = req.body;
+        const { tripId, conceptos, dieselHistorial, dieselCosto, dieselCargas, tag, total, costosExtras } = req.body;
         let conceptosFinal = {};
         if (conceptos) {
             const conceptosObj = typeof conceptos === "string" ? JSON.parse(conceptos) : conceptos;
@@ -98,6 +98,11 @@ const createViatic = async (req, res) => {
         if (!viaje) {
             return res.status(400).json({ message: "Viaje no econtrado" });
         }
+        const costosExtrasFinal = typeof costosExtras === "string"
+            ? JSON.parse(costosExtras || "[]")
+            : Array.isArray(costosExtras)
+                ? costosExtras
+                : [];
         const newViatic = await Viatic_1.default.create({
             tripId,
             tripNombre: viaje.rutaAcubrir ||
@@ -106,10 +111,14 @@ const createViatic = async (req, res) => {
             conductorNombre: viaje.conductorId?.nombre || "Sin asignar",
             conceptos: conceptosFinal,
             dieselHistorial: typeof dieselHistorial === "string" ? JSON.parse(dieselHistorial) : [],
-            dieselCargas: Number(dieselCargas) || 0,
             diselCosto: Number(dieselCosto) || 0,
+            dieselCargas: Number(dieselCargas) || 0,
             tag: Number(tag) || 0,
             total: Number(total) || 0,
+            costosExtras: costosExtrasFinal.map((item) => ({
+                description: String(item.description || ""),
+                costo: Number(item.costo || 0),
+            })),
             factura,
         });
         return res.status(201).json(newViatic);
@@ -122,6 +131,11 @@ const createViatic = async (req, res) => {
 exports.createViatic = createViatic;
 const updateViatic = async (req, res) => {
     try {
+        const costosExtrasParsed = req.body.costosExtras
+            ? typeof req.body.costosExtras === "string"
+                ? JSON.parse(req.body.costosExtras)
+                : req.body.costosExtras
+            : undefined;
         const update = {
             conceptos: req.body.conceptos
                 ? JSON.parse(req.body.conceptos)
@@ -129,10 +143,18 @@ const updateViatic = async (req, res) => {
             dieselHistorial: req.body.dieselHistorial
                 ? JSON.parse(req.body.dieselHistorial)
                 : undefined,
-            dieselCragas: Number(req.body.dieselCargas || 0),
-            dieselCosto: Number(req.body.dieselCosto || 0),
+            dieselCargas: Number(req.body.dieselCargas || 0),
+            diselCosto: Number(req.body.dieselCosto || 0),
             tag: Number(req.body.tag || 0),
             total: Number(req.body.total || 0),
+            ...(costosExtrasParsed !== undefined
+                ? {
+                    costosExtras: (Array.isArray(costosExtrasParsed) ? costosExtrasParsed : []).map((item) => ({
+                        description: String(item.description || ""),
+                        costo: Number(item.costo || 0),
+                    })),
+                }
+                : {}),
         };
         if (req.file)
             update.factura = `/uploads/${req.file.filename}`;
@@ -166,3 +188,13 @@ const deleteViatic = async (req, res) => {
     }
 };
 exports.deleteViatic = deleteViatic;
+const getViaticCount = async (req, res) => {
+    try {
+        const count = await Viatic_1.default.countDocuments();
+        res.status(200).json({ count });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error al contar viaticos", error });
+    }
+};
+exports.getViaticCount = getViaticCount;

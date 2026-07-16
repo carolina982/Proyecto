@@ -41,22 +41,56 @@ const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
     nombre: { type: String, required: true },
     apellido: { type: String },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true },
-    rol: { type: String, enum: ["Admin", "Chofer"], required: true },
+    email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+    // Operadores creados solo como catálogo pueden no tener acceso al login
+    password: { type: String, required: false },
+    rol: {
+        type: String,
+        enum: ["Admin", "Operador", "Ayudante General"],
+        required: true,
+    },
     contacto: { type: String },
     photoUrl: { type: String, default: null },
     resetToken: { type: String },
     resetTokenExp: { type: Date },
 }, { timestamps: true });
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password"))
-        return next();
-    const salt = await bcryptjs_1.default.genSalt(10);
-    this.password = await bcryptjs_1.default.hash(this.password, salt);
-    next();
+    try {
+        if (!this.isModified("password") || !this.password)
+            return next();
+        const salt = await bcryptjs_1.default.genSalt(10);
+        this.password = await bcryptjs_1.default.hash(this.password, salt);
+        next();
+    }
+    catch (error) {
+        next(error);
+    }
+});
+userSchema.pre("findOneAndUpdate", async function (next) {
+    try {
+        const update = this.getUpdate();
+        if (!update)
+            return next();
+        const plainUpdate = update;
+        const password = plainUpdate.password ?? plainUpdate.$set?.password;
+        if (password) {
+            const hash = await bcryptjs_1.default.hash(password, 10);
+            if (plainUpdate.$set) {
+                plainUpdate.$set.password = hash;
+            }
+            else {
+                plainUpdate.password = hash;
+            }
+        }
+        next();
+    }
+    catch (error) {
+        next(error);
+    }
 });
 userSchema.methods.comparePassword = function (password) {
+    if (!this.password)
+        return Promise.resolve(false);
     return bcryptjs_1.default.compare(password, this.password);
 };
 exports.default = mongoose_1.default.model("User", userSchema);

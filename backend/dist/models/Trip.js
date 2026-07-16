@@ -34,6 +34,26 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const DestinoExtraSchema = new mongoose_1.Schema({
+    destino: { type: String, default: "" },
+    fechaSalida: { type: Date, default: null },
+    fechaLlegada: { type: Date, default: null },
+    conductorId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", default: null },
+    unidadId: { type: String, default: "" },
+    acompanante: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", default: null },
+    kilometrajeSalida: [
+        {
+            numero: { type: Number, required: true },
+            descripcion: { type: String, default: "" },
+        },
+    ],
+    kilometrajeLlegada: [
+        {
+            numero: { type: Number, required: true },
+            descripcion: { type: String, default: "" },
+        },
+    ],
+}, { _id: false });
 const tripSchema = new mongoose_1.Schema({
     rutaAcubrir: { type: String, required: true },
     destino: { type: String, required: true },
@@ -41,10 +61,35 @@ const tripSchema = new mongoose_1.Schema({
     fechaLlegada: { type: Date, required: false, default: null },
     conductorId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
     unidadId: { type: String, required: true },
-    estado: { type: String, enum: ["pendiente", "en progreso", "completado"], default: "pendiente" },
-    kilometrajeSalida: { type: Number, default: 0 },
-    kilometrajeLlegada: { type: Number, default: 0 },
+    estado: {
+        type: String,
+        enum: ["pendiente", "en progreso", "en parada", "completado"],
+        default: "pendiente",
+    },
+    kilometrajeSalida: [{
+            numero: { type: Number, required: true },
+            descripcion: { type: String, default: "" },
+        },],
+    kilometrajeLlegada: [{
+            numero: { type: Number, required: true },
+            descripcion: { type: String, default: "" },
+        },],
     acompanante: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: false, default: null },
     def: { type: String, required: true },
+    multidestino: { type: Boolean, default: false },
+    destinoExtra: {
+        type: [DestinoExtraSchema],
+        default: [],
+        set: (value) => {
+            if (!value)
+                return [];
+            if (Array.isArray(value))
+                return value;
+            if (typeof value === "object")
+                return [value];
+            return [];
+        },
+    },
+    destinoActualIndex: { type: Number, default: 0 },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("Trip", tripSchema);

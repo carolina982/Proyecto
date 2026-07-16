@@ -10,6 +10,7 @@ const validate_1 = require("../middlewares/validate");
 const Unit_1 = __importDefault(require("../models/Unit"));
 const unitValidator_1 = require("../validators/unitValidator");
 const router = (0, express_1.Router)();
+router.get("/count", unitController_1.getUnitCount);
 router.post("/", unitValidator_1.createUnitValidator, validate_1.validate, unitController_1.createUnit);
 router.get("/", unitController_1.getUnits);
 router.get("/:id", unitController_1.getUnitById);
@@ -28,9 +29,7 @@ router.post("/:id/image", upload_1.upload.single("image"), async (req, res) => {
                 error: "Unidad no encontrada",
             });
         }
-        /* const imagenUrl =
-           `https://${req.get("host")}/uploads/${req.file.filename}`;*/
-        const imagenUrl = req.file.path;
+        const imagenUrl = `https://${req.get("host")}/uploads/${req.file.filename}`;
         unit.imagenUrl = imagenUrl;
         await unit.save();
         res.json({

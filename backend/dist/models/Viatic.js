@@ -20,6 +20,13 @@ const ViaticoSchema = new mongoose_1.default.Schema({
     diselCosto: { type: Number, default: 0 },
     tag: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
+    costosExtras: {
+        type: [{
+                description: { type: String, default: "" },
+                costo: { type: Number, default: 0 },
+            }],
+        default: [],
+    },
     factura: String,
     createAT: { type: Date, default: Date.now },
     tripNombre: { type: String, default: "Sin asignar" },

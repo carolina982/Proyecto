@@ -3,14 +3,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const crypto_1 = __importDefault(require("crypto"));
 const express_1 = require("express");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config/config");
+const resend_1 = require("../config/resend");
 const Trip_1 = __importDefault(require("../models/Trip"));
 const User_1 = __importDefault(require("../models/User"));
 const router = (0, express_1.Router)();
-let resetToken = "123456789";
+let resetToken = "";
+const generateResetCode = () => {
+    return crypto_1.default.randomInt(100000, 999999).toString();
+};
 console.log("authRoutes cargando correctamente");
 // REGISTER
 router.put("/trips/:id", async (req, res) => {
@@ -60,7 +64,12 @@ router.post("/login", async (req, res) => {
         if (!user) {
             return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
         }
-        const passwordValid = await bcryptjs_1.default.compare(password, user.password);
+        if (!user.password) {
+            return res.status(401).json({
+                message: "Este usuario no tiene acceso al inicio de sesión",
+            });
+        }
+        const passwordValid = await user.comparePassword(password);
         if (!passwordValid) {
             return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
         }
@@ -84,19 +93,47 @@ router.post("/forgot-password", async (req, res) => {
         if (!email) {
             return res.status(400).json({ message: "Email requerido" });
         }
-        const user = await User_1.default.findOne({ email: email.trim().toLowerCase() });
+        const user = await User_1.default.findOne({
+            email: email.trim().toLowerCase(),
+        });
         if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(404).json({
+                message: "Usuario no encontrado",
+            });
         }
-        console.log(`Token para ${email}: ${resetToken}`);
+        //  generar código correctamente
+        const resetToken = generateResetCode();
+        //  guardar token en DB
+        user.resetToken = resetToken;
+        user.resetTokenExp = new Date(Date.now() + 10 * 60 * 1000);
+        await user.save();
+        // enviar correo
+        await resend_1.resend.emails.send({
+            from: ` Volta App <${config_1.EMAIL_FROM}>`,
+            to: "al222010146@gmail.com",
+            subject: "Recuperación de contraseña",
+            html: `
+       <h2>Recuperación de contraseña</h2>
+        <p>Tu código de recuperación es:</p>
+        <h1>${resetToken}</h1>
+        <p>Este código expira en 10 minutos.</p>
+      `,
+        });
         return res.json({
-            message: "Código enviado",
-            token: resetToken,
+            message: "Código enviado correctamente",
         });
     }
     catch (error) {
-        console.error("Error en forgot-password", error);
-        return res.status(500).json({ message: "Error del servidor" });
+        console.log("erro full");
+        console.dir(error, { depth: null });
+        console.log("Code", error?.code);
+        console.log("Response", error?.response);
+        console.log("Response code", error?.responseCode);
+        console.error("Error en forgot-password:", error);
+        return res.status(500).json({
+            message: "No se pudo enviar el correo",
+            error: error.message,
+        });
     }
 });
 // RESET PASSWORD
@@ -106,15 +143,18 @@ router.post("/reset-password", async (req, res) => {
         if (!token || !newPassword || !email) {
             return res.status(400).json({ message: "Faltan datos" });
         }
-        if (token !== resetToken) {
-            return res.status(400).json({ message: "Token inválido" });
-        }
-        const user = await User_1.default.findOne({ email: email.trim().toLowerCase() });
+        const user = await User_1.default.findOne({
+            email: email.trim().toLowerCase(),
+            resetToken: token,
+            resetTokenExp: { $gt: new Date() },
+        });
         if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({ message: "Token inválido o expirado" });
         }
-        const hashedPassword = await bcryptjs_1.default.hash(newPassword, 10);
-        user.password = hashedPassword;
+        // El pre('save') del modelo se encarga del hash
+        user.password = newPassword;
+        user.resetToken = undefined;
+        user.resetTokenExp = undefined;
         await user.save();
         return res.json({
             message: "Contraseña actualizada correctamente",

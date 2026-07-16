@@ -8,6 +8,8 @@ const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const db_1 = __importDefault(require("./config/db"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const announcementRoutes_1 = __importDefault(require("./routes/announcementRoutes"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const tripRoutes_1 = __importDefault(require("./routes/tripRoutes"));
@@ -17,21 +19,16 @@ const viaticRoutes_1 = __importDefault(require("./routes/viaticRoutes"));
 const app = (0, express_1.default)();
 const PORT = Number(process.env.PORT) || 3000;
 (0, db_1.default)();
-
 const uploadsPath = path_1.default.join(__dirname, "../uploads");
 if (!fs_1.default.existsSync(uploadsPath)) {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
-};
-
+}
+;
 app.use((0, cors_1.default)({
     origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
-
-
-
-
 app.options("*", (0, cors_1.default)());
 app.use(express_1.default.json());
 app.use("/uploads", express_1.default.static(uploadsPath));

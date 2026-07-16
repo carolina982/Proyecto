@@ -11,9 +11,9 @@ const User_1 = __importDefault(require("../models/User"));
     try {
         console.log("Conectando a MongoDB...");
         await mongoose_1.default.connect(config_1.MONGO_URI);
-        const newPassword = "admin123";
+        const newPassword = "carol123";
         const newHash = await bcryptjs_1.default.hash(newPassword, 10);
-        const result = await User_1.default.updateOne({ email: "admin1@gmail.com" }, { $set: { password: newHash } });
+        const result = await User_1.default.updateOne({ email: "patriciocarolina@gmail.com" }, { $set: { password: newHash } });
         console.log("Resultados de actualizacin", result);
         console.log(`Contraseña del admin actualizada a :${newPassword}`);
     }

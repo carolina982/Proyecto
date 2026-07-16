@@ -9,6 +9,7 @@ dotenv.config();
 
 import announcement from "./routes/announcementRoutes";
 import authRoutes from "./routes/authRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 import tripRoutes from "./routes/tripRoutes";
 import unitRoutes from "./routes/unitRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use("/uploads", express.static(uploadsPath));
 
 app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/viatics", viaticRoutes);

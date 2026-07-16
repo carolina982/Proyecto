@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
@@ -81,7 +80,13 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
     }
 
-    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!user.password) {
+      return res.status(401).json({
+        message: "Este usuario no tiene acceso al inicio de sesión",
+      });
+    }
+
+    const passwordValid = await user.comparePassword(password);
 
     if (!passwordValid) {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
@@ -180,9 +185,8 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Token inválido o expirado" });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedPassword;
+    // El pre('save') del modelo se encarga del hash
+    user.password = newPassword;
     user.resetToken = undefined;
     user.resetTokenExp = undefined;
 
