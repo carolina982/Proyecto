@@ -1,0 +1,10 @@
+# secrets
+.env
+**/.env
+!**/.env.example
+backend/.env
+node_modules/
+backend/node_modules/
+volta-frontend/node_modules/
+*.log
+.DS_Store
