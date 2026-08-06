@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import fs from "fs";
-import path from "path";
 import Announcement from "../models/Announcement";
+import { notifyAnnouncementPublished } from "../services/notificationService";
+import { removeStoredPhoto, uploadedFileUrl } from "../utils/uploadHelpers";
 
 const parseFijado = (value: unknown) => {
   if (typeof value === "boolean") return value;
@@ -25,7 +25,7 @@ export const createAnnouncements = async (req: Request, res: Response) => {
     if (!titulo || !contenido) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
     }
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    const imagePath = uploadedFileUrl(req.file);
     const newAnnouncement = new Announcement({
       titulo,
       contenido,
@@ -36,6 +36,14 @@ export const createAnnouncements = async (req: Request, res: Response) => {
       fijado: parseFijado(req.body.fijado),
     });
     await newAnnouncement.save();
+
+    try {
+      const publisherId = (req as any).user?._id || (req as any).user?.id || null;
+      await notifyAnnouncementPublished(newAnnouncement, publisherId);
+    } catch (notifyError) {
+      console.error("Error notificando anuncio nuevo:", notifyError);
+    }
+
     res.status(201).json(newAnnouncement);
   } catch (error) {
     console.error("Error creando anuncio:", error);
@@ -52,13 +60,11 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Anuncio no encontrado" });
     }
     if (req.file) {
-      if (existing.image) {
-        const oldPath = path.join(__dirname, "../../uploads", path.basename(existing.image));
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
-        }
+      const nextUrl = uploadedFileUrl(req.file);
+      if (nextUrl) {
+        await removeStoredPhoto(existing.image);
+        existing.image = nextUrl;
       }
-      existing.image = `/uploads/${req.file.filename}`;
     }
     existing.titulo = titulo || existing.titulo;
     existing.contenido = contenido || existing.contenido;
@@ -80,12 +86,7 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
     if (!existing) {
       return res.status(404).json({ message: "Anuncio no encontrado" });
     }
-    if (existing.image) {
-      const oldPath = path.join(__dirname, "../../uploads", path.basename(existing.image));
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
-    }
+    await removeStoredPhoto(existing.image);
     await Announcement.findByIdAndDelete(id);
     res.json({ message: "Anuncio eliminado correctamente" });
   } catch (error) {

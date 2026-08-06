@@ -1,0 +1,23 @@
+# Túnel Cloudflare NOMBRADO (URL fija) — no uses `cloudflared tunnel --url`
+# Los quick tunnels cambian de hostname en cada reinicio y no sirven para producción.
+#
+# Setup una vez (en la máquina que sirve el backend):
+#   1) cloudflared tunnel login
+#   2) cloudflared tunnel create volta
+#   3) Copia el UUID y el JSON de credenciales que imprime el comando
+#   4) Renombra este archivo a config.yml y sustituye <TUNNEL_ID>
+#   5) cloudflared tunnel route dns volta voltabs.mx
+#      (opcional) cloudflared tunnel route dns volta www.voltabs.mx
+#   6) pm2 start "cloudflared tunnel --config /home/voltaapp/Volta-app/deploy/cloudflared/config.yml run" --name volta-tunnel
+#
+# Frontend ya apunta a https://voltabs.mx por defecto (ver volta-frontend/services/baseUrl.ts).
+
+tunnel: <TUNNEL_ID>
+credentials-file: /home/voltaapp/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: voltabs.mx
+    service: http://127.0.0.1:3000
+  - hostname: www.voltabs.mx
+    service: http://127.0.0.1:3000
+  - service: http_status:404

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUnitCount = exports.deleteUnit = exports.updateUnit = exports.getUnitById = exports.getUnits = exports.createUnit = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const Unit_1 = __importDefault(require("../models/Unit"));
+const unitEstadoSync_1 = require("../services/unitEstadoSync");
 const createUnit = async (req, res) => {
     try {
         const data = req.body;
@@ -15,8 +16,8 @@ const createUnit = async (req, res) => {
         }
         const unit = await Unit_1.default.create(data);
         const newUnit = await Unit_1.default.findById(unit._id)
-            .populate("Inventarios.conductorId", "nombre");
-        return res.status(201).json(unit);
+            .populate("inventarios.operadorId", "nombre apellido");
+        return res.status(201).json(newUnit || unit);
     }
     catch (error) {
         console.error("Error creando unidad", error);
@@ -26,7 +27,14 @@ const createUnit = async (req, res) => {
 exports.createUnit = createUnit;
 const getUnits = async (req, res) => {
     try {
-        const units = await Unit_1.default.find().populate("inventarios.conductorId", "nombre").sort({ createdAt: 1 });
+        // Actualiza solos: En ruta ↔ Disponible según viajes activos (todas las unidades).
+        try {
+            await (0, unitEstadoSync_1.reconcileAllUnitEstados)();
+        }
+        catch (syncErr) {
+            console.error("Error reconciliando estados de unidades:", syncErr);
+        }
+        const units = await Unit_1.default.find().populate("inventarios.operadorId", "nombre apellido").collation({ locale: "es", numericOrdering: true }).sort({ nombre: 1 });
         res.json(units);
     }
     catch (error) {

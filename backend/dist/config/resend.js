@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resend = void 0;
-// para recuperacion de contraseña
-const resend_1 = require("resend");
-exports.resend = new resend_1.Resend(process.env.RESEND_API_KEY);
+/**
+ * Resend deshabilitado: Volta usa solo Gmail SMTP (EMAIL_USER / EMAIL_PASS).
+ * Este archivo se mantiene vacío a propósito para no romper imports antiguos.
+ */
+exports.resend = null;

@@ -3,7 +3,9 @@ import mongoose, { Document, Schema } from "mongoose";
 export type NotificationType =
   | "trip_assigned"
   | "companion_assigned"
-  | "trip_completed";
+  | "trip_completed"
+  | "trip_started"
+  | "announcement_published";
 
 export interface INotification extends Document {
   userId: mongoose.Types.ObjectId;
@@ -23,7 +25,13 @@ const notificationSchema = new Schema<INotification>(
     body: { type: String, required: true },
     type: {
       type: String,
-      enum: ["trip_assigned", "companion_assigned", "trip_completed"],
+      enum: [
+        "trip_assigned",
+        "companion_assigned",
+        "trip_completed",
+        "trip_started",
+        "announcement_published",
+      ],
       required: true,
     },
     tripId: { type: Schema.Types.ObjectId, ref: "Trip", default: null },

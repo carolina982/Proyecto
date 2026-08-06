@@ -34,22 +34,38 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const InventarioItemSchema = new mongoose_1.Schema({
+    cantidad: { type: Number, default: 0 },
+    descripcion: { type: String, default: "" },
+}, { _id: false });
+const InventarioSchema = new mongoose_1.Schema({
+    contenido: { type: String, default: "" },
+    items: { type: [InventarioItemSchema], default: [] },
+    hojaUrl: { type: String, default: "" },
+    firmaUrl: { type: String, default: "" },
+    operadorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", default: null },
+    operadorNombre: { type: String, default: "" },
+    creadoPorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", default: null },
+    creadoPorNombre: { type: String, default: "" },
+    fecha: { type: Date, default: Date.now },
+}, { _id: true });
+const UNIT_ESTADOS = [
+    "Disponible",
+    "Mantenimiento",
+    "En ruta",
+    "No disponible",
+    "Ocupado", // legacy → se muestra/normaliza como "En ruta"
+];
 const uniSchema = new mongoose_1.Schema({
     nombre: { type: String, required: true },
     placas: { type: String, required: true },
     modelo: { type: String, required: true },
     capacidad: { type: String, required: true },
-    estado: { type: String, enum: ["Disponible", "Mantenimiento", "Ocupado"] },
+    estado: { type: String, enum: UNIT_ESTADOS, default: "Disponible" },
     tipoRemolque: { type: String, enum: ["Lowboy", "Caja Seca", ""], default: "" },
     placaRemolque: { type: String, default: "" },
     imagenUrl: { type: String, default: "" },
-    inventarios: [
-        {
-            archivo: { type: String, required: true },
-            conductorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-            fecha: { type: Date, default: Date.now }
-        }
-    ],
+    inventarios: { type: [InventarioSchema], default: [] },
 }, { timestamps: true });
 uniSchema.set("toJSON", {
     virtuals: true,
@@ -57,6 +73,9 @@ uniSchema.set("toJSON", {
     transform: function (doc, ret) {
         ret.id = ret._id;
         delete ret._id;
+        // Compat: "Ocupado" legacy → "En ruta"
+        if (ret.estado === "Ocupado")
+            ret.estado = "En ruta";
     },
 });
 exports.default = mongoose_1.default.model("Unit", uniSchema);

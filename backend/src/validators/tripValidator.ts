@@ -21,7 +21,9 @@ export const createTripValidator = [
    
 
     body("acompanante").optional({nullable: true}).isMongoId().withMessage("ID de acompañante inválido"),
+    body("cliente").optional({ nullable: true }).isString().withMessage("Cliente inválido"),
     body("def").optional().isString().withMessage("DEF inválido"),
+    body("playo").optional().isString().withMessage("Playo inválido"),
     body("destinoActualIndex")
       .optional({ nullable: true })
       .custom((value) => {
@@ -51,7 +53,9 @@ export const updateTripValidator = [
       if (typeof value === "string" && /^[a-fA-F0-9]{24}$/.test(value)) return true;
       throw new Error("ID de acompañante inválido");
     }),
+    body("cliente").optional({ nullable: true }).isString().withMessage("Cliente inválido"),
     body("def").optional().isString().withMessage("DEF inválido"),
+    body("playo").optional().isString().withMessage("Playo inválido"),
     body("destinoActualIndex")
       .optional({ nullable: true })
       .custom((value) => {

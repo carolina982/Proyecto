@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Unit, { IUnit } from "../models/Unit";
+import { reconcileAllUnitEstados } from "../services/unitEstadoSync";
 
 export const createUnit =async (req:Request, res:Response)=>{
     try{
@@ -11,8 +12,8 @@ export const createUnit =async (req:Request, res:Response)=>{
         }
         const unit:IUnit =await Unit.create(data);
         const newUnit =await Unit.findById(unit._id)
-         .populate("Inventarios.conductorId","nombre");
-         return res.status(201).json(unit);
+         .populate("inventarios.operadorId","nombre apellido");
+         return res.status(201).json(newUnit || unit);
     }catch (error){
         console.error("Error creando unidad",error);
         res.status(500).json({message:"Error creando unidad", error});
@@ -21,7 +22,14 @@ export const createUnit =async (req:Request, res:Response)=>{
 
 export const getUnits =async (req:Request , res:Response)=>{
     try {
-        const units :IUnit[]=await Unit.find().populate("inventarios.conductorId","nombre").sort({createdAt:1});
+        // Actualiza solos: En ruta ↔ Disponible según viajes activos (todas las unidades).
+        try {
+          await reconcileAllUnitEstados();
+        } catch (syncErr) {
+          console.error("Error reconciliando estados de unidades:", syncErr);
+        }
+
+        const units :IUnit[]=await Unit.find().populate("inventarios.operadorId","nombre apellido").collation({ locale: "es", numericOrdering: true }).sort({ nombre: 1 });
         res.json(units);
     }catch (error){
         console.error("Error obteniendo unidades" , error),

@@ -1,10 +1,80 @@
 import { Request, Response } from "express";
 import Trip from "../models/Trip";
 import Viatico from "../models/Viatic";
+import Settings, { DEFAULT_DEF_UNIT_PRICE, SETTINGS_KEY } from "../models/Settings";
 
 const isOperatorRole = (rol?: string) => {
   const value = (rol || "").toLowerCase();
   return value === "operador" || value === "chofer";
+};
+
+const readConcepto = (conceptos: any, key: string) => {
+  if (!conceptos) return null;
+  if (typeof conceptos.get === "function") return conceptos.get(key) || null;
+  return conceptos[key] || null;
+};
+
+/** Precio DEF fijado en un registro (snapshot). No usa precio vigente. */
+const resolveHistoricalDefPrice = (existingDef: any): number | null => {
+  if (!existingDef) return null;
+  const stored = Number(existingDef.precioUnitario);
+  if (Number.isFinite(stored) && stored > 0) return stored;
+  const costo = Number(existingDef.costo || 0);
+  const cantidad = Number(existingDef.cantidad || 0);
+  if (costo > 0 && cantidad > 0) return costo / cantidad;
+  // Había DEF histórico sin costo: conservar 0 (no reescribir con precio vigente)
+  if (cantidad > 0) return 0;
+  return null;
+};
+
+const applyDefSnapshotOnCreate = async (conceptosFinal: any) => {
+  const def = conceptosFinal?.DEF;
+  if (!def) return;
+  const cantidad = Number(def.cantidad || 0);
+  const costoManual = Number(def.costo || 0);
+  let precio = Number(def.precioUnitario);
+  if (!Number.isFinite(precio) || precio < 0) {
+    const settings = await Settings.findOne({ key: SETTINGS_KEY });
+    precio = Number(settings?.defUnitPrice ?? DEFAULT_DEF_UNIT_PRICE);
+  }
+  if (!Number.isFinite(precio) || precio < 0) precio = DEFAULT_DEF_UNIT_PRICE;
+  def.precioUnitario = precio;
+  // Cantidad y costo son manuales; si solo hay cantidad, deriva el costo
+  if (costoManual > 0) {
+    def.costo = costoManual;
+  } else if (cantidad > 0) {
+    def.costo = cantidad * precio;
+  }
+};
+
+/**
+ * En actualización: si el gasto ya tenía DEF, conserva SU precio unitario.
+ * Cambiar el precio vigente NO debe alterar cortes históricos.
+ */
+const applyDefSnapshotOnUpdate = (conceptosFinal: any, existingConceptos: any) => {
+  const incoming = conceptosFinal?.DEF;
+  if (!incoming) return;
+  const existingDef = readConcepto(existingConceptos, "DEF");
+  const historical = resolveHistoricalDefPrice(existingDef);
+  const cantidad = Number(incoming.cantidad || 0);
+  const costoManual = Number(incoming.costo || 0);
+
+  if (historical === null) {
+    const precio = Number(incoming.precioUnitario);
+    if (Number.isFinite(precio) && precio >= 0) {
+      incoming.precioUnitario = precio;
+      if (costoManual > 0) incoming.costo = costoManual;
+      else if (cantidad > 0) incoming.costo = cantidad * precio;
+    }
+    return;
+  }
+
+  incoming.precioUnitario = historical;
+  if (costoManual > 0) {
+    incoming.costo = costoManual;
+  } else {
+    incoming.costo = cantidad * historical;
+  }
 };
 
 export const getViatic= async (req:Request, res:Response)=>{
@@ -82,20 +152,39 @@ export const getViaticByTrip = async (req: Request, res: Response) => {
 
 export const createViatic =async (req:Request, res :Response)=>{
   try {
-    const {tripId,conceptos,dieselHistorial,dieselCosto,dieselCargas,tag,total,costosExtras}=req.body;
+    const {
+      tripId,
+      conceptos,
+      dieselHistorial,
+      dieselCosto,
+      dieselCargas,
+      tag,
+      total,
+      costosExtras,
+      kilometrajeInicial,
+      kilometrajeFinal,
+      kilometrosRecorridos,
+      totalDefGastado,
+      tipoUnidadDef,
+    }=req.body;
     let conceptosFinal :any ={};
     if (conceptos){
       const conceptosObj= typeof conceptos === "string" ?JSON.parse(conceptos):conceptos;
       Object.entries(conceptosObj).forEach(([nombre,data]:any)=>{
-        conceptosFinal[nombre]={
+        const entry: any = {
           cantidad:Number(data.cantidad || 0),
           costo:Number (data.costo || 0),
         };
+        if (data.precioUnitario !== undefined && data.precioUnitario !== null && data.precioUnitario !== "") {
+          entry.precioUnitario = Number(data.precioUnitario);
+        }
+        conceptosFinal[nombre] = entry;
       });
+      await applyDefSnapshotOnCreate(conceptosFinal);
     }
     let factura ="";
     if (req.file){
-      factura= `/upload/${req.file.filename}`;
+      factura= `/uploads/${req.file.filename}`;
     }
     const viaje=await Trip.findById(tripId).populate("conductorId","nombre");
     if (!viaje){
@@ -121,6 +210,11 @@ export const createViatic =async (req:Request, res :Response)=>{
       dieselCargas:Number(dieselCargas) || 0,
       tag:Number (tag) || 0,
       total:Number (total)  || 0,
+      kilometrajeInicial: Number(kilometrajeInicial) || 0,
+      kilometrajeFinal: Number(kilometrajeFinal) || 0,
+      kilometrosRecorridos: Number(kilometrosRecorridos) || 0,
+      totalDefGastado: Number(totalDefGastado) || 0,
+      tipoUnidadDef: String(tipoUnidadDef || "").trim(),
       costosExtras: costosExtrasFinal.map((item: any) => ({
         description: String(item.description || ""),
         costo: Number(item.costo || 0),
@@ -137,15 +231,43 @@ export const createViatic =async (req:Request, res :Response)=>{
 
 export const updateViatic = async (req:Request, res:Response)=>{
   try {
+    const existing = await Viatico.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "Viático no encontrado" });
+    }
+
     const costosExtrasParsed = req.body.costosExtras
       ? typeof req.body.costosExtras === "string"
         ? JSON.parse(req.body.costosExtras)
         : req.body.costosExtras
       : undefined;
+
+    let conceptosNormalized: any = undefined;
+    if (req.body.conceptos) {
+      const parsed =
+        typeof req.body.conceptos === "string"
+          ? JSON.parse(req.body.conceptos)
+          : req.body.conceptos;
+      conceptosNormalized = {};
+      Object.entries(parsed || {}).forEach(([nombre, data]: any) => {
+        const entry: any = {
+          cantidad: Number(data?.cantidad || 0),
+          costo: Number(data?.costo || 0),
+        };
+        if (
+          data?.precioUnitario !== undefined &&
+          data?.precioUnitario !== null &&
+          data?.precioUnitario !== ""
+        ) {
+          entry.precioUnitario = Number(data.precioUnitario);
+        }
+        conceptosNormalized[nombre] = entry;
+      });
+      applyDefSnapshotOnUpdate(conceptosNormalized, existing.conceptos);
+    }
+
     const update:any ={
-      conceptos:req.body.conceptos
-      ? JSON.parse(req.body.conceptos)
-      :undefined,
+      conceptos: conceptosNormalized,
       dieselHistorial:req.body.dieselHistorial
       ?JSON.parse(req.body.dieselHistorial)
       :undefined,
@@ -153,6 +275,11 @@ export const updateViatic = async (req:Request, res:Response)=>{
       diselCosto:Number(req.body.dieselCosto || 0),
       tag:Number(req.body.tag || 0),
       total:Number(req.body.total || 0),
+      kilometrajeInicial: Number(req.body.kilometrajeInicial || 0),
+      kilometrajeFinal: Number(req.body.kilometrajeFinal || 0),
+      kilometrosRecorridos: Number(req.body.kilometrosRecorridos || 0),
+      totalDefGastado: Number(req.body.totalDefGastado || 0),
+      tipoUnidadDef: String(req.body.tipoUnidadDef || "").trim(),
       ...(costosExtrasParsed !== undefined
         ? {
             costosExtras: (Array.isArray(costosExtrasParsed) ? costosExtrasParsed : []).map(

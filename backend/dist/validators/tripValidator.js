@@ -18,8 +18,18 @@ exports.createTripValidator = [
     (0, express_validator_1.body)("kilometrajeLlegada.*.numero").optional().isNumeric().withMessage("El valor de KM debe ser un número"),
     (0, express_validator_1.body)("kilometrajeLlegada.*.descripcion").optional().isString(),
     (0, express_validator_1.body)("acompanante").optional({ nullable: true }).isMongoId().withMessage("ID de acompañante inválido"),
+    (0, express_validator_1.body)("cliente").optional({ nullable: true }).isString().withMessage("Cliente inválido"),
     (0, express_validator_1.body)("def").optional().isString().withMessage("DEF inválido"),
-    (0, express_validator_1.body)("destinoActualIndex").optional().isNumeric().withMessage("Índice de destino inválido"),
+    (0, express_validator_1.body)("playo").optional().isString().withMessage("Playo inválido"),
+    (0, express_validator_1.body)("destinoActualIndex")
+        .optional({ nullable: true })
+        .custom((value) => {
+        if (value === undefined || value === null || value === "")
+            return true;
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 0;
+    })
+        .withMessage("Índice de destino inválido"),
 ];
 exports.updateTripValidator = [
     (0, express_validator_1.body)("rutaAcubrir").optional().notEmpty().withMessage("El nombre es obligatorio"),
@@ -42,7 +52,24 @@ exports.updateTripValidator = [
             return true;
         throw new Error("ID de acompañante inválido");
     }),
+    (0, express_validator_1.body)("cliente").optional({ nullable: true }).isString().withMessage("Cliente inválido"),
     (0, express_validator_1.body)("def").optional().isString().withMessage("DEF inválido"),
-    (0, express_validator_1.body)("destinoActualIndex").optional().isNumeric().withMessage("Índice de destino inválido"),
-    (0, express_validator_1.body)("multidestino").optional().isBoolean().withMessage("Multidestino inválido"),
+    (0, express_validator_1.body)("playo").optional().isString().withMessage("Playo inválido"),
+    (0, express_validator_1.body)("destinoActualIndex")
+        .optional({ nullable: true })
+        .custom((value) => {
+        if (value === undefined || value === null || value === "")
+            return true;
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 0;
+    })
+        .withMessage("Índice de destino inválido"),
+    (0, express_validator_1.body)("multidestino")
+        .optional({ nullable: true })
+        .custom((value) => {
+        if (value === undefined || value === null)
+            return true;
+        return typeof value === "boolean" || value === "true" || value === "false" || value === 0 || value === 1;
+    })
+        .withMessage("Multidestino inválido"),
 ];

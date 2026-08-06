@@ -39,5 +39,8 @@ const announcementSchema = new mongoose_1.Schema({
     contenido: { type: String, required: true },
     fecha: { type: Date, default: Date.now },
     image: { type: String },
-});
+    autor: { type: String, default: "Administración" },
+    autorPhotoUrl: { type: String, default: null },
+    fijado: { type: Boolean, default: false },
+}, { timestamps: true });
 exports.default = mongoose_1.default.model("Announcement", announcementSchema);

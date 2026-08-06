@@ -3,49 +3,124 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IUser extends Document {
   nombre: string;
+  /** Apellido completo (paterno + materno). Se mantiene por compatibilidad. */
   apellido: string;
+  apellidoPaterno?: string;
+  apellidoMaterno?: string;
+  /** femenino | masculino | "" (sin especificar) */
+  genero?: string;
   email: string;
   password: string;
   rol: string;
   contacto: string;
+  /** false = desactivado (sigue en BD, no aparece en asignaciones). */
+  activo: boolean;
   photoUrl?: string | null;
+  /** corporativo-hm = perfil creado/sincronizado desde Corporativo HM */
+  origen?: string | null;
   expoPushToken?: string | null;
+  /**
+   * Permisos explícitos (independientes del rol).
+   * Se suman a los permisos por defecto del rol.
+   */
+  permissions?: string[];
+  /** Preferencias de correos automáticos de viajes (por usuario). */
+  emailNotifications?: {
+    /** Master: si false, no recibe ningún correo de la app. */
+    enabled?: boolean;
+    tripAssigned?: boolean;
+    tripStarted?: boolean;
+    tripCompleted?: boolean;
+  };
   resetToken?: string;
   resetTokenExp?: Date;
 
   comparePassword(password: string): Promise<boolean>;
 }
 
-const isBcryptHash = (value: string) =>
-  typeof value === "string" && /^\$2[aby]\$/.test(value);
+/** Une apellido paterno + materno en un solo string. */
+export function joinApellidos(paterno?: string | null, materno?: string | null) {
+  return [paterno, materno]
+    .map((s) => String(s || "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+export const isBcryptHash = (value: string) =>
+  typeof value === "string" && /^\$2[aby]\$\d{2}\$/.test(value);
+
+/** Hashea contraseña en texto plano. Si ya es bcrypt, la deja igual. */
+export async function hashPassword(plainOrHash: string): Promise<string> {
+  const value = String(plainOrHash || "");
+  if (!value) return value;
+  if (isBcryptHash(value)) return value;
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(value, salt);
+}
 
 const userSchema = new Schema<IUser>(
   {
     nombre: { type: String, required: true },
     apellido: { type: String },
+    apellidoPaterno: { type: String, default: "" },
+    apellidoMaterno: { type: String, default: "" },
+    genero: {
+      type: String,
+      enum: ["", "femenino", "masculino"],
+      default: "",
+    },
     email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
     // Operadores creados solo como catálogo pueden no tener acceso al login
-    password: { type: String, required: false },
+    password: { type: String, required: false, select: false },
     rol: {
       type: String,
-      enum: ["Admin", "Operador", "Ayudante General"],
+      enum: [
+        "Administrador",
+        "Usuario",
+        "Admin",
+        "Operador",
+        "Ayudante General",
+        // Legacy: se normaliza a Administrador al guardar
+        "Superadministrador",
+      ],
       required: true,
     },
     contacto: { type: String },
+    activo: { type: Boolean, default: true },
     photoUrl: { type: String, default: null },
+    origen: { type: String, default: null },
     expoPushToken: { type: String, default: null },
-    resetToken: { type: String },
-    resetTokenExp: { type: Date },
+    permissions: { type: [String], default: [] },
+    emailNotifications: {
+      enabled: { type: Boolean, default: false },
+      tripAssigned: { type: Boolean, default: false },
+      tripStarted: { type: Boolean, default: false },
+      tripCompleted: { type: Boolean, default: false },
+    },
+    resetToken: { type: String, select: false },
+    resetTokenExp: { type: Date, select: false },
   },
   { timestamps: true }
 );
+
+userSchema.set("toJSON", {
+  virtuals: true,
+  transform(_doc, ret: any) {
+    ret.id = String(ret._id || ret.id || "");
+    delete ret.password;
+    delete ret.resetToken;
+    delete ret.resetTokenExp;
+    delete ret.__v;
+    return ret;
+  },
+});
+userSchema.set("toObject", { virtuals: true });
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
   // Evita doble-hash si ya viene hasheada
   if (isBcryptHash(this.password)) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await hashPassword(this.password);
 });
 
 userSchema.pre("findOneAndUpdate", async function () {
@@ -54,9 +129,9 @@ userSchema.pre("findOneAndUpdate", async function () {
 
   const plainUpdate = update as { password?: string; $set?: { password?: string } };
   const password = plainUpdate.$set?.password ?? plainUpdate.password;
-  if (!password || isBcryptHash(password)) return;
+  if (!password) return;
 
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await hashPassword(password);
   if (!plainUpdate.$set) {
     plainUpdate.$set = {};
   }
@@ -66,13 +141,18 @@ userSchema.pre("findOneAndUpdate", async function () {
   }
 });
 
-userSchema.methods.comparePassword = function (password: string) {
-  if (!this.password) return Promise.resolve(false);
-  // Contraseña guardada en texto plano (datos viejos / update roto)
-  if (!isBcryptHash(this.password)) {
-    return Promise.resolve(this.password === password);
+userSchema.methods.comparePassword = async function (password: string) {
+  // Asegura tener el campo aunque password tenga select:false
+  const stored: string | undefined =
+    this.password ||
+    (await mongoose.model<IUser>("User").findById(this._id).select("+password").then((u) => u?.password));
+
+  if (!stored) return false;
+  // Contraseña guardada en texto plano (datos viejos)
+  if (!isBcryptHash(stored)) {
+    return stored === password;
   }
-  return bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, stored);
 };
 
 export default mongoose.model<IUser>("User", userSchema);

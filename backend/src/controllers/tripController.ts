@@ -1,11 +1,14 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+import { isAdminLevel } from "../auth/roles";
 import Trip from "../models/Trip";
 import {
   notifyAdminsTripCompleted,
+  notifyAdminsTripStarted,
   notifyCompanionAssigned,
   notifyTripAssigned,
 } from "../services/notificationService";
+import { syncUnitsEstadoForTrip } from "../services/unitEstadoSync";
 
 /** Operador / Chofer / Ayudante: solo ven viajes donde participan */
 const isFieldStaffRole = (rol?: string) => {
@@ -32,7 +35,15 @@ const isOperatorRole = isFieldStaffRole;
 
 const userObjectId = (user: any) => {
   const raw = user?._id || user?.id;
-  return raw ? new mongoose.Types.ObjectId(String(raw)) : null;
+  if (!raw) return null;
+  const s = String(raw).trim();
+  // Puente HM usa id sintético (no ObjectId); no debe tumbar el listado.
+  if (!mongoose.Types.ObjectId.isValid(s) || s.length !== 24) return null;
+  try {
+    return new mongoose.Types.ObjectId(s);
+  } catch {
+    return null;
+  }
 };
 
 /** Operador: solo como conductor. Ayudante: como acompañante (o conductor). */
@@ -93,12 +104,13 @@ export const getTrip = async (req: Request, res: Response) => {
     const uid = userObjectId(user);
 
     if (isFieldStaffRole(user.rol) && uid) {
-      trips = await Trip.find(tripAssignedToUserQuery(uid, user.rol)).populate(
-        "asignadoPor",
-        "nombre apellido"
-      );
+      trips = await Trip.find(tripAssignedToUserQuery(uid, user.rol))
+        .sort({ createdAt: -1 })
+        .populate("asignadoPor", "nombre apellido");
     } else {
-      trips = await Trip.find().populate("asignadoPor", "nombre apellido");
+      trips = await Trip.find()
+        .sort({ createdAt: -1 })
+        .populate("asignadoPor", "nombre apellido");
     }
     return res.status(200).json(trips);
   } catch (error) {
@@ -134,12 +146,15 @@ export const createTrip = async (req: Request, res: Response) => {
       conductorId, 
       fechaSalida, 
       fechaLlegada, 
-      destino, 
+      destino,
+      cliente,
       estado, 
       kilometrajeSalida, 
       kilometrajeLlegada, 
       acompanante, 
       def,
+      playo,
+      tarjeta,
       multidestino,
       destinoExtra,
     } = req.body;
@@ -186,6 +201,7 @@ const newTrip = new Trip({
   fechaSalida: new Date(fechaSalida),
   fechaLlegada: fechaLlegada ? new Date(fechaLlegada) : null,
   destino,
+  cliente: String(cliente || "").trim(),
   estado,
   kilometrajeSalida: mapKm(kilometrajeSalida),
   kilometrajeLlegada: mapKm(kilometrajeLlegada),
@@ -194,6 +210,8 @@ const newTrip = new Trip({
       ? null
       : new mongoose.Types.ObjectId(String(acompanante)),
   def: def || "",
+  playo: String(playo || "").trim(),
+  tarjeta: String(tarjeta || "").trim(),
   multidestino: Boolean(multidestino),
   destinoExtra: Boolean(multidestino) ? normalizeDestinosExtras(destinoExtra) : [],
   destinoActualIndex: 0,
@@ -201,6 +219,12 @@ const newTrip = new Trip({
 });
 
     await newTrip.save();
+
+    try {
+      await syncUnitsEstadoForTrip(newTrip, String(newTrip.estado || ""));
+    } catch (syncErr) {
+      console.error("Error sincronizando estado de unidad:", syncErr);
+    }
 
     try {
       await notifyTripAssigned(newTrip);
@@ -213,6 +237,7 @@ const newTrip = new Trip({
             rutaAcubrir: newTrip.rutaAcubrir,
             destino: String(extra.destino || newTrip.destino),
             acompanante: extra.acompanante,
+            asignadoPor: newTrip.asignadoPor,
           });
         }
       }
@@ -237,7 +262,7 @@ export const updateTrip = async (req: Request, res: Response) => {
     const conductorIdStr = String(
       (trip.conductorId as any)?._id || trip.conductorId || ""
     ).trim();
-    const isAdminUser = String(user?.rol || "").toLowerCase() === "admin";
+    const isAdminUser = isAdminLevel(user?.rol);
     const isMainConductor = Boolean(userId && conductorIdStr && userId === conductorIdStr);
     const isExtraConductor = Array.isArray(trip.destinoExtra)
       ? trip.destinoExtra.some((extra: any) => {
@@ -256,10 +281,12 @@ export const updateTrip = async (req: Request, res: Response) => {
 
     const estadoAnterior = trip.estado;
     const acompananteAnterior = trip.acompanante ? String(trip.acompanante) : null;
+    const conductorAnterior = trip.conductorId ? String(trip.conductorId) : null;
 
     const {
       rutaAcubrir, 
-      destino, 
+      destino,
+      cliente,
       fechaLlegada, 
       fechaSalida, 
       kilometrajeSalida, 
@@ -269,6 +296,8 @@ export const updateTrip = async (req: Request, res: Response) => {
       conductorId, 
       acompanante, 
       def,
+      playo,
+      tarjeta,
       multidestino,
       destinoExtra,
       destinoActualIndex,
@@ -277,9 +306,17 @@ export const updateTrip = async (req: Request, res: Response) => {
     
     if (rutaAcubrir !== undefined) trip.rutaAcubrir = rutaAcubrir;
     if (destino !== undefined) trip.destino = destino;
+    if (cliente !== undefined) trip.cliente = String(cliente || "").trim();
     if (unidadId !== undefined) trip.unidadId = unidadId;
     if (estado !== undefined) trip.estado = estado;
     if (def !== undefined) trip.def = def;
+    if (playo !== undefined) trip.playo = String(playo || "").trim();
+    if (tarjeta !== undefined) trip.tarjeta = String(tarjeta || "").trim();
+    if (req.body.cartaPorte !== undefined) trip.cartaPorte = String(req.body.cartaPorte || "").trim();
+    if (req.body.bitacoraHoras !== undefined) {
+      trip.bitacoraHoras = String(req.body.bitacoraHoras || "").trim();
+    }
+    // facturaViaje solo por multipart autorizado (updateTripOperador)
     if (destinoActualIndex !== undefined) {
       trip.destinoActualIndex = Number(destinoActualIndex) || 0;
     }
@@ -342,35 +379,78 @@ export const updateTrip = async (req: Request, res: Response) => {
       }
     }
 
+    // Marca/limpia la hora real de finalización según el cambio de estado.
+    // Guarda la hora de inicio real la primera vez que pasa a "en progreso".
+    if (estado !== undefined) {
+      const nuevoEstado = String(estado).toLowerCase();
+      const anterior = String(estadoAnterior).toLowerCase();
+      if (nuevoEstado === "completado" && anterior !== "completado") {
+        trip.finalizadoEn = new Date();
+      } else if (nuevoEstado !== "completado" && anterior === "completado") {
+        trip.finalizadoEn = null;
+      }
+      if (
+        nuevoEstado === "en progreso" &&
+        anterior !== "en progreso" &&
+        !trip.iniciadoEn
+      ) {
+        trip.iniciadoEn = new Date();
+      }
+    }
+
     await trip.save();
 
-    const acompananteNuevo = trip.acompanante ? String(trip.acompanante) : null;
-    if (acompananteNuevo && acompananteNuevo !== acompananteAnterior) {
+    try {
+      await syncUnitsEstadoForTrip(trip, String(trip.estado || ""));
+    } catch (syncErr) {
+      console.error("Error sincronizando estado de unidad:", syncErr);
+    }
+
+    const conductorNuevo = trip.conductorId ? String(trip.conductorId) : null;
+    if (conductorNuevo && conductorNuevo !== conductorAnterior) {
       try {
-        await notifyCompanionAssigned({
-          _id: trip._id,
-          rutaAcubrir: trip.rutaAcubrir,
-          destino: trip.destino,
-          acompanante: acompananteNuevo,
-        });
+        await notifyTripAssigned(trip);
       } catch (notifyError) {
-        console.error("Error notificando acompañante:", notifyError);
+        console.error("Error notificando nuevo operador:", notifyError);
+      }
+    } else {
+      const acompananteNuevo = trip.acompanante ? String(trip.acompanante) : null;
+      if (acompananteNuevo && acompananteNuevo !== acompananteAnterior) {
+        try {
+          await notifyCompanionAssigned({
+            _id: trip._id,
+            rutaAcubrir: trip.rutaAcubrir,
+            destino: trip.destino,
+            acompanante: acompananteNuevo,
+            asignadoPor: trip.asignadoPor,
+          });
+        } catch (notifyError) {
+          console.error("Error notificando acompañante:", notifyError);
+        }
       }
     }
 
     const estadoNuevo = trip.estado;
+    const seInicio =
+      String(estadoAnterior).toLowerCase() !== "en progreso" &&
+      String(estadoNuevo).toLowerCase() === "en progreso";
     const seCompleto =
       String(estadoAnterior).toLowerCase() !== "completado" &&
       String(estadoNuevo).toLowerCase() === "completado";
 
-    if (seCompleto) {
+    if (seInicio || seCompleto) {
       try {
         const operatorName = isOperatorRole(user?.rol)
           ? [user.nombre, user.apellido].filter(Boolean).join(" ").trim() || "Operador"
           : "Un operador";
-        await notifyAdminsTripCompleted(trip, operatorName);
+        if (seInicio) {
+          await notifyAdminsTripStarted(trip, operatorName);
+        }
+        if (seCompleto) {
+          await notifyAdminsTripCompleted(trip, operatorName);
+        }
       } catch (notifyError) {
-        console.error("Error enviando notificación de viaje finalizado:", notifyError);
+        console.error("Error enviando notificación de estado de viaje:", notifyError);
       }
     }
 
@@ -394,7 +474,7 @@ export const updateTripOperador = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Usuario no autenticado" });
     }
 
-    const isAdminUser = String(user?.rol || "").toLowerCase() === "admin";
+    const isAdminUser = isAdminLevel(user?.rol);
     const uid = userObjectId(user);
 
     // Misma regla que el listado: si el viaje aparece en "Mis viajes", puede iniciarlo.
@@ -422,10 +502,90 @@ export const updateTripOperador = async (req: Request, res: Response) => {
     if (!trip) return res.status(404).json({ message: "Viaje no encontrado" });
 
     const estadoAnterior = trip.estado;
-    const { estado, destinoActualIndex, fechaSalida, fechaLlegada, multidestino, destinoExtra } =
-      req.body || {};
+    const parseMaybeJson = (value: any) => {
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      if (!trimmed) return value;
+      if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) return value;
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return value;
+      }
+    };
+
+    const body = req.body || {};
+    const estado = body.estado;
+    const destinoActualIndex = body.destinoActualIndex;
+    const fechaSalida = body.fechaSalida;
+    const fechaLlegada = body.fechaLlegada;
+    const multidestino = body.multidestino;
+    const destinoExtra = parseMaybeJson(body.destinoExtra);
+    const checklistInicio = parseMaybeJson(body.checklistInicio);
+    const checklistRecepcion = parseMaybeJson(body.checklistRecepcion);
+    const checklistFin = parseMaybeJson(body.checklistFin);
+    const checklistParada = parseMaybeJson(body.checklistParada);
 
     const $set: Record<string, unknown> = {};
+
+    const normalizeChecklist = (raw: any) => {
+      if (!raw || typeof raw !== "object") return undefined;
+      const notes =
+        raw.observaciones != null
+          ? String(raw.observaciones)
+          : raw.extras != null
+            ? String(raw.extras)
+            : "";
+      const items = Array.isArray(raw.items)
+        ? raw.items.map((it: any) => ({
+            id: String(it?.id || ""),
+            label: String(it?.label || ""),
+            checked: Boolean(it?.checked),
+            foto: String(it?.foto || ""),
+          }))
+        : [];
+      return {
+        items,
+        extras: notes,
+        observaciones: notes,
+        completadoEn: raw.completadoEn ? new Date(raw.completadoEn) : new Date(),
+      };
+    };
+
+    const files = Array.isArray((req as any).files)
+      ? ((req as any).files as Express.Multer.File[])
+      : [];
+    const hojaFile =
+      files.find((f) => f.fieldname === "hojaEntrega") ||
+      ((req as any).file as Express.Multer.File | undefined);
+
+    if (hojaFile?.filename) {
+      $set.hojaEntrega = `/uploads/${hojaFile.filename}`;
+    } else if (body.hojaEntrega !== undefined) {
+      $set.hojaEntrega = String(body.hojaEntrega || "");
+    }
+
+    const cartaFile = files.find((f) => f.fieldname === "cartaPorte");
+    if (cartaFile?.filename) {
+      $set.cartaPorte = `/uploads/${cartaFile.filename}`;
+    } else if (body.cartaPorte !== undefined) {
+      $set.cartaPorte = String(body.cartaPorte || "");
+    }
+
+    const bitacoraFile = files.find((f) => f.fieldname === "bitacoraHoras");
+    if (bitacoraFile?.filename) {
+      $set.bitacoraHoras = `/uploads/${bitacoraFile.filename}`;
+    } else if (body.bitacoraHoras !== undefined) {
+      $set.bitacoraHoras = String(body.bitacoraHoras || "");
+    }
+
+    const facturaFile = files.find((f) => f.fieldname === "facturaViaje");
+    const wantsFacturaClear = body.facturaViaje !== undefined && !facturaFile;
+    if (facturaFile?.filename || wantsFacturaClear) {
+      return res.status(403).json({
+        message: "La carga de factura de viaje no está habilitada.",
+      });
+    }
 
     if (estado !== undefined) {
       const allowed = ["pendiente", "en progreso", "en parada", "completado"];
@@ -499,33 +659,176 @@ export const updateTripOperador = async (req: Request, res: Response) => {
       }));
     }
 
-    if (Object.keys($set).length === 0) {
+    if (checklistInicio !== undefined) {
+      const normalized = normalizeChecklist(checklistInicio);
+      if (normalized) {
+        const fotoFiles = files.filter((f) =>
+          String(f.fieldname || "").startsWith("checklistInicioFoto_")
+        );
+        for (const f of fotoFiles) {
+          if (!f.filename) continue;
+          const itemId = String(f.fieldname).replace(/^checklistInicioFoto_/, "");
+          if (!itemId) continue;
+          const url = `/uploads/${f.filename}`;
+          const existing = normalized.items.find(
+            (it: { id: string; label: string; checked: boolean; foto?: string }) =>
+              it.id === itemId
+          );
+          if (existing) {
+            existing.foto = url;
+          } else {
+            normalized.items.push({
+              id: itemId,
+              label: "",
+              checked: false,
+              foto: url,
+            });
+          }
+        }
+        $set.checklistInicio = normalized;
+      }
+    }
+
+    if (checklistRecepcion !== undefined) {
+      const normalized = normalizeChecklist(checklistRecepcion);
+      if (normalized) {
+        const destIdx = Number(
+          body.destinoRecepcionIndex != null ? body.destinoRecepcionIndex : 0
+        );
+        if (!Number.isFinite(destIdx) || destIdx <= 0) {
+          // Destino 1 / viaje simple
+          $set.checklistRecepcion = normalized;
+        } else {
+          // Destino 2+: upsert recepción en checklistParadas[index]
+          const tripDoc = await Trip.findById(tripId);
+          if (!tripDoc) {
+            return res.status(404).json({ message: "Viaje no encontrado" });
+          }
+          const list = Array.isArray(tripDoc.checklistParadas)
+            ? [...(tripDoc.checklistParadas as any[])]
+            : [];
+          const pos = list.findIndex((p) => Number(p?.index) === destIdx);
+          if (pos >= 0) {
+            list[pos] = {
+              ...(list[pos] as any),
+              index: destIdx,
+              recepcion: normalized,
+            };
+          } else {
+            list.push({
+              index: destIdx,
+              destino: String(
+                (Array.isArray(tripDoc.destinoExtra)
+                  ? tripDoc.destinoExtra[destIdx - 1]?.destino
+                  : "") ||
+                  tripDoc.destino ||
+                  ""
+              ),
+              items: [],
+              extras: "",
+              completadoEn: null,
+              recepcion: normalized,
+            });
+          }
+          $set.checklistParadas = list;
+        }
+      }
+    }
+
+    if (checklistFin !== undefined) {
+      const normalized = normalizeChecklist(checklistFin);
+      if (normalized) $set.checklistFin = normalized;
+    }
+
+    // Checklist de una parada (multidestino): se agrega al historial de paradas.
+    const $push: Record<string, unknown> = {};
+    if (checklistParada !== undefined) {
+      const normalized = normalizeChecklist(checklistParada);
+      if (normalized) {
+        const recepcionParada = normalizeChecklist(
+          (checklistParada as any)?.recepcion
+        );
+        const closedIndex = Number((checklistParada as any)?.index) || 0;
+        $push.checklistParadas = {
+          ...normalized,
+          index: closedIndex,
+          destino: String((checklistParada as any)?.destino || ""),
+          recepcion: recepcionParada || null,
+        };
+        // Asegura avance del índice aunque el cliente no mande destinoActualIndex (bug móvil).
+        const nextIdx = closedIndex + 1;
+        const currentIdx = Number((trip as any).destinoActualIndex ?? 0) || 0;
+        if ($set.destinoActualIndex === undefined || Number($set.destinoActualIndex) < nextIdx) {
+          if (nextIdx > currentIdx) {
+            $set.destinoActualIndex = nextIdx;
+          }
+        }
+      }
+    }
+
+    // Marca la hora real de finalización al pasar a "completado" (y la limpia si se reabre).
+    // Guarda la hora de inicio real la primera vez que pasa a "en progreso".
+    if ($set.estado !== undefined) {
+      const nuevoEstado = String($set.estado).toLowerCase();
+      const anterior = String(estadoAnterior).toLowerCase();
+      if (nuevoEstado === "completado" && anterior !== "completado") {
+        $set.finalizadoEn = new Date();
+      } else if (nuevoEstado !== "completado" && anterior === "completado") {
+        $set.finalizadoEn = null;
+      }
+      if (
+        nuevoEstado === "en progreso" &&
+        anterior !== "en progreso" &&
+        !(trip as any).iniciadoEn
+      ) {
+        $set.iniciadoEn = new Date();
+      }
+    }
+
+    if (Object.keys($set).length === 0 && Object.keys($push).length === 0) {
       return res.status(400).json({ message: "No hay cambios para aplicar" });
     }
 
-    const updated = await Trip.findByIdAndUpdate(
-      tripId,
-      { $set },
-      { new: true, runValidators: false }
-    );
+    const updateOps: Record<string, unknown> = {};
+    if (Object.keys($set).length > 0) updateOps.$set = $set;
+    if (Object.keys($push).length > 0) updateOps.$push = $push;
+
+    const updated = await Trip.findByIdAndUpdate(tripId, updateOps, {
+      new: true,
+      runValidators: false,
+    });
 
     if (!updated) {
       return res.status(404).json({ message: "Viaje no encontrado" });
     }
 
     const estadoNuevo = updated.estado;
+    const seInicio =
+      String(estadoAnterior).toLowerCase() !== "en progreso" &&
+      String(estadoNuevo).toLowerCase() === "en progreso";
     const seCompleto =
       String(estadoAnterior).toLowerCase() !== "completado" &&
       String(estadoNuevo).toLowerCase() === "completado";
 
-    if (seCompleto) {
+    try {
+      await syncUnitsEstadoForTrip(updated, String(estadoNuevo || ""));
+    } catch (syncErr) {
+      console.error("Error sincronizando estado de unidad:", syncErr);
+    }
+
+    if (seInicio || seCompleto) {
       try {
         const operatorName = isOperatorRole(user?.rol)
           ? [user.nombre, user.apellido].filter(Boolean).join(" ").trim() || "Operador"
           : "Un operador";
-        await notifyAdminsTripCompleted(updated, operatorName);
+        if (seInicio) {
+          await notifyAdminsTripStarted(updated, operatorName);
+        }
+        if (seCompleto) {
+          await notifyAdminsTripCompleted(updated, operatorName);
+        }
       } catch (notifyError) {
-        console.error("Error enviando notificación de viaje finalizado:", notifyError);
+        console.error("Error enviando notificación de estado de viaje:", notifyError);
       }
     }
 
@@ -551,7 +854,16 @@ export const deleteTrip = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "No tienes permiso" });
     }
 
+    const snapshot = trip.toObject ? trip.toObject() : trip;
     await trip.deleteOne();
+
+    try {
+      // Si el viaje estaba activo, libera unidades (o reconcilia).
+      await syncUnitsEstadoForTrip(snapshot, "completado");
+    } catch (syncErr) {
+      console.error("Error sincronizando unidad al eliminar viaje:", syncErr);
+    }
+
     res.json({ message: "Viaje eliminado correctamente" });
   } catch (error) {
     console.error(error);

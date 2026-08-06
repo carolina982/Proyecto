@@ -74,13 +74,44 @@ Join our community of developers creating universal apps.
 
 - Pendientes en realizar en la aplicacion 
 
-* Solo por lo mientras funcionan local todavia no esta subido a hosting 
+* Hosting / dominio (`voltabs.mx`)
+  - La app ya usa `https://voltabs.mx` por defecto (`volta-frontend/services/baseUrl.ts`).
+  - **No uses** `cloudflared tunnel --url` (quick tunnel): la URL `*.trycloudflare.com` cambia al reiniciar.
+  - Para URL fija desde esta máquina: `bash scripts/setup-named-tunnel.sh` (túnel nombrado + DNS).
+  - Alternativa: desplegar el backend en un VPS/PaaS y apuntar el DNS de `voltabs.mx`.
 
-* Restablcer la contraseña => solo falta  configuracion de la (api)
-* checar para subirlo al dominio (backend ya esta alojada en render )
-* Revisar en que hsoting  se puede subir para sea el mas recomdendable para el uso 
-* checar por que no se actualiza correctamente en el modulo perfil .
-* 
+* Restablecer la contraseña
+  - Frontend: Login → ¿Olvidaste tu contraseña? → código 6 dígitos → nueva contraseña
+  - API: `POST /api/auth/forgot-password` y `POST /api/auth/reset-password`
+  - Correo en `backend/.env` (ver `backend/.env.example`):
+    - Resend: dominio verificado y `EMAIL_FROM=Volta App <noreply@send.voltabs.mx>`
+    - o Gmail: `EMAIL_USER` + `EMAIL_PASS` (contraseña de aplicación)
+  - Tras cambiar `.env`: `pm2 restart volta-backend --update-env`
 
+* Perfil (foto / datos)
+  - Guardar usa multipart sin `Content-Type` manual (boundary correcto en web).
+  - Fotos en Cloudinary si hay credenciales; si no, `backend/uploads`.
+  - Cualquier usuario puede editar su nombre/contacto/foto; el correo solo un admin.
 
+* App móvil estable (APK / iOS)
+  - Ya no dependas de Expo Go + túneles para usuarios finales.
+  - API fija en builds: `https://voltabs.mx` (`eas.json`).
+  - Una vez (en `volta-frontend`):
+    ```bash
+    npm i -g eas-cli
+    eas login
+    eas build:configure
+    ```
+  - Android APK instalable:
+    ```bash
+    npm run build:android
+    ```
+  - Development client (push nativas, etc.):
+    ```bash
+    npm run build:android:dev
+    ```
+  - iOS (requiere cuenta Apple):
+    ```bash
+    npm run build:ios
+    ```
 

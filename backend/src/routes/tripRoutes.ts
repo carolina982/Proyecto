@@ -9,8 +9,10 @@ import {
   updateTripOperador,
 } from "../controllers/tripController";
 import { verifyToken } from "../middlewares/auth";
+import { uploadTripDocs } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import { createTripValidator, updateTripValidator } from "../validators/tripValidator";
+import facturaRoutes from "./facturaRoutes";
 
 /** Si el body solo trae campos de operador, evita el validator del form admin. */
 const operadorBodyKeys = new Set([
@@ -20,6 +22,12 @@ const operadorBodyKeys = new Set([
   "fechaLlegada",
   "multidestino",
   "destinoExtra",
+  "checklistInicio",
+  "checklistRecepcion",
+  "destinoRecepcionIndex",
+  "checklistFin",
+  "checklistParada",
+  "hojaEntrega",
 ]);
 
 const routeOperadorOrAdminUpdate = (req: any, res: any, next: any) => {
@@ -38,10 +46,12 @@ const router = Router();
 router.get("/count", getTripCount);
 router.post("/", verifyToken, createTripValidator, validate, createTrip);
 router.get("/", verifyToken, getTrip);
+/** Facturas por viaje (colección independiente; un viaje puede tener N facturas). */
+router.use("/:tripId/facturas", facturaRoutes);
 router.get("/:id", verifyToken, getTripById);
-/** Acciones de operador (iniciar / parada / finalizar) */
-router.patch("/:id/operador", verifyToken, updateTripOperador);
-router.put("/:id/operador", verifyToken, updateTripOperador);
+/** Acciones de operador: hoja de entrega + fotos checklistInicio (cualquier fieldname). */
+router.patch("/:id/operador", verifyToken, uploadTripDocs.any(), updateTripOperador);
+router.put("/:id/operador", verifyToken, uploadTripDocs.any(), updateTripOperador);
 /** PUT normal: si solo cambia estado/ops, usa handler operador (sin validator estricto) */
 router.put("/:id", verifyToken, routeOperadorOrAdminUpdate, updateTripValidator, validate, updateTrip);
 router.delete("/:id", verifyToken, deleteTrip);
