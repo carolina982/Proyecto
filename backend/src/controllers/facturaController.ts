@@ -5,6 +5,7 @@ import path from "path";
 import { hasPermission, PERMISSIONS } from "../auth/permissions";
 import Factura from "../models/Factura";
 import Trip from "../models/Trip";
+import Viatico from "../models/Viatic";
 import { uploadedFileUrl } from "../utils/uploadHelpers";
 
 const MAX_FACTURA_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -114,7 +115,50 @@ export const listTripFacturas = async (req: Request, res: Response) => {
       .sort({ uploadedAt: -1 })
       .lean();
 
-    return res.json(rows.map(serializeFactura));
+    const serializedFacturas = rows.map(serializeFactura);
+
+    // Si no se solicitan eliminados, incluir también comprobantes de viáticos cargados
+    if (!includeDeleted) {
+      try {
+        const viaticos = await Viatico.find({
+          tripId,
+          factura: { $exists: true, $ne: "" },
+        }).lean();
+
+        const serializedViatics = viaticos.map((v: any) => {
+          const id = `viatic-${v._id}`;
+          const fileName = v.factura
+            ? path.basename(v.factura).replace(/^\d+-/, "")
+            : "comprobante_gasto.pdf";
+          const fileType: "pdf" | "xml" | "ambos" = fileName.toLowerCase().endsWith(".xml") ? "xml" : "pdf";
+          const fileUrl = `/api/trips/${tripId}/facturas/${id}/file`;
+
+          return {
+            id,
+            _id: id,
+            tripId,
+            fileName: `Comprobante de Gasto - ${fileName}`,
+            fileType,
+            fileUrl,
+            xmlUrl: "",
+            mimeType: fileName.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+            sizeBytes: 0,
+            uploadedAt: v.createdAt || v.createAT || new Date(),
+            uploadedBy: "",
+            uploadedByUser: null,
+            uploadedByName: v.conductorNombre || "Chofer",
+            estado: v.estado || "activo",
+            isViatico: true,
+          };
+        });
+
+        serializedFacturas.push(...serializedViatics);
+      } catch (e) {
+        console.error("Error al buscar viáticos para listado de facturas:", e);
+      }
+    }
+
+    return res.json(serializedFacturas);
   } catch (error) {
     console.error("Error listando facturas:", error);
     return res.status(500).json({ message: "Error al listar facturas" });
@@ -137,6 +181,38 @@ export const downloadTripFacturaFile = async (req: Request, res: Response) => {
     if (!tripId || !mongoose.Types.ObjectId.isValid(tripId)) {
       return res.status(400).json({ message: "ID de viaje inválido" });
     }
+
+    if (facturaId.startsWith("viatic-")) {
+      const viaticoId = facturaId.replace(/^viatic-/, "");
+      if (!mongoose.Types.ObjectId.isValid(viaticoId)) {
+        return res.status(400).json({ message: "ID de viático inválido" });
+      }
+      const viatico = await Viatico.findOne({ _id: viaticoId, tripId }).lean();
+      if (!viatico || !viatico.factura) {
+        return res.status(404).json({ message: "Comprobante de viático no encontrado" });
+      }
+
+      const storedUrl = viatico.factura;
+      if (storedUrl.startsWith("http")) {
+        return res.redirect(storedUrl);
+      }
+
+      const filename = path.basename(storedUrl);
+      const fullPath = path.resolve(UPLOADS_DIR, filename);
+      if (!fs.existsSync(fullPath)) {
+        return res.status(404).json({ message: "Comprobante no encontrado en el servidor" });
+      }
+
+      const downloadName = filename.replace(/^\d+-/, "");
+      res.setHeader("Content-Type", guessMime(fullPath, "application/pdf"));
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${downloadName.replace(/"/g, "")}"`
+      );
+      res.setHeader("Cache-Control", "private, no-store");
+      return res.sendFile(fullPath);
+    }
+
     if (!facturaId || !mongoose.Types.ObjectId.isValid(facturaId)) {
       return res.status(400).json({ message: "ID de factura inválido" });
     }
@@ -321,6 +397,13 @@ export const deleteTripFactura = async (req: Request, res: Response) => {
     if (!tripId || !mongoose.Types.ObjectId.isValid(tripId)) {
       return res.status(400).json({ message: "ID de viaje inválido" });
     }
+
+    if (facturaId.startsWith("viatic-")) {
+      return res.status(400).json({
+        message: "No se puede eliminar el comprobante de viáticos desde este módulo. Por favor, elimínalo desde el módulo de Gastos.",
+      });
+    }
+
     if (!facturaId || !mongoose.Types.ObjectId.isValid(facturaId)) {
       return res.status(400).json({ message: "ID de factura inválido" });
     }
