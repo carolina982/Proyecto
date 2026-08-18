@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import {
   defaultPermissionsForRole,
+  canManagePermissionCatalog,
   hasPermission,
   PERMISSIONS,
   sanitizePermissions,
@@ -14,7 +15,9 @@ import {
 } from "../auth/roles";
 import { JWT_SECRET } from "../config/config";
 import User, { hashPassword, isBcryptHash, joinApellidos } from "../models/User";
+import { validatePasswordStrength } from "../utils/passwordPolicy";
 import { removeStoredPhoto, uploadedFileUrl } from "../utils/uploadHelpers";
+import { checkRateLimit, clientIp } from "../middlewares/rateLimit";
 
 const PUBLIC_USER_FIELDS = "-password -resetToken -resetTokenExp";
 /** Campos visibles para operadores (sin correo ni contacto). */
@@ -174,10 +177,13 @@ export const createUser = async (req: Request, res: Response) => {
     }
 
     let nextPermissions = sanitizePermissions(permissions);
-    if (nextPermissions.length > 0 && !isAdminLevel(authUser?.rol)) {
+    if (nextPermissions.length > 0 && !canManagePermissionCatalog(authUser)) {
       return res.status(403).json({
         message: "No tienes permiso para asignar permisos",
       });
+    }
+    if (!canManagePermissionCatalog(authUser)) {
+      nextPermissions = [];
     }
 
     const emailTrim = email ? String(email).trim().toLowerCase() : "";
@@ -197,10 +203,11 @@ export const createUser = async (req: Request, res: Response) => {
       }
     }
 
-    if (passwordTrim && passwordTrim.length < 6) {
-      return res.status(400).json({
-        message: "La contraseña debe tener al menos 6 caracteres",
-      });
+    if (passwordTrim) {
+      const pwdErr = validatePasswordStrength(passwordTrim);
+      if (pwdErr) {
+        return res.status(400).json({ message: pwdErr });
+      }
     }
 
     // Sync desde Corporativo HM: email sin password (perfil aparece en app; login se completa después).
@@ -256,6 +263,19 @@ export const createUser = async (req: Request, res: Response) => {
 // Registrar usuario (público): siempre Operador — nunca Admin
 export const registerUser = async (req: Request, res: Response) => {
   try {
+    const ip = clientIp(req as any);
+    const ipLimit = checkRateLimit({
+      key: `register:ip:${ip}`,
+      max: 5,
+      windowMs: 60 * 60 * 1000,
+      minIntervalMs: 30_000,
+      message: "Demasiados registros desde esta red. Espera un momento.",
+    });
+    if (!ipLimit.ok) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfterSec));
+      return res.status(429).json({ message: ipLimit.message });
+    }
+
     const { nombre, email, password, contacto } = req.body;
     const apellidos = resolveApellidos(req.body);
 
@@ -282,6 +302,11 @@ export const registerUser = async (req: Request, res: Response) => {
       });
     }
 
+    const pwdErr = validatePasswordStrength(String(password).trim());
+    if (pwdErr) {
+      return res.status(400).json({ message: pwdErr });
+    }
+
     const hashedPassword = await hashPassword(String(password).trim());
 
     const newUser = await User.create({
@@ -294,27 +319,20 @@ export const registerUser = async (req: Request, res: Response) => {
       password: hashedPassword,
       rol: role,
       contacto,
+      activo: false,
       photoUrl: uploadedFileUrl(req.file),
     });
-
-    const token = jwt.sign(
-      { id: newUser._id, email: newUser.email, rol: newUser.rol },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
 
     return res.status(201).json({
       _id: newUser._id,
       nombre: newUser.nombre,
       apellido: newUser.apellido,
-      apellidoPaterno: newUser.apellidoPaterno || "",
-      apellidoMaterno: newUser.apellidoMaterno || "",
-      genero: newUser.genero || "",
       email: newUser.email,
       rol: newUser.rol,
-      contacto: newUser.contacto,
-      photoUrl: newUser.photoUrl || null,
-      token,
+      activo: false,
+      pendingApproval: true,
+      message:
+        "Cuenta creada. Un administrador debe activarla antes de que puedas iniciar sesión.",
     });
   } catch (error: any) {
     console.error("Error registrando usuario", error);
@@ -341,6 +359,19 @@ export const loginUser = async (req: Request, res: Response) => {
 
   if (!email || !password) {
     return res.status(400).json({ message: "Faltan datos" });
+  }
+
+  const ip = clientIp(req as any);
+  const ipLimit = checkRateLimit({
+    key: `login:ip:${ip}`,
+    max: 12,
+    windowMs: 15 * 60 * 1000,
+    minIntervalMs: 800,
+    message: "Demasiados intentos de inicio de sesión. Espera un momento.",
+  });
+  if (!ipLimit.ok) {
+    res.setHeader("Retry-After", String(ipLimit.retryAfterSec));
+    return res.status(429).json({ message: ipLimit.message });
   }
 
   try {
@@ -398,12 +429,7 @@ export const loginUser = async (req: Request, res: Response) => {
       activo: true,
       photoUrl: user.photoUrl || null,
       contacto: user.contacto,
-      permissions: [
-        ...new Set([
-          ...defaultPermissionsForRole(user.rol),
-          ...(Array.isArray(user.permissions) ? user.permissions : []),
-        ]),
-      ],
+      permissions: Array.isArray(user.permissions) ? user.permissions : [],
       token,
     });
   } catch (error) {
@@ -504,15 +530,21 @@ export const updateUser = async (req: Request, res: Response) => {
       }
 
       if (permissions !== undefined) {
+        if (!canManagePermissionCatalog(authUser)) {
+          return res.status(403).json({
+            message: "No tienes permiso para asignar permisos",
+          });
+        }
         user.permissions = sanitizePermissions(permissions);
         user.markModified("permissions");
       }
 
       if (password !== undefined && password !== null && String(password).trim() !== "") {
         const plain = String(password).trim();
-        if (plain.length < 6) {
+        const pwdErr = validatePasswordStrength(plain);
+        if (pwdErr) {
           return res.status(400).json({
-            message: "La contraseña debe tener al menos 6 caracteres",
+            message: pwdErr,
           });
         }
         if (!user.email) {

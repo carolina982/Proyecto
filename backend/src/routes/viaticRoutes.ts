@@ -1,20 +1,21 @@
 import { Router } from "express";
 import { createViatic, deleteViatic, getViatic, getViaticById, getViaticByTrip, getViaticCount, updateViatic, } from "../controllers/viaticController";
+import { PERMISSIONS } from "../auth/permissions";
 import { verifyToken } from "../middlewares/auth";
-import { authorize } from "../middlewares/authorize";
+import { requirePermission } from "../middlewares/authorize";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
 import { createViaticValidator, updateViaticValidator } from "../validators/viaticValidator";
 
 const router = Router();
-const adminOnly = [verifyToken, authorize(["Admin"])];
+const canGastos = [verifyToken, requirePermission(PERMISSIONS.GASTOS_MANAGE)];
 
-router.get("/count", ...adminOnly, getViaticCount);
-router.get("/", ...adminOnly, getViatic);
-router.get("/trip/:tripId", ...adminOnly, getViaticByTrip);
-router.get("/:id", ...adminOnly, getViaticById);
-router.post("/", ...adminOnly, upload.single("factura"), createViaticValidator, validate, createViatic);
-router.put("/:id", ...adminOnly, upload.single("factura"), updateViaticValidator, validate, updateViatic);
-router.delete("/:id", ...adminOnly, deleteViatic);
+router.get("/count", ...canGastos, getViaticCount);
+router.get("/", ...canGastos, getViatic);
+router.get("/trip/:tripId", ...canGastos, getViaticByTrip);
+router.get("/:id", ...canGastos, getViaticById);
+router.post("/", ...canGastos, upload.single("factura"), createViaticValidator, validate, createViatic);
+router.put("/:id", ...canGastos, upload.single("factura"), updateViaticValidator, validate, updateViatic);
+router.delete("/:id", ...canGastos, deleteViatic);
 
 export default router;

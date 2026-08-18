@@ -116,6 +116,8 @@ export interface ITrip extends Document {
   checklistFin: IChecklist | null;
   checklistParadas: IChecklistParada[];
   hojaEntrega: string;
+  /** Varias hojas (p. ej. multidestino: una por recepción). `hojaEntrega` = la primera. */
+  hojasEntrega: string[];
   cartaPorte?: string;
   bitacoraHoras?: string;
   facturaViaje?: string;
@@ -175,6 +177,7 @@ const tripSchema = new Schema<ITrip>(
     checklistFin: { type: ChecklistSchema, default: null },
     checklistParadas: { type: [ChecklistParadaSchema], default: [] },
     hojaEntrega: { type: String, default: "" },
+    hojasEntrega: { type: [String], default: [] },
     cartaPorte: { type: String, default: "" },
     bitacoraHoras: { type: String, default: "" },
     facturaViaje: { type: String, default: "" },

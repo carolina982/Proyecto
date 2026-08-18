@@ -1,19 +1,31 @@
 import dotenv from "dotenv";
-dotenv.config();
+// override: true — PM2 a veces deja MONGO_URI viejo en el proceso; el .env manda.
+dotenv.config({ override: true });
 
-export const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/volta";
+export const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/voltaDB";
 
-export const JWT_SECRET = process.env.JWT_SECRET || "mi_super_secreto";
+const jwtRaw = String(process.env.JWT_SECRET || "").trim();
+const WEAK_JWT = new Set([
+  "",
+  "mi_super_secreto",
+  "cambia_este_secreto",
+  "cambia_este_secreto_por_uno_largo",
+  "secret",
+  "jwtsecret",
+]);
+if (WEAK_JWT.has(jwtRaw) || jwtRaw.length < 16) {
+  console.error(
+    "JWT_SECRET ausente o débil. Define uno de al menos 16 caracteres en backend/.env"
+  );
+  process.exit(1);
+}
+export const JWT_SECRET = jwtRaw;
 
 
 // Gmail SMTP (único proveedor de correo).
 // EMAIL_USER = correo Gmail ; EMAIL_PASS = contraseña de aplicación (16 caracteres).
 export const EMAIL_USER = process.env.EMAIL_USER || "";
 export const EMAIL_PASS = process.env.EMAIL_PASS || "";
-
-// Legacy / no usados en envío (se mantiene por compatibilidad de .env antiguos).
-export const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-export const EMAIL_FROM = process.env.EMAIL_FROM || "";
 
 //para aguardar imagenes
 

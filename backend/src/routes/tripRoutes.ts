@@ -5,6 +5,7 @@ import {
   getTrip,
   getTripById,
   getTripCount,
+  getTripStatusCounts,
   updateTrip,
   updateTripOperador,
 } from "../controllers/tripController";
@@ -28,6 +29,7 @@ const operadorBodyKeys = new Set([
   "checklistFin",
   "checklistParada",
   "hojaEntrega",
+  "hojasEntrega",
 ]);
 
 const routeOperadorOrAdminUpdate = (req: any, res: any, next: any) => {
@@ -43,7 +45,8 @@ const routeOperadorOrAdminUpdate = (req: any, res: any, next: any) => {
 };
 
 const router = Router();
-router.get("/count", getTripCount);
+router.get("/count", verifyToken, getTripCount);
+router.get("/status-counts", verifyToken, getTripStatusCounts);
 router.post("/", verifyToken, createTripValidator, validate, createTrip);
 router.get("/", verifyToken, getTrip);
 /** Facturas por viaje (colección independiente; un viaje puede tener N facturas). */

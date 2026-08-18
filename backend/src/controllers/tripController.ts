@@ -555,14 +555,30 @@ export const updateTripOperador = async (req: Request, res: Response) => {
     const files = Array.isArray((req as any).files)
       ? ((req as any).files as Express.Multer.File[])
       : [];
-    const hojaFile =
-      files.find((f) => f.fieldname === "hojaEntrega") ||
-      ((req as any).file as Express.Multer.File | undefined);
+    const hojaFiles = files.filter((f) => f.fieldname === "hojaEntrega" && f?.filename);
+    const singleHojaFallback = (req as any).file as Express.Multer.File | undefined;
+    const allHojaFiles =
+      hojaFiles.length > 0
+        ? hojaFiles
+        : singleHojaFallback?.filename
+          ? [singleHojaFallback]
+          : [];
 
-    if (hojaFile?.filename) {
-      $set.hojaEntrega = `/uploads/${hojaFile.filename}`;
+    if (allHojaFiles.length > 0) {
+      const paths = allHojaFiles.map((f) => `/uploads/${f.filename}`);
+      $set.hojasEntrega = paths;
+      $set.hojaEntrega = paths[0] || "";
+    } else if (body.hojasEntrega !== undefined) {
+      const parsed = parseMaybeJson(body.hojasEntrega);
+      const paths = Array.isArray(parsed)
+        ? parsed.map((u: any) => String(u || "").trim()).filter(Boolean)
+        : [];
+      $set.hojasEntrega = paths;
+      $set.hojaEntrega = paths[0] || "";
     } else if (body.hojaEntrega !== undefined) {
-      $set.hojaEntrega = String(body.hojaEntrega || "");
+      const single = String(body.hojaEntrega || "").trim();
+      $set.hojaEntrega = single;
+      $set.hojasEntrega = single ? [single] : [];
     }
 
     const cartaFile = files.find((f) => f.fieldname === "cartaPorte");
@@ -879,3 +895,29 @@ export const getTripCount = async (req:Request,res:Response)=>{
     res.status(500).json({message:"Error al contar los vaijes",error})
   }
 }
+
+/** Contadores ligeros para badges del menú (sin bajar la lista completa). */
+export const getTripStatusCounts = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    const uid = userObjectId(user);
+    const baseFilter =
+      isFieldStaffRole(user.rol) && uid
+        ? tripAssignedToUserQuery(uid, user.rol)
+        : {};
+
+    const pendiente = await Trip.countDocuments({
+      ...baseFilter,
+      estado: { $regex: /^pendiente$/i },
+    });
+
+    return res.status(200).json({ pendiente });
+  } catch (error) {
+    console.error("Error al contar viajes por estado:", error);
+    return res.status(500).json({ message: "Error al contar viajes" });
+  }
+};

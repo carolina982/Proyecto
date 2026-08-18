@@ -2,15 +2,14 @@ import crypto from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config";
-import { isAdminLevel } from "../auth/roles";
 import { verifyToken } from "../middlewares/auth";
 import { checkRateLimit, clientIp } from "../middlewares/rateLimit";
-import Trip from "../models/Trip";
 import User, { hashPassword, isBcryptHash } from "../models/User";
 import {
   getActiveMailer,
   sendPasswordResetCode,
 } from "../services/emailService";
+import { validatePasswordStrength } from "../utils/passwordPolicy";
 
 const router = Router();
 
@@ -31,57 +30,23 @@ console.log(
   "Código en respuesta API (solo si falla el correo):",
   allowResetCodeInResponse() ? "sí" : "no"
 );
-// REGISTER
 
-router.put("/trips/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({ message: "Token no proporcionado" });
-    }
-
-    const decoded: any = jwt.verify(token, JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.status(401).json({ message: "Usuario no autorizado" });
-    }
-
-    const trip = await Trip.findById(id);
-
-    if (!trip) {
-      return res.status(404).json({ message: "Viaje no encontrado" });
-    }
-
-    if (isAdminLevel(user.rol)) {
-      Object.assign(trip, req.body);
-    } else {
-      if (trip.conductorId.toString() !== user._id.toString()) {
-        return res.status(403).json({ message: "No autorizado" });
-      }
-
-      if (req.body.fechaLlegada) {
-        trip.fechaLlegada = req.body.fechaLlegada;
-        trip.estado = "completado";
-      }
-    }
-
-    await trip.save();
-
-    res.json({ message: "Viaje actualizado", trip });
-
-  } catch (error) {
-    console.error("Error actualizando viaje:", error);
-    res.status(500).json({ message: "Error del servidor" });
-  }
-});
 // LOGIN
 router.post("/login", async (req, res) => {
   try {
+    const ip = clientIp(req as any);
+    const ipLimit = checkRateLimit({
+      key: `login:ip:${ip}`,
+      max: 12,
+      windowMs: 15 * 60 * 1000,
+      minIntervalMs: 800,
+      message: "Demasiados intentos de inicio de sesión. Espera un momento.",
+    });
+    if (!ipLimit.ok) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfterSec));
+      return res.status(429).json({ message: ipLimit.message });
+    }
+
     // "email" puede ser un correo o un nombre de usuario (se acepta cualquiera).
     const { email, identifier, password } = req.body;
     const rawIdentifier = String(identifier ?? email ?? "").trim();
@@ -91,23 +56,30 @@ router.post("/login", async (req, res) => {
     }
 
     const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const looksLikeEmail = rawIdentifier.includes("@");
 
-    // Busca por correo (exacto, en minúsculas) o por nombre (sin distinguir mayúsculas).
-    const user = await User.findOne({
-      $or: [
-        { email: rawIdentifier.toLowerCase() },
-        { nombre: new RegExp(`^${escapeRegex(rawIdentifier)}$`, "i") },
-        {
-          $expr: {
-            $regexMatch: {
-              input: { $concat: ["$nombre", " ", { $ifNull: ["$apellido", ""] }] },
-              regex: `^${escapeRegex(rawIdentifier)}$`,
-              options: "i",
-            },
-          },
-        },
-      ],
-    }).select("+password");
+    // Evitar $expr/$regexMatch en cada login (escaneo lento). Primero email indexado.
+    let user: any = null;
+    if (looksLikeEmail) {
+      user = await User.findOne({ email: rawIdentifier.toLowerCase() }).select("+password");
+    }
+    if (!user) {
+      user = await User.findOne({
+        nombre: new RegExp(`^${escapeRegex(rawIdentifier)}$`, "i"),
+      }).select("+password");
+    }
+    if (!user && !looksLikeEmail) {
+      // Nombre completo "Nombre Apellido" sin $expr: buscar candidatos por primer token.
+      const parts = rawIdentifier.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        const first = parts[0];
+        const rest = parts.slice(1).join(" ");
+        user = await User.findOne({
+          nombre: new RegExp(`^${escapeRegex(first)}$`, "i"),
+          apellido: new RegExp(`^${escapeRegex(rest)}$`, "i"),
+        }).select("+password");
+      }
+    }
 
     if (!user) {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
@@ -116,6 +88,12 @@ router.post("/login", async (req, res) => {
     if (!user.password) {
       return res.status(401).json({
         message: "Este usuario no tiene acceso al inicio de sesión",
+      });
+    }
+
+    if (user.activo === false) {
+      return res.status(403).json({
+        message: "Esta cuenta está pendiente de activación. Contacta al administrador.",
       });
     }
 
@@ -341,10 +319,9 @@ router.post("/reset-password", async (req, res) => {
     if (cleanToken.length !== 6) {
       return res.status(400).json({ message: "El código debe ser de 6 dígitos" });
     }
-    if (plainPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "La contraseña debe tener al menos 6 caracteres" });
+    const pwdErr = validatePasswordStrength(plainPassword);
+    if (pwdErr) {
+      return res.status(400).json({ message: pwdErr });
     }
 
     const user = await User.findOne({
@@ -392,9 +369,10 @@ router.post("/change-password", verifyToken, async (req, res) => {
         message: "Ingresa la contraseña actual y la nueva",
       });
     }
-    if (newPassword.length < 6) {
+    const pwdErr = validatePasswordStrength(newPassword);
+    if (pwdErr) {
       return res.status(400).json({
-        message: "La nueva contraseña debe tener al menos 6 caracteres",
+        message: pwdErr,
       });
     }
     if (currentPassword === newPassword) {

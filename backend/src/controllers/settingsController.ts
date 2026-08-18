@@ -117,3 +117,44 @@ export const updateSettings = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error al actualizar configuración" });
   }
 };
+
+/** Config de cámaras (IPs / URLs) compartida entre administradores. */
+export const getCameraConfig = async (_req: Request, res: Response) => {
+  try {
+    const settings = await getOrCreateSettings();
+    const extras = (settings.extras || {}) as Record<string, unknown>;
+    const devices =
+      extras.cameraDevices && typeof extras.cameraDevices === "object"
+        ? extras.cameraDevices
+        : {};
+    return res.json({ devices });
+  } catch (error) {
+    console.error("Error al obtener camera config", error);
+    return res.status(500).json({ message: "Error al obtener cámaras" });
+  }
+};
+
+export const updateCameraConfig = async (req: Request, res: Response) => {
+  try {
+    const devices = req.body?.devices;
+    if (!devices || typeof devices !== "object" || Array.isArray(devices)) {
+      return res.status(400).json({ message: "devices inválido" });
+    }
+    const settings = await getOrCreateSettings();
+    const extras = {
+      ...((settings.extras || {}) as Record<string, unknown>),
+      cameraDevices: devices,
+    };
+    settings.extras = extras;
+    settings.markModified("extras");
+    await settings.save();
+    return res.json({
+      ok: true,
+      message: "Configuración de cámaras guardada para todos los admins",
+      devices: extras.cameraDevices,
+    });
+  } catch (error) {
+    console.error("Error al guardar camera config", error);
+    return res.status(500).json({ message: "Error al guardar cámaras" });
+  }
+};

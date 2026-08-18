@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isAdminLevel } from "../auth/roles";
 import Notification, { NotificationType } from "../models/Notification";
 import User from "../models/User";
 import {
@@ -20,19 +21,70 @@ function fullName(user: { nombre?: string; apellido?: string } | null | undefine
   return [user.nombre, user.apellido].filter(Boolean).join(" ").trim();
 }
 
+/** Extrae un id usable aunque venga ObjectId, string o documento populate. */
+function resolveUserId(value: unknown, depth = 0): string {
+  if (depth > 4) return "";
+  if (value === undefined || value === null || value === "" || value === "none") {
+    return "";
+  }
+  if (value instanceof mongoose.Types.ObjectId) {
+    return String(value);
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    const raw = String(value).trim();
+    if (!raw || raw === "[object Object]") return "";
+    return raw;
+  }
+  if (typeof value === "object") {
+    const obj = value as {
+      _id?: unknown;
+      id?: unknown;
+      toHexString?: () => string;
+    };
+    // BSON ObjectId-like (evita recursión por .id Buffer / getters)
+    if (typeof obj.toHexString === "function") {
+      try {
+        const hex = String(obj.toHexString()).trim();
+        if (hex) return hex;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (obj._id !== undefined && obj._id !== null && obj._id !== value) {
+      return resolveUserId(obj._id, depth + 1);
+    }
+    if (typeof obj.id === "string" || typeof obj.id === "number") {
+      return String(obj.id).trim();
+    }
+  }
+  const raw = String(value).trim();
+  if (!raw || raw === "[object Object]") return "";
+  return raw;
+}
+
 async function resolveUserName(userId?: string | mongoose.Types.ObjectId | null) {
-  if (!userId || !mongoose.Types.ObjectId.isValid(String(userId))) {
+  const id = resolveUserId(userId);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
     return "Administración";
   }
-  const user = await User.findById(userId).select("nombre apellido");
+  const user = await User.findById(id).select("nombre apellido");
   return fullName(user) || "Administración";
 }
 
+async function findAdminRecipients() {
+  const users = await User.find({ activo: { $ne: false } }).select("_id rol");
+  return users.filter((u) => isAdminLevel(u.rol));
+}
+
 export async function notifyUser(userId: string, payload: NotifyPayload) {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) return;
+  const id = resolveUserId(userId);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    console.warn("[notifyUser] userId inválido, se omite:", userId);
+    return;
+  }
 
   await Notification.create({
-    userId: new mongoose.Types.ObjectId(userId),
+    userId: new mongoose.Types.ObjectId(id),
     title: payload.title,
     body: payload.body,
     type: payload.type,
@@ -40,7 +92,9 @@ export async function notifyUser(userId: string, payload: NotifyPayload) {
     read: false,
   });
 
-  const user = await User.findById(userId).select("expoPushToken");
+  console.log(`[notifyUser] ${payload.type} → ${id}`);
+
+  const user = await User.findById(id).select("expoPushToken");
   if (user?.expoPushToken) {
     await sendPushToToken(user.expoPushToken, payload.title, payload.body, {
       type: payload.type,
@@ -59,67 +113,72 @@ type TripAssignLike = {
 };
 
 export async function notifyTripAssigned(trip: TripAssignLike) {
-  if (!trip.conductorId) return;
+  const conductorId = resolveUserId(trip.conductorId);
+  if (!conductorId) return;
 
   const tripId = String(trip._id);
   const routeLabel = `${trip.rutaAcubrir} → ${trip.destino}`;
   const assignedBy = await resolveUserName(trip.asignadoPor);
   const body = `Te asignaron un viaje: ${routeLabel}. Asignado por: ${assignedBy}`;
 
-  await notifyUser(String(trip.conductorId), {
+  await notifyUser(conductorId, {
     title: "Viaje asignado",
     body,
     type: "trip_assigned",
     tripId,
   });
 
+  // Correo opcional: NUNCA hacer return aquí (bloquearía aviso al acompañante).
   try {
-    if (!(await shouldSendTripEmailToUser(trip.conductorId, "tripAssigned"))) return;
-    const conductor = await User.findById(trip.conductorId).select(
-      "email nombre apellido"
-    );
-    if (!conductor?.email) {
-      console.warn(
-        `Viaje ${tripId}: operador sin email; no se envió correo de asignación`
+    if (await shouldSendTripEmailToUser(conductorId, "tripAssigned")) {
+      const conductor = await User.findById(conductorId).select(
+        "email nombre apellido"
       );
-    } else {
-      const result = await sendTripAssignedEmail({
-        to: conductor.email,
-        userName: fullName(conductor) || "Hola",
-        role: "operador",
-        routeLabel,
-        assignedBy,
-      });
-      if (result.ok) {
-        console.log(
-          `Correo viaje asignado (operador) → ${conductor.email} via ${result.provider}`
+      if (!conductor?.email) {
+        console.warn(
+          `Viaje ${tripId}: operador sin email; no se envió correo de asignación`
         );
       } else {
-        console.warn(
-          "Correo de viaje asignado (operador) no enviado:",
-          result.message,
-          result.detail || ""
-        );
+        const result = await sendTripAssignedEmail({
+          to: conductor.email,
+          userName: fullName(conductor) || "Hola",
+          role: "operador",
+          routeLabel,
+          assignedBy,
+        });
+        if (result.ok) {
+          console.log(
+            `Correo viaje asignado (operador) → ${conductor.email} via ${result.provider}`
+          );
+        } else {
+          console.warn(
+            "Correo de viaje asignado (operador) no enviado:",
+            result.message,
+            result.detail || ""
+          );
+        }
       }
     }
   } catch (emailError) {
     console.error("Error enviando correo de viaje asignado:", emailError);
   }
 
-  if (trip.acompanante && String(trip.acompanante) !== "none") {
+  const acompananteId = resolveUserId(trip.acompanante);
+  if (acompananteId) {
     await notifyCompanionAssigned(trip);
   }
 }
 
 export async function notifyCompanionAssigned(trip: TripAssignLike) {
-  if (!trip.acompanante || String(trip.acompanante) === "none") return;
+  const acompananteId = resolveUserId(trip.acompanante);
+  if (!acompananteId) return;
 
   const tripId = String(trip._id);
   const routeLabel = `${trip.rutaAcubrir} → ${trip.destino}`;
   const assignedBy = await resolveUserName(trip.asignadoPor);
   const body = `Te asignaron como acompañante en el viaje: ${routeLabel}. Asignado por: ${assignedBy}`;
 
-  await notifyUser(String(trip.acompanante), {
+  await notifyUser(acompananteId, {
     title: "Vas como acompañante",
     body,
     type: "companion_assigned",
@@ -127,8 +186,8 @@ export async function notifyCompanionAssigned(trip: TripAssignLike) {
   });
 
   try {
-    if (!(await shouldSendTripEmailToUser(trip.acompanante, "tripAssigned"))) return;
-    const companion = await User.findById(trip.acompanante).select(
+    if (!(await shouldSendTripEmailToUser(acompananteId, "tripAssigned"))) return;
+    const companion = await User.findById(acompananteId).select(
       "email nombre apellido"
     );
     if (!companion?.email) {
@@ -170,16 +229,15 @@ async function emailAdminsTripStatus(
   status: "started" | "completed"
 ) {
   const kind = status === "started" ? "tripStarted" : "tripCompleted";
-  const admins = await User.find({
-    rol: { $in: ["Admin", "Administrador", "Superadministrador"] },
-  }).select("_id email nombre apellido");
+  const admins = await findAdminRecipients();
   const routeLabel = `${trip.rutaAcubrir} → ${trip.destino}`;
   const tripId = String(trip._id);
 
   await Promise.all(
     admins.map(async (admin) => {
       if (!(await shouldSendTripEmailToUser(admin._id, kind))) return;
-      if (!admin.email) {
+      const full = await User.findById(admin._id).select("email nombre apellido");
+      if (!full?.email) {
         console.warn(
           `Viaje ${tripId}: admin ${admin._id} sin email; omitiendo correo de estado`
         );
@@ -187,25 +245,25 @@ async function emailAdminsTripStatus(
       }
       try {
         const result = await sendTripStatusEmail({
-          to: admin.email,
-          userName: fullName(admin) || "Hola",
+          to: full.email,
+          userName: fullName(full) || "Hola",
           status,
           routeLabel,
           operatorName,
         });
         if (result.ok) {
           console.log(
-            `Correo viaje ${status} → ${admin.email} via ${result.provider}`
+            `Correo viaje ${status} → ${full.email} via ${result.provider}`
           );
         } else {
           console.warn(
-            `Correo viaje ${status} no enviado a ${admin.email}:`,
+            `Correo viaje ${status} no enviado a ${full.email}:`,
             result.message,
             result.detail || ""
           );
         }
       } catch (emailError) {
-        console.error(`Error correo viaje ${status} a ${admin.email}:`, emailError);
+        console.error(`Error correo viaje ${status} a ${full.email}:`, emailError);
       }
     })
   );
@@ -219,9 +277,7 @@ export async function notifyAdminsTripCompleted(
   },
   operatorName: string
 ) {
-  const admins = await User.find({
-    rol: { $in: ["Admin", "Administrador", "Superadministrador"] },
-  }).select("_id");
+  const admins = await findAdminRecipients();
   const tripId = String(trip._id);
   const body = `${operatorName} finalizó el viaje ${trip.rutaAcubrir} → ${trip.destino}`;
 
@@ -248,9 +304,7 @@ export async function notifyAdminsTripStarted(
   },
   operatorName: string
 ) {
-  const admins = await User.find({
-    rol: { $in: ["Admin", "Administrador", "Superadministrador"] },
-  }).select("_id");
+  const admins = await findAdminRecipients();
   const tripId = String(trip._id);
   const body = `${operatorName} inició el viaje ${trip.rutaAcubrir} → ${trip.destino}`;
 
@@ -277,7 +331,7 @@ export async function notifyAnnouncementPublished(
   },
   publisherUserId?: string | null
 ) {
-  const users = await User.find().select("_id");
+  const users = await User.find({ activo: { $ne: false } }).select("_id");
   const title = "Nuevo anuncio";
   const preview = String(announcement.contenido || "")
     .replace(/\s+/g, " ")
@@ -287,7 +341,7 @@ export async function notifyAnnouncementPublished(
     ? `${announcement.titulo}: ${preview}${preview.length >= 120 ? "…" : ""}`
     : String(announcement.titulo || "Se publicó un aviso nuevo");
 
-  const publisher = publisherUserId ? String(publisherUserId) : "";
+  const publisher = resolveUserId(publisherUserId);
 
   await Promise.all(
     users

@@ -130,17 +130,14 @@ export function defaultPermissionsForRole(rol?: string | null): PermissionCode[]
       PERMISSIONS.UNITS_MANAGE,
       PERMISSIONS.TRIPS_MANAGE,
       PERMISSIONS.GASTOS_MANAGE,
-      PERMISSIONS.FACTURAS_VIEW,
-      PERMISSIONS.FACTURAS_UPLOAD,
-      PERMISSIONS.FACTURAS_DELETE,
-      PERMISSIONS.SYSTEM_CONFIG,
+      PERMISSIONS.EMAIL_RECEIVE,
     ];
   }
   if (r === "operador" || r === "chofer") {
-    return [PERMISSIONS.TRIPS_OPERATE];
+    return [PERMISSIONS.TRIPS_OPERATE, PERMISSIONS.EMAIL_RECEIVE];
   }
   if (r === "ayudante general" || r === "ayudante") {
-    return [PERMISSIONS.TRIPS_ASSIST];
+    return [PERMISSIONS.TRIPS_ASSIST, PERMISSIONS.EMAIL_RECEIVE];
   }
   // Usuario genérico: sin permisos hasta que se asignen
   return [];
@@ -163,4 +160,33 @@ export function hasPermission(
 ): boolean {
   if (!user) return false;
   return effectivePermissions(user.rol, user.permissions).has(code);
+}
+
+/**
+ * Correos del desarrollador / owners que pueden asignar permisos granulares.
+ * Otros administradores no pueden. Override: PERMISSIONS_OWNER_EMAILS=a@x.com,b@y.com
+ */
+const DEFAULT_PERMISSIONS_OWNER_EMAILS = [
+  "al222010146@gmail.com",
+  "tics@grupohm.com",
+];
+
+function permissionsOwnerEmails(): string[] {
+  const fromEnv = String(process.env.PERMISSIONS_OWNER_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return fromEnv.length > 0 ? fromEnv : DEFAULT_PERMISSIONS_OWNER_EMAILS;
+}
+
+/** Solo owners (desarrollador) pueden asignar el catálogo de permisos. */
+export function canManagePermissionCatalog(
+  user: { email?: string | null; permissions?: string[] | null } | null | undefined
+): boolean {
+  if (!user) return false;
+  const email = String(user.email || "")
+    .trim()
+    .toLowerCase();
+  if (email && permissionsOwnerEmails().includes(email)) return true;
+  return sanitizePermissions(user.permissions).includes(PERMISSIONS.USERS_ASSIGN_PERMISSIONS);
 }

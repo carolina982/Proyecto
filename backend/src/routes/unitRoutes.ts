@@ -3,7 +3,8 @@ import fs from "fs";
 import mongoose from "mongoose";
 import path from "path";
 import { createUnit, deleteUnit, getUnitById, getUnitCount, getUnits, updateUnit } from "../controllers/unitController";
-import { authorize } from "../middlewares/authorize";
+import { PERMISSIONS } from "../auth/permissions";
+import { requirePermission } from "../middlewares/authorize";
 import { verifyToken } from "../middlewares/auth";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
@@ -14,18 +15,18 @@ import { createUnitValidator, updateUnitValidator } from "../validators/unitVali
 const uploadDir = path.join(__dirname, "../../uploads");
 
 const auth = verifyToken;
-const adminOnly = [verifyToken, authorize(["Admin"])];
+const canUnits = [verifyToken, requirePermission(PERMISSIONS.UNITS_MANAGE)];
 
 const router = Router();
 
 router.get("/count", auth, getUnitCount);
 router.get("/", auth, getUnits);
-router.post("/", ...adminOnly, createUnitValidator, validate, createUnit);
+router.post("/", ...canUnits, createUnitValidator, validate, createUnit);
 router.get("/:id", auth, getUnitById);
-router.put("/:id", ...adminOnly, updateUnitValidator, validate, updateUnit);
-router.delete("/:id", ...adminOnly, deleteUnit);
+router.put("/:id", ...canUnits, updateUnitValidator, validate, updateUnit);
+router.delete("/:id", ...canUnits, deleteUnit);
 
-router.post("/:id/image", ...adminOnly, upload.single("image"), async (req, res) => {
+router.post("/:id/image", ...canUnits, upload.single("image"), async (req, res) => {
     try {
        if (!req.file) {
         return res.status(400).json({
@@ -58,7 +59,7 @@ router.post("/:id/image", ...adminOnly, upload.single("image"), async (req, res)
 );
 
 // Crear un inventario de entrega (ítems cantidad/descripción + firma). Solo Admin. Histórico: no se sobrescribe.
-router.post("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, res) => {
+router.post("/:id/inventarios", verifyToken, requirePermission(PERMISSIONS.UNITS_MANAGE), async (req, res) => {
   try {
     const { contenido, items, operadorId, firmaBase64, hojaBase64 } = req.body || {};
 
@@ -79,18 +80,22 @@ router.post("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, r
         : String(contenido || "").trim();
 
     const hasHoja =
-      typeof hojaBase64 === "string" && hojaBase64.startsWith("data:image/");
+      typeof hojaBase64 === "string" &&
+      (hojaBase64.startsWith("data:image/") ||
+        hojaBase64.startsWith("data:application/pdf"));
 
     if (!contenidoFinal && !hasHoja) {
       return res.status(400).json({ error: "El inventario no puede estar vacío" });
     }
-    if (!firmaBase64 || typeof firmaBase64 !== "string") {
-      return res.status(400).json({ error: "Falta la firma" });
-    }
 
-    const matches = firmaBase64.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/i);
-    if (!matches) {
-      return res.status(400).json({ error: "Firma inválida" });
+    // Firma digital obligatoria salvo que haya foto/PDF de hoja.
+    const hasFirma =
+      typeof firmaBase64 === "string" &&
+      /^data:image\/(png|jpeg|jpg);base64,.+/i.test(firmaBase64);
+    if (!hasFirma && !hasHoja) {
+      return res.status(400).json({
+        error: "Falta la firma digital (o adjunta la foto/PDF de la hoja firmada)",
+      });
     }
 
     const unit = await Unit.findById(req.params.id);
@@ -98,23 +103,39 @@ router.post("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, r
       return res.status(404).json({ error: "Unidad no encontrada" });
     }
 
-    // Guardar la firma como archivo PNG en /uploads
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    const ext = matches[1].toLowerCase() === "png" ? "png" : "jpg";
-    const filename = `firma-${Date.now()}.${ext}`;
-    fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(matches[2], "base64"));
-    const firmaUrl = `${req.protocol}://${req.get("host")}/uploads/${filename}`;
 
-    // Foto opcional de la hoja manuscrita
+    let firmaUrl = "";
+    if (hasFirma) {
+      const matches = firmaBase64.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/i);
+      if (!matches) {
+        return res.status(400).json({ error: "Firma inválida" });
+      }
+      const ext = matches[1].toLowerCase() === "png" ? "png" : "jpg";
+      const filename = `firma-${Date.now()}.${ext}`;
+      fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(matches[2], "base64"));
+      firmaUrl = `${req.protocol}://${req.get("host")}/uploads/${filename}`;
+    }
+
+    // Foto/PDF opcional de la hoja
     let hojaUrl = "";
+    let hojaEsPdf = false;
     if (hasHoja) {
-      const hojaMatch = hojaBase64.match(/^data:image\/([a-z0-9+.-]+);base64,(.+)$/i);
+      const hojaMatch = hojaBase64.match(
+        /^data:(image\/[a-z0-9.+-]+|application\/pdf);base64,(.+)$/i
+      );
       if (!hojaMatch) {
-        return res.status(400).json({ error: "Imagen de hoja inválida" });
+        return res.status(400).json({ error: "Archivo de hoja inválido (usa JPG, PNG o PDF)" });
       }
       const rawType = hojaMatch[1].toLowerCase();
-      const hojaExt =
-        rawType.includes("png") ? "png" : rawType.includes("webp") ? "webp" : "jpg";
+      hojaEsPdf = rawType === "application/pdf" || rawType.includes("pdf");
+      const hojaExt = hojaEsPdf
+        ? "pdf"
+        : rawType.includes("png")
+          ? "png"
+          : rawType.includes("webp")
+            ? "webp"
+            : "jpg";
       const hojaFilename = `hoja-inv-${Date.now()}.${hojaExt}`;
       fs.writeFileSync(path.join(uploadDir, hojaFilename), Buffer.from(hojaMatch[2], "base64"));
       hojaUrl = `${req.protocol}://${req.get("host")}/uploads/${hojaFilename}`;
@@ -139,7 +160,11 @@ router.post("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, r
     unit.inventarios.push({
       contenido:
         contenidoFinal ||
-        (hojaUrl ? "Inventario registrado en hoja fotográfica" : ""),
+        (hojaUrl
+          ? hojaEsPdf
+            ? "Inventario registrado en hoja (PDF)"
+            : "Inventario registrado en hoja fotográfica"
+          : ""),
       items: normalizedItems,
       hojaUrl,
       firmaUrl,
@@ -163,7 +188,7 @@ router.post("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, r
 router.delete(
   "/:id/inventarios/:inventarioId",
   verifyToken,
-  authorize(["Admin"]),
+  requirePermission(PERMISSIONS.UNITS_MANAGE),
   async (req, res) => {
     try {
       const { id, inventarioId } = req.params;
@@ -214,7 +239,7 @@ router.delete(
 );
 
 // Historial de inventarios de una unidad (más reciente primero). Solo Admin.
-router.get("/:id/inventarios", verifyToken, authorize(["Admin"]), async (req, res) => {
+router.get("/:id/inventarios", verifyToken, requirePermission(PERMISSIONS.UNITS_MANAGE), async (req, res) => {
   try {
     const unit = await Unit.findById(req.params.id).populate(
       "inventarios.operadorId",

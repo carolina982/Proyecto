@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Unit, { IUnit } from "../models/Unit";
-import { reconcileAllUnitEstados } from "../services/unitEstadoSync";
 
 export const createUnit =async (req:Request, res:Response)=>{
     try{
@@ -22,14 +21,12 @@ export const createUnit =async (req:Request, res:Response)=>{
 
 export const getUnits =async (req:Request , res:Response)=>{
     try {
-        // Actualiza solos: En ruta ↔ Disponible según viajes activos (todas las unidades).
-        try {
-          await reconcileAllUnitEstados();
-        } catch (syncErr) {
-          console.error("Error reconciliando estados de unidades:", syncErr);
-        }
-
-        const units :IUnit[]=await Unit.find().populate("inventarios.operadorId","nombre apellido").collation({ locale: "es", numericOrdering: true }).sort({ nombre: 1 });
+        // Solo lectura: el estado En ruta/Disponible se sincroniza al cambiar viajes
+        // (syncUnitsEstadoForTrip). Evita Trip.find + updates en cada listado/poll.
+        const units :IUnit[]=await Unit.find()
+          .populate("inventarios.operadorId","nombre apellido")
+          .collation({ locale: "es", numericOrdering: true })
+          .sort({ nombre: 1 });
         res.json(units);
     }catch (error){
         console.error("Error obteniendo unidades" , error),

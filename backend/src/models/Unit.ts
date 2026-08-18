@@ -28,6 +28,8 @@ export interface IUnit extends Document {
     tipoRemolque?:"Lowboy" |"Caja Seca" |"";
     placaRemolque?:string;
     imagenUrl:string;
+    /** Canales de cámara del MDVR / celular (0 = sin cámaras). Se define al registrar. */
+    numCamaras?: number;
 
     inventarios?: IInventarioUnidad[];
 }
@@ -72,6 +74,7 @@ const uniSchema =new Schema<IUnit> ({
     tipoRemolque:{type:String, enum:["Lowboy","Caja Seca",""],default:""},
     placaRemolque:{type:String,default:""},
     imagenUrl:{type:String,default:""},
+    numCamaras:{ type: Number, default: 0, min: 0, max: 24 },
     inventarios:{ type: [InventarioSchema], default: [] },
 },
 {timestamps:true}

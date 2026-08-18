@@ -18,7 +18,15 @@ export const registerUserValidator = [
       return true;
     }),
   body("email").isEmail().withMessage("Correo invalido"),
-  body("password").notEmpty().withMessage("La contraseña es obligatoria"),
+  body("password")
+    .notEmpty()
+    .withMessage("La contraseña es obligatoria")
+    .isLength({ min: 8 })
+    .withMessage("La contraseña debe tener al menos 8 caracteres")
+    .matches(/[A-ZÁÉÍÓÚÜÑ]/)
+    .withMessage("La contraseña debe incluir al menos una letra mayúscula")
+    .matches(/[0-9]/)
+    .withMessage("La contraseña debe incluir al menos un número"),
   body("rol")
     .optional({ nullable: true })
     .custom((value) => {
