@@ -8,14 +8,16 @@ import User, { hashPassword, isBcryptHash } from "../models/User";
 import {
   getActiveMailer,
   sendPasswordResetCode,
+  sendTwoFactorCode,
 } from "../services/emailService";
 import { validatePasswordStrength } from "../utils/passwordPolicy";
 
 const router = Router();
 
-const generateResetCode = () => {
-  return crypto.randomInt(100000, 999999).toString();
-};
+const generateResetCode = () => crypto.randomInt(100000, 999999).toString();
+
+const hashOtp = (code: string) =>
+  crypto.createHash("sha256").update(String(code)).digest("hex");
 
 /** Por defecto NO devolver el código en la API. Solo si RESET_CODE_IN_RESPONSE=true. */
 const allowResetCodeInResponse = () =>
@@ -109,15 +111,51 @@ router.post("/login", async (req, res) => {
       await user.save();
     }
 
+    if (user.twoFactorEmail) {
+      if (!user.email) {
+        return res.status(400).json({
+          message: "Esta cuenta no tiene correo para el código de acceso",
+        });
+      }
+      const code = generateResetCode();
+      user.twoFactorCode = hashOtp(code);
+      user.twoFactorCodeExp = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      const sent = await sendTwoFactorCode({
+        to: user.email,
+        code,
+        userName: user.nombre,
+      });
+      if (!sent.ok) {
+        return res.status(503).json({
+          message: sent.message || "No se pudo enviar el código. Intenta de nuevo.",
+        });
+      }
+      const preAuthToken = jwt.sign(
+        { id: user._id, purpose: "2fa" },
+        JWT_SECRET,
+        { expiresIn: "10m" }
+      );
+      return res.json({
+        requiresTwoFactor: true,
+        preAuthToken,
+        message: "Enviamos un código a tu correo",
+      });
+    }
+
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
     const userData: any = user.toObject({ virtuals: true });
     delete userData.password;
     delete userData.resetToken;
     delete userData.resetTokenExp;
+    delete userData.twoFactorCode;
+    delete userData.twoFactorCodeExp;
     delete userData.__v;
     userData.id = String(userData._id || "");
     userData.genero = user.genero || "";
+
+    userData.profileSetupCompleted = user.profileSetupCompleted !== false;
 
     return res.json({
       message: "Inicio de sesión exitoso",
@@ -405,6 +443,149 @@ router.post("/change-password", verifyToken, async (req, res) => {
     return res.json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
     console.error("Error en change-password", error);
+    return res.status(500).json({ message: "Error del servidor" });
+  }
+});
+
+/** Primer ingreso: dejar o cambiar la contraseña asignada y marcar el setup como listo. */
+router.post("/complete-profile-setup", verifyToken, async (req, res) => {
+  try {
+    const authUser = (req as any).user;
+    if (!authUser || authUser.isServiceAccount) {
+      return res.status(403).json({ message: "No autorizado" });
+    }
+
+    const user = await User.findById(authUser._id || authUser.id).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    if (user.profileSetupCompleted !== false) {
+      return res.json({
+        message: "Listo",
+        profileSetupCompleted: true,
+        photoUrl: user.photoUrl || null,
+      });
+    }
+
+    const keepPassword = Boolean(req.body?.keepPassword);
+    const newPassword = String(req.body?.newPassword || "").trim();
+
+    if (!keepPassword) {
+      if (!newPassword) {
+        return res.status(400).json({
+          message: "Escribe una contraseña nueva o elige dejar la asignada",
+        });
+      }
+      const pwdErr = validatePasswordStrength(newPassword);
+      if (pwdErr) {
+        return res.status(400).json({ message: pwdErr });
+      }
+      user.password = await hashPassword(newPassword);
+      user.markModified("password");
+    }
+
+    user.profileSetupCompleted = true;
+    user.resetToken = undefined;
+    user.resetTokenExp = undefined;
+    await user.save();
+
+    return res.json({
+      message: keepPassword
+        ? "Listo. Conservaste la contraseña asignada"
+        : "Contraseña actualizada",
+      profileSetupCompleted: true,
+      photoUrl: user.photoUrl || null,
+    });
+  } catch (error) {
+    console.error("Error en complete-profile-setup", error);
+    return res.status(500).json({ message: "Error del servidor" });
+  }
+});
+
+router.post("/two-factor", verifyToken, async (req, res) => {
+  try {
+    const authUser = (req as any).user;
+    if (!authUser || authUser.isServiceAccount) {
+      return res.status(403).json({ message: "No autorizado" });
+    }
+    const enabled = Boolean(req.body?.enabled);
+    const user = await User.findById(authUser._id || authUser.id);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    if (enabled && !user.email) {
+      return res.status(400).json({
+        message: "Necesitas un correo para activar el código de acceso",
+      });
+    }
+    user.twoFactorEmail = enabled;
+    if (!enabled) {
+      user.twoFactorCode = undefined;
+      user.twoFactorCodeExp = undefined;
+    }
+    await user.save();
+    return res.json({
+      message: enabled ? "Código de acceso activado" : "Código de acceso desactivado",
+      twoFactorEmail: enabled,
+    });
+  } catch (error) {
+    console.error("Error en two-factor", error);
+    return res.status(500).json({ message: "Error del servidor" });
+  }
+});
+
+router.post("/verify-2fa", async (req, res) => {
+  try {
+    const preAuthToken = String(req.body?.preAuthToken || "").trim();
+    const code = String(req.body?.code || "").trim();
+    if (!preAuthToken || !code) {
+      return res.status(400).json({ message: "Falta el código" });
+    }
+    let decoded: { id?: string; purpose?: string };
+    try {
+      decoded = jwt.verify(preAuthToken, JWT_SECRET) as { id?: string; purpose?: string };
+    } catch {
+      return res.status(401).json({ message: "El código expiró. Vuelve a iniciar sesión." });
+    }
+    if (decoded.purpose !== "2fa" || !decoded.id) {
+      return res.status(401).json({ message: "Sesión inválida" });
+    }
+    const user = await User.findById(decoded.id).select(
+      "+password +twoFactorCode +twoFactorCodeExp"
+    );
+    if (!user || !user.twoFactorEmail) {
+      return res.status(401).json({ message: "No autorizado" });
+    }
+    if (!user.twoFactorCode || !user.twoFactorCodeExp || user.twoFactorCodeExp < new Date()) {
+      return res.status(400).json({ message: "El código expiró. Vuelve a iniciar sesión." });
+    }
+    if (hashOtp(code) !== user.twoFactorCode) {
+      return res.status(401).json({ message: "Código incorrecto" });
+    }
+    user.twoFactorCode = undefined;
+    user.twoFactorCodeExp = undefined;
+    await user.save();
+
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+    const userData: any = user.toObject({ virtuals: true });
+    delete userData.password;
+    delete userData.resetToken;
+    delete userData.resetTokenExp;
+    delete userData.twoFactorCode;
+    delete userData.twoFactorCodeExp;
+    delete userData.__v;
+    userData.id = String(userData._id || "");
+    userData.profileSetupCompleted = user.profileSetupCompleted !== false;
+    userData.twoFactorEmail = true;
+
+    return res.json({
+      message: "Inicio de sesión exitoso",
+      token,
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Error en verify-2fa", error);
     return res.status(500).json({ message: "Error del servidor" });
   }
 });

@@ -3,6 +3,10 @@
 **/.env
 !**/.env.example
 backend/.env
+backend/~/
+**/backups/
+*.archive
+*.bson
 node_modules/
 backend/node_modules/
 volta-frontend/node_modules/

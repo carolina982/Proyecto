@@ -16,6 +16,15 @@ export interface IUser extends Document {
   /** false = desactivado (sigue en BD, no aparece en asignaciones). */
   activo: boolean;
   photoUrl?: string | null;
+  /**
+   * false = el usuario aún debe elegir si cambia la contraseña asignada y si sube foto.
+   * Ausente/true = ya pasó ese paso (o es cuenta previa).
+   */
+  profileSetupCompleted?: boolean;
+  /** Si true, el login pide un código enviado al correo. */
+  twoFactorEmail?: boolean;
+  twoFactorCode?: string;
+  twoFactorCodeExp?: Date;
   /** corporativo-hm = perfil creado/sincronizado desde Corporativo HM */
   origen?: string | null;
   expoPushToken?: string | null;
@@ -88,6 +97,10 @@ const userSchema = new Schema<IUser>(
     contacto: { type: String },
     activo: { type: Boolean, default: true },
     photoUrl: { type: String, default: null },
+    profileSetupCompleted: { type: Boolean, default: true },
+    twoFactorEmail: { type: Boolean, default: false },
+    twoFactorCode: { type: String, select: false },
+    twoFactorCodeExp: { type: Date, select: false },
     origen: { type: String, default: null },
     expoPushToken: { type: String, default: null },
     permissions: { type: [String], default: [] },
@@ -110,6 +123,8 @@ userSchema.set("toJSON", {
     delete ret.password;
     delete ret.resetToken;
     delete ret.resetTokenExp;
+    delete ret.twoFactorCode;
+    delete ret.twoFactorCodeExp;
     delete ret.__v;
     return ret;
   },

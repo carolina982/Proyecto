@@ -20,8 +20,17 @@ import userRoutes from "./routes/userRoutes";
 import viaticRoutes from "./routes/viaticRoutes";
 import { getActiveMailer } from "./services/emailService";
 import { upsertLiveGps, listLiveGps, getTrack, normalizeUnitGpsId } from "./services/gpsLiveStore";
+import {
+  assignedGpsUnitIds,
+  canPostGpsForUnit,
+  filterLiveGps,
+} from "./services/gpsAccess";
+import { issueGpsShareTicket, peekGpsShareTicket } from "./services/gpsShareTickets";
 import { verifyGmailConnection } from "./config/mailer";
 import { verifyToken } from "./middlewares/auth";
+import { requirePermission } from "./middlewares/authorize";
+import { PERMISSIONS } from "./auth/permissions";
+import { CAM_PROXY_MAX_BYTES, assertCamProxyTarget } from "./utils/camProxyGuard";
 import { resolveWebBuildId } from "./utils/webBuildId";
 
 const app = express();
@@ -110,28 +119,75 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/announcements", announcement);
 app.use("/api/auth", authRoutes);
 
+function verifyGpsPoster(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ticket = String(req.header("X-Gps-Ticket") || "").trim();
+  if (ticket) {
+    const row = peekGpsShareTicket(ticket);
+    if (!row) {
+      res.status(401).json({ error: "ticket inválido o expirado" });
+      return;
+    }
+    (req as any).gpsTicket = row;
+    (req as any).user = { _id: row.userId, id: row.userId };
+    next();
+    return;
+  }
+  return verifyToken(req, res, next);
+}
+
 /** GPS en vivo + última posición + recorrido del día. */
-app.get("/api/gps/live", verifyToken, (_req, res) => {
+app.get("/api/gps/live", verifyToken, async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  res.json(listLiveGps());
+  const allowed = await assignedGpsUnitIds((req as any).user);
+  res.json(filterLiveGps(listLiveGps(), allowed));
 });
 
-app.get("/api/gps/track/:unitId", verifyToken, (req, res) => {
+app.get("/api/gps/track/:unitId", verifyToken, async (req, res) => {
   const unitId = normalizeUnitGpsId(req.params.unitId);
   if (!unitId) {
     res.status(400).json({ error: "unitId requerido" });
+    return;
+  }
+  const allowed = await assignedGpsUnitIds((req as any).user);
+  if (allowed && !allowed.has(unitId)) {
+    res.status(403).json({ error: "No puedes ver esta unidad" });
     return;
   }
   res.setHeader("Cache-Control", "no-store");
   res.json(getTrack(unitId));
 });
 
-app.post("/api/gps/live", verifyToken, (req, res) => {
+app.post("/api/gps/share-ticket", verifyToken, async (req, res) => {
+  const unitId = normalizeUnitGpsId(req.body?.unitId ?? req.body?.unit);
+  if (!unitId) {
+    res.status(400).json({ error: "unitId requerido" });
+    return;
+  }
+  const user = (req as any).user;
+  if (!(await canPostGpsForUnit(user, unitId))) {
+    res.status(403).json({ error: "No puedes compartir GPS de esta unidad" });
+    return;
+  }
+  const issued = issueGpsShareTicket(String(user._id || user.id), unitId);
+  res.json({ ...issued, unitId });
+});
+
+app.post("/api/gps/live", verifyGpsPoster, async (req, res) => {
   const unitId = normalizeUnitGpsId(req.body?.unitId ?? req.body?.unit);
   const lat = Number(req.body?.lat);
   const lng = Number(req.body?.lng);
   if (!unitId) {
     res.status(400).json({ error: "unitId requerido" });
+    return;
+  }
+  const ticketRow = (req as any).gpsTicket as { unitId: string } | undefined;
+  if (ticketRow) {
+    if (unitId !== ticketRow.unitId) {
+      res.status(403).json({ error: "ticket no corresponde a esta unidad" });
+      return;
+    }
+  } else if (!(await canPostGpsForUnit((req as any).user, unitId))) {
+    res.status(403).json({ error: "No puedes enviar GPS de esta unidad" });
     return;
   }
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
@@ -151,9 +207,10 @@ app.post("/api/gps/live", verifyToken, (req, res) => {
   res.json({ ok: true, unitId, lat: row.lat, lng: row.lng });
 });
 
-/** Página móvil: comparte GPS del teléfono a Volta (misma Wi‑Fi). */
+/** Página móvil: comparte GPS del teléfono a Volta (ticket corto, no JWT). */
 app.get("/gps-phone", (req, res) => {
   const unit = normalizeUnitGpsId(req.query.unit) || "002"
+  const ticket = String(req.query.g || "").trim()
   res.setHeader("Cache-Control", "no-store")
   res.type("html").send(`<!doctype html>
 <html lang="es">
@@ -172,20 +229,16 @@ app.get("/gps-phone", (req, res) => {
 </head>
 <body>
   <h1>Volta · GPS unidad <code id="u">${unit}</code></h1>
-  <p id="st">Pulsa para compartir ubicación con el mapa de Cámaras. Debes abrir esta página desde la app (sesión iniciada).</p>
+  <p id="st">Pulsa para compartir ubicación con el mapa de Cámaras. Debes abrir esta página desde la app.</p>
   <button id="btn" type="button">Compartir GPS</button>
   <script>
-    const params = new URLSearchParams(location.search);
     const unitId = ${JSON.stringify(unit)};
-    const token = params.get('t') || '';
-    if (token) {
-      try { history.replaceState({}, '', location.pathname + '?unit=' + encodeURIComponent(unitId)); } catch (e) {}
-    }
+    const ticket = ${JSON.stringify(ticket)};
+    try { history.replaceState({}, '', location.pathname + '?unit=' + encodeURIComponent(unitId)); } catch (e) {}
     const st = document.getElementById('st');
     let watchId = null;
     async function send(lat, lng) {
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = 'Bearer ' + token;
+      const headers = { 'Content-Type': 'application/json', 'X-Gps-Ticket': ticket };
       const res = await fetch('/api/gps/live', {
         method: 'POST',
         headers,
@@ -194,9 +247,9 @@ app.get("/gps-phone", (req, res) => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
     }
     function start() {
-      if (!token) {
+      if (!ticket) {
         st.className = 'err';
-        st.textContent = 'Falta sesión. Abre esta página desde Volta (Compartir GPS).';
+        st.textContent = 'Falta autorización. Abre esta página desde Volta (Compartir GPS).';
         return;
       }
       if (!navigator.geolocation) {
@@ -235,15 +288,21 @@ app.get("/gps-phone", (req, res) => {
  * Proxy de cámaras IP (IP Webcam / HTTP snapshot).
  * Evita CORS al pedir http://192.168.x.x desde el navegador.
  */
-app.get("/api/cam-proxy", async (req, res) => {
+app.get(
+  "/api/cam-proxy",
+  verifyToken,
+  requirePermission(PERMISSIONS.UNITS_MANAGE),
+  async (req, res) => {
   try {
-    const target = String(req.query.u || "");
-    if (!target || !/^https?:\/\//i.test(target)) {
-      res.status(400).send("u inválida");
+    let url: URL;
+    try {
+      url = assertCamProxyTarget(String(req.query.u || ""));
+    } catch (e) {
+      res.status(400).send(e instanceof Error ? e.message : "u inválida");
       return;
     }
-    const upstream = await fetch(target, {
-      redirect: "follow",
+    const upstream = await fetch(url.toString(), {
+      redirect: "error",
       signal: AbortSignal.timeout(10000),
       headers: {
         Accept: "image/jpeg,multipart/x-mixed-replace,application/json,*/*",
@@ -254,11 +313,19 @@ app.get("/api/cam-proxy", async (req, res) => {
       res.status(upstream.status).send(`upstream ${upstream.status}`);
       return;
     }
+    const len = Number(upstream.headers.get("content-length") || 0);
+    if (len > CAM_PROXY_MAX_BYTES) {
+      res.status(502).send("respuesta demasiado grande");
+      return;
+    }
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    if (buf.length > CAM_PROXY_MAX_BYTES) {
+      res.status(502).send("respuesta demasiado grande");
+      return;
+    }
     const ct = upstream.headers.get("content-type") || "image/jpeg";
     res.setHeader("Content-Type", ct);
     res.setHeader("Cache-Control", "no-store, no-cache");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    const buf = Buffer.from(await upstream.arrayBuffer());
     res.end(buf);
   } catch (err) {
     res

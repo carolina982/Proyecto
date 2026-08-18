@@ -229,6 +229,7 @@ export const createUser = async (req: Request, res: Response) => {
       rol: role,
       activo: isActivo,
       permissions: nextPermissions,
+      profileSetupCompleted: passwordTrim ? false : true,
       ...(emailTrim ? { email: emailTrim } : {}),
       ...(hashedPassword ? { password: hashedPassword } : {}),
       ...(contacto != null && String(contacto).trim()
@@ -430,6 +431,7 @@ export const loginUser = async (req: Request, res: Response) => {
       photoUrl: user.photoUrl || null,
       contacto: user.contacto,
       permissions: Array.isArray(user.permissions) ? user.permissions : [],
+      profileSetupCompleted: user.profileSetupCompleted !== false,
       token,
     });
   } catch (error) {
@@ -553,8 +555,12 @@ export const updateUser = async (req: Request, res: Response) => {
               "El usuario necesita un correo para poder iniciar sesión con contraseña",
           });
         }
+        const hadPassword = Boolean(user.password);
         user.password = await hashPassword(plain);
         user.markModified("password");
+        if (!hadPassword) {
+          user.profileSetupCompleted = false;
+        }
       }
     }
 

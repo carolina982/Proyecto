@@ -10,6 +10,14 @@ import {
 } from "../services/notificationService";
 import { syncUnitsEstadoForTrip } from "../services/unitEstadoSync";
 
+const SAFE_UPLOAD_PATH = /^\/uploads\/[A-Za-z0-9._-]+$/;
+
+function sanitizeStoredUploadPath(raw: unknown): string {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  return SAFE_UPLOAD_PATH.test(s) ? s : "";
+}
+
 /** Operador / Chofer / Ayudante: solo ven viajes donde participan */
 const isFieldStaffRole = (rol?: string) => {
   const value = (rol || "").toLowerCase().trim();
@@ -571,12 +579,12 @@ export const updateTripOperador = async (req: Request, res: Response) => {
     } else if (body.hojasEntrega !== undefined) {
       const parsed = parseMaybeJson(body.hojasEntrega);
       const paths = Array.isArray(parsed)
-        ? parsed.map((u: any) => String(u || "").trim()).filter(Boolean)
+        ? parsed.map((u: any) => sanitizeStoredUploadPath(u)).filter(Boolean)
         : [];
       $set.hojasEntrega = paths;
       $set.hojaEntrega = paths[0] || "";
     } else if (body.hojaEntrega !== undefined) {
-      const single = String(body.hojaEntrega || "").trim();
+      const single = sanitizeStoredUploadPath(body.hojaEntrega);
       $set.hojaEntrega = single;
       $set.hojasEntrega = single ? [single] : [];
     }
@@ -585,14 +593,14 @@ export const updateTripOperador = async (req: Request, res: Response) => {
     if (cartaFile?.filename) {
       $set.cartaPorte = `/uploads/${cartaFile.filename}`;
     } else if (body.cartaPorte !== undefined) {
-      $set.cartaPorte = String(body.cartaPorte || "");
+      $set.cartaPorte = sanitizeStoredUploadPath(body.cartaPorte);
     }
 
     const bitacoraFile = files.find((f) => f.fieldname === "bitacoraHoras");
     if (bitacoraFile?.filename) {
       $set.bitacoraHoras = `/uploads/${bitacoraFile.filename}`;
     } else if (body.bitacoraHoras !== undefined) {
-      $set.bitacoraHoras = String(body.bitacoraHoras || "");
+      $set.bitacoraHoras = sanitizeStoredUploadPath(body.bitacoraHoras);
     }
 
     const facturaFile = files.find((f) => f.fieldname === "facturaViaje");
@@ -887,14 +895,23 @@ export const deleteTrip = async (req: Request, res: Response) => {
   }
 };
 
-export const getTripCount = async (req:Request,res:Response)=>{
-  try{
-    const count=await Trip.countDocuments();
-    res.status(200).json({count});
-  }catch (error){
-    res.status(500).json({message:"Error al contar los vaijes",error})
+export const getTripCount = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+    const uid = userObjectId(user);
+    const baseFilter =
+      isFieldStaffRole(user.rol) && uid
+        ? tripAssignedToUserQuery(uid, user.rol)
+        : {};
+    const count = await Trip.countDocuments(baseFilter);
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: "Error al contar los vaijes", error });
   }
-}
+};
 
 /** Contadores ligeros para badges del menú (sin bajar la lista completa). */
 export const getTripStatusCounts = async (req: Request, res: Response) => {

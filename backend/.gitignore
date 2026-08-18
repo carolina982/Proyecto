@@ -4,4 +4,8 @@
 node_modules/
 dist/
 uploads/
+~/
+backups/
+*.archive
+*.bson
 *.log

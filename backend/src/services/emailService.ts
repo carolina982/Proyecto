@@ -29,6 +29,22 @@ const buildResetHtml = (nombreUsuario: string, code: string) => `
   </div>
 `;
 
+const buildTwoFactorHtml = (nombreUsuario: string, code: string) => `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f3f4f6;border-radius:16px">
+    <div style="background:#ffffff;border-radius:14px;padding:28px;border:1px solid #e5e7eb">
+      <div style="text-align:center;margin:0 0 20px">
+        <img src="cid:logo-volta" alt="Volta" width="140" style="display:inline-block;max-width:140px;height:auto;border:0;outline:none" />
+      </div>
+      <h2 style="margin:0 0 8px;color:#111111;font-size:20px;text-align:center">Código de acceso</h2>
+      <p style="margin:0 0 16px;color:#6b7280;font-size:14px;text-align:center">${nombreUsuario}, usa este código para entrar a Volta:</p>
+      <div style="text-align:center;margin:20px 0">
+        <span style="display:inline-block;font-size:34px;font-weight:800;letter-spacing:8px;color:#111111;background:#f3f4f6;border-radius:12px;padding:14px 22px">${code}</span>
+      </div>
+      <p style="margin:0;color:#9ca3af;font-size:13px;text-align:center">Este código expira en 10 minutos. Si no fuiste tú, cambia tu contraseña.</p>
+    </div>
+  </div>
+`;
+
 const buildTripAssignedHtml = (options: {
   userName: string;
   roleLabel: string;
@@ -147,6 +163,19 @@ export async function sendPasswordResetCode(options: {
     to: options.to,
     subject: "Recuperación de contraseña — Volta",
     html: buildResetHtml(nombreUsuario, options.code),
+  });
+}
+
+export async function sendTwoFactorCode(options: {
+  to: string;
+  code: string;
+  userName?: string;
+}): Promise<SendResetResult> {
+  const nombreUsuario = String(options.userName || "").trim() || "Hola";
+  return sendHtmlEmail({
+    to: options.to,
+    subject: "Código de acceso — Volta",
+    html: buildTwoFactorHtml(nombreUsuario, options.code),
   });
 }
 
