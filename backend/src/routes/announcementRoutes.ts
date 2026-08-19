@@ -7,7 +7,7 @@ import { validate } from "../middlewares/validate";
 import { createAnnouncementsValidator, updateAnnouncementValidator } from "../validators/announcementValidator";
 
 const router =express.Router();
-router.get("/",getAnnouncements);
+router.get("/", verifyToken, getAnnouncements);
 router.post("/",verifyToken,authorize(["admin"]),uploadAnnouncements.single("image"),createAnnouncementsValidator,validate,createAnnouncements);
 router.put("/:id",verifyToken,authorize(["admin"]),uploadAnnouncements.single("image"),updateAnnouncementValidator,validate,updateAnnouncement);
 router.delete("/:id",verifyToken,authorize(["admin"]),deleteAnnouncement);

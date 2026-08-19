@@ -32,6 +32,7 @@ import { requirePermission } from "./middlewares/authorize";
 import { PERMISSIONS } from "./auth/permissions";
 import { CAM_PROXY_MAX_BYTES, assertCamProxyTarget } from "./utils/camProxyGuard";
 import { resolveWebBuildId } from "./utils/webBuildId";
+import { getAppLinkConfig } from "./utils/appLinks";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -104,6 +105,56 @@ app.options("*", cors(corsOptions));
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, ts: Date.now() });
+});
+
+const SW_PUSH = `self.addEventListener('push', (event) => {
+  let data = { title: 'Volta', body: '', data: {} };
+  try { data = event.data ? event.data.json() : data; } catch (e) {}
+  event.waitUntil(self.registration.showNotification(data.title || 'Volta', {
+    body: data.body || '',
+    data: data.data || {},
+    icon: '/favicon.png'
+  }));
+});
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow('/Dashboard'));
+});
+`;
+
+app.get("/sw-push.js", (_req, res) => {
+  res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Service-Worker-Allowed", "/");
+  res.send(SW_PUSH);
+});
+
+app.get("/.well-known/apple-app-site-association", async (_req, res) => {
+  const { appleTeamId } = await getAppLinkConfig();
+  res.setHeader("Content-Type", "application/json");
+  res.json({
+    applinks: {
+      apps: [],
+      details: appleTeamId
+        ? [{ appID: `${appleTeamId}.com.volta.app`, paths: ["*"] }]
+        : [],
+    },
+  });
+});
+
+app.get("/.well-known/assetlinks.json", async (_req, res) => {
+  const { androidCertSha256 } = await getAppLinkConfig();
+  res.setHeader("Content-Type", "application/json");
+  res.json([
+    {
+      relation: ["delegate_permission/common.handle_all_urls"],
+      target: {
+        namespace: "android_app",
+        package_name: "com.volta.app",
+        sha256_cert_fingerprints: androidCertSha256 ? [androidCertSha256] : [],
+      },
+    },
+  ]);
 });
 
 app.use(express.json({ limit: "20mb" }));
@@ -379,7 +430,7 @@ if (fs.existsSync(webDist)) {
 
   app.get("*", (req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
-    if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) return next();
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/.well-known") || req.path === "/sw-push.js") return next();
 
     const clean = req.path.replace(/\/+$/, "") || "/";
     const candidates = [

@@ -71,6 +71,11 @@ export function checkRateLimit(options: {
   return { ok: true };
 }
 
+/** Solo tests. */
+export function resetRateLimitStoreForTests() {
+  store.clear();
+}
+
 export function clientIp(req: { ip?: string; headers: Record<string, unknown> }): string {
   const xf = req.headers["x-forwarded-for"];
   if (typeof xf === "string" && xf.trim()) {

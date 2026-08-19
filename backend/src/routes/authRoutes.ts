@@ -537,10 +537,34 @@ router.post("/two-factor", verifyToken, async (req, res) => {
 
 router.post("/verify-2fa", async (req, res) => {
   try {
+    const ip = clientIp(req as any);
+    const ipLimit = checkRateLimit({
+      key: `2fa:ip:${ip}`,
+      max: 8,
+      windowMs: 15 * 60 * 1000,
+      minIntervalMs: 800,
+      message: "Demasiados intentos del código. Espera un momento.",
+    });
+    if (!ipLimit.ok) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfterSec));
+      return res.status(429).json({ message: ipLimit.message });
+    }
+
     const preAuthToken = String(req.body?.preAuthToken || "").trim();
     const code = String(req.body?.code || "").trim();
     if (!preAuthToken || !code) {
       return res.status(400).json({ message: "Falta el código" });
+    }
+    const tokenLimit = checkRateLimit({
+      key: `2fa:tok:${preAuthToken.slice(-24)}`,
+      max: 5,
+      windowMs: 10 * 60 * 1000,
+      minIntervalMs: 500,
+      message: "Demasiados intentos con este código. Inicia sesión de nuevo.",
+    });
+    if (!tokenLimit.ok) {
+      res.setHeader("Retry-After", String(tokenLimit.retryAfterSec));
+      return res.status(429).json({ message: tokenLimit.message });
     }
     let decoded: { id?: string; purpose?: string };
     try {

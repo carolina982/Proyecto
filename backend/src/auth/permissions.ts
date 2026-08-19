@@ -187,6 +187,5 @@ export function canManagePermissionCatalog(
   const email = String(user.email || "")
     .trim()
     .toLowerCase();
-  if (email && permissionsOwnerEmails().includes(email)) return true;
-  return sanitizePermissions(user.permissions).includes(PERMISSIONS.USERS_ASSIGN_PERMISSIONS);
+  return Boolean(email && permissionsOwnerEmails().includes(email));
 }

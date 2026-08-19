@@ -2,6 +2,39 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Notification from "../models/Notification";
 import User from "../models/User";
+import { getVapidPublicKey } from "../services/webPushService";
+
+export const getWebPushKey = async (_req: Request, res: Response) => {
+  res.json({ publicKey: getVapidPublicKey() });
+};
+
+export const registerWebPush = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const sub = req.body?.subscription || req.body;
+    const endpoint = String(sub?.endpoint || "").trim();
+    const p256dh = String(sub?.keys?.p256dh || "").trim();
+    const auth = String(sub?.keys?.auth || "").trim();
+    if (!endpoint || !p256dh || !auth) {
+      return res.status(400).json({ message: "Suscripción inválida" });
+    }
+    await User.findByIdAndUpdate(user._id, {
+      $pull: { webPushSubscriptions: { endpoint } },
+    });
+    await User.findByIdAndUpdate(user._id, {
+      $push: {
+        webPushSubscriptions: {
+          $each: [{ endpoint, p256dh, auth }],
+          $slice: -5,
+        },
+      },
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Error registrando web push:", error);
+    res.status(500).json({ message: "No se pudo registrar la suscripción" });
+  }
+};
 
 export const registerPushToken = async (req: Request, res: Response) => {
   try {

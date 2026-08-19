@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  canManagePermissionCatalog,
   defaultPermissionsForRole,
   PERMISSIONS,
   sanitizePermissions,
@@ -34,5 +35,23 @@ describe("defaultPermissionsForRole", () => {
     const perms = defaultPermissionsForRole("Ayudante General");
     assert.ok(perms.includes(PERMISSIONS.TRIPS_ASSIST));
     assert.ok(perms.includes(PERMISSIONS.EMAIL_RECEIVE));
+  });
+});
+
+describe("canManagePermissionCatalog", () => {
+  it("tics@grupohm.com sí puede", () => {
+    assert.equal(
+      canManagePermissionCatalog({ email: "tics@grupohm.com" }),
+      true
+    );
+  });
+  it("otro admin no", () => {
+    assert.equal(
+      canManagePermissionCatalog({
+        email: "admin@otro.com",
+        permissions: [PERMISSIONS.USERS_ASSIGN_PERMISSIONS],
+      }),
+      false
+    );
   });
 });

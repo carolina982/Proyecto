@@ -1,10 +1,10 @@
 import express from "express";
-import { createUser, deleteUser, deleteUserPhoto, forgotPassword, getUser, getUserById, loginUser, registerUser, resetPassword, updateUser, updateUserEmailNotifications, updateUserPhoto, } from "../controllers/userController";
+import { createUser, deleteUser, deleteUserPhoto, forgotPassword, getUser, getUserById, registerUser, resetPassword, updateUser, updateUserEmailNotifications, updateUserPhoto, } from "../controllers/userController";
 import { verifyToken } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
 import { upload } from "../middlewares/upload";
 import { validate } from "../middlewares/validate";
-import { loginUserValidator, registerUserValidator } from "../validators/userValidator";
+import { registerUserValidator } from "../validators/userValidator";
 
 /** Multer solo si viene multipart; no toca body JSON (editar usuario / contraseña). */
 const optionalPhotoUpload = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -23,7 +23,11 @@ const adminOnly = [
   authorize(["Admin", "Administrador"]),
 ];
 
-router.post("/login", loginUserValidator, validate, loginUser);
+router.post("/login", (_req, res) => {
+  return res.status(410).json({
+    message: "Usa POST /api/auth/login",
+  });
+});
 router.post("/register", upload.single("photo"), registerUserValidator, validate, registerUser);
 router.get("/", auth, getUser);
 router.get("/:id", auth, getUserById);

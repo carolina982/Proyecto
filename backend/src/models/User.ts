@@ -28,6 +28,11 @@ export interface IUser extends Document {
   /** corporativo-hm = perfil creado/sincronizado desde Corporativo HM */
   origen?: string | null;
   expoPushToken?: string | null;
+  webPushSubscriptions?: {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+  }[];
   /**
    * Permisos explícitos (independientes del rol).
    * Se suman a los permisos por defecto del rol.
@@ -103,6 +108,16 @@ const userSchema = new Schema<IUser>(
     twoFactorCodeExp: { type: Date, select: false },
     origen: { type: String, default: null },
     expoPushToken: { type: String, default: null },
+    webPushSubscriptions: {
+      type: [
+        {
+          endpoint: { type: String, required: true },
+          p256dh: { type: String, required: true },
+          auth: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
     permissions: { type: [String], default: [] },
     emailNotifications: {
       enabled: { type: Boolean, default: false },

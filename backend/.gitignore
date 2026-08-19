@@ -9,3 +9,4 @@ backups/
 *.archive
 *.bson
 *.log
+data/vapid.json

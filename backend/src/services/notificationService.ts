@@ -7,6 +7,7 @@ import {
   sendTripStatusEmail,
 } from "./emailService";
 import { sendPushToToken } from "./pushService";
+import { sendWebPushToUser } from "./webPushService";
 import { shouldSendTripEmailToUser } from "./tripEmailSettings";
 
 type NotifyPayload = {
@@ -101,6 +102,10 @@ export async function notifyUser(userId: string, payload: NotifyPayload) {
       tripId: payload.tripId ? String(payload.tripId) : "",
     });
   }
+  await sendWebPushToUser(id, payload.title, payload.body, {
+    type: payload.type,
+    tripId: payload.tripId ? String(payload.tripId) : "",
+  });
 }
 
 type TripAssignLike = {
